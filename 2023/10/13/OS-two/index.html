@@ -20,12 +20,12 @@
   <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
   <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
-  <meta name="description" content="操作系统必须交替执行多个进程，在合理的响应时间范围内使处理器的利用率最大 操作系统必须按照特定的策略给进程分配资源，同时避免死锁 操作系统须为有助于构建应用的进程间通信和用户进程创建提供支持  什么是进程操作系统管理应用程序的目标 资源对多个应用程序是可用的 物理处理器在多个应用程序间切换，以保证所有程序都在执行 处理器和I&#x2F;O设备能得到充分利用  进程和进程块进程的基本元素 程序代码">
+  <meta name="description" content="第三章进程相关内容总结">
 <meta property="og:type" content="article">
 <meta property="og:title" content="第三章 进程描述与控制">
 <meta property="og:url" content="https://daydreamerh.github.io/2023/10/13/OS-two/index.html">
 <meta property="og:site_name" content="DayDreamer">
-<meta property="og:description" content="操作系统必须交替执行多个进程，在合理的响应时间范围内使处理器的利用率最大 操作系统必须按照特定的策略给进程分配资源，同时避免死锁 操作系统须为有助于构建应用的进程间通信和用户进程创建提供支持  什么是进程操作系统管理应用程序的目标 资源对多个应用程序是可用的 物理处理器在多个应用程序间切换，以保证所有程序都在执行 处理器和I&#x2F;O设备能得到充分利用  进程和进程块进程的基本元素 程序代码">
+<meta property="og:description" content="第三章进程相关内容总结">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://daydreamerh.github.io/2023/10/13/OS-two/e784f11b-ea89-45a7-8309-f91b05316438.jpg">
 <meta property="og:image" content="https://daydreamerh.github.io/2023/10/13/OS-two/63b5cca0-2a31-4414-bd45-860b7606bf1b.jpg">
@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://daydreamerh.github.io/2023/10/13/OS-two/c2b5f1cc-599e-4a6a-bda0-1ff83af14b54.jpg">
 <meta property="og:image" content="https://daydreamerh.github.io/2023/10/13/OS-two/4a51f56a-ef56-4d20-a0e4-7f32478b438a.jpg">
 <meta property="article:published_time" content="2023-10-13T13:29:36.000Z">
-<meta property="article:modified_time" content="2023-10-14T02:49:28.314Z">
+<meta property="article:modified_time" content="2023-10-14T02:57:21.874Z">
 <meta property="article:author" content="DayDreamer">
 <meta property="article:tag" content="OS">
 <meta name="twitter:card" content="summary">
@@ -171,6 +171,45 @@
     </div>
   </div>
 
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">归档</h3>
+      
+      
+        <a class="archive-link" href="/archives/2023/10 ">
+          十月 2023 
+          <div class="archive-count">2 </div>
+        </a>
+      
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">最新文章</h3>
+      <ul>
+        
+          <a class="recent-link" href="/2023/10/13/OS-two/" title="第三章 进程描述与控制" >
+            <div class="recent-link-text">
+              第三章 进程描述与控制
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/10/13/OS-one/" title="第二章 操作系统概述" >
+            <div class="recent-link-text">
+              第二章 操作系统概述
+            </div>
+          </a>
+        
+      </ul>
+    </div>
+  </div>
 
     
   </div>
@@ -508,6 +547,19 @@
   
 </article>
 
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
 
 
 
