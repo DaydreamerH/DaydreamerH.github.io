@@ -232,7 +232,7 @@
   
           </div>
           <div class="wordcount need-seperator meta-info">
-            201 词 
+            1.4k 词 
           </div>
         </div>
         
@@ -267,7 +267,43 @@
 
 
 
+ 面向连接和无连接的访问
 
+TCP/IP提供了两种协议
+
+使用TCP的服务器是面向连接的服务器
+
+点到点通信
+建立可靠连接
+可靠交付
+具有流控的传输
+双工传输
+流模式
+
+
+使用UDP的服务器是无连接的服务器
+
+多对多通信
+不可靠服务
+缺乏流控制
+报文模式
+
+
+
+
+选择面向连接或者无连接的服务依赖于应用协议
+
+ 面向连接
+
+易于编程
+
+自动处理分组丢失，分组失序
+自动验证数据差错，处理连接状态
+
+
+对每个连接都有一个单独的套接字，耗费更多资源
+在空闲的连接上不发送任何分组
+始终运行的服务器会因为客户的崩溃，导致无用套接字的过多而耗尽资...
             
           </div>
         
@@ -277,18 +313,20 @@
     </div>
     
      
-    <a class="right-panel  non-pic  "
+    <a class="right-panel  with-pic  "
       
       
       
       
       
       
-      
+       style="background-image: url(/2023/10/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%89%EF%BC%89/banner.jpg)" 
       href="/2023/10/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%89%EF%BC%89/" 
     >
        
-      <i class="fa-solid fa-angle-right non-pic"></i>
+      <div class="overlay">
+        <i class="fa-solid fa-angle-right with-pic"></i>
+      </div>
        
     </a>
      
