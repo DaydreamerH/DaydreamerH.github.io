@@ -188,7 +188,7 @@
   <div class="widget-wrap">
     <div class="widget">
       <h3 class="widget-title">标签</h3>
-      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/JavaWeb/" rel="tag">JavaWeb</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/c/" rel="tag">c</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/flask/" rel="tag">flask</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/java/" rel="tag">java</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/socket/" rel="tag">socket</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/sockey/" rel="tag">sockey</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/stable-diffusion/" rel="tag">stable-diffusion</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/uni-app/" rel="tag">uni-app</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag">机器学习</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%89%A9%E7%90%86/" rel="tag">物理</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B/" rel="tag">线程</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a></li></ul>
+      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/JavaWeb/" rel="tag">JavaWeb</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/c/" rel="tag">c</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/flask/" rel="tag">flask</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/java/" rel="tag">java</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/socket/" rel="tag">socket</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/stable-diffusion/" rel="tag">stable-diffusion</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/uni-app/" rel="tag">uni-app</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag">机器学习</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%89%A9%E7%90%86/" rel="tag">物理</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B/" rel="tag">线程</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a></li></ul>
     </div>
   </div>
 
@@ -236,74 +236,14 @@
           </div>
         </div>
         
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/c/" rel="tag">c</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sockey/" rel="tag">sockey</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/c/" rel="tag">c</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/socket/" rel="tag">socket</a></li></ul>
 
       </header>
       <div class="e-content article-entry" itemprop="articleBody">
         
           <div class="truncate-text">
             
-               服务器软件设计概述
- 最简单服务器的算法
-
-创建套接字
-绑定到一个熟知端口
-期望在这个端口上接受请求
-进入无线循环，接收客户请求并应答
-
- 循环与并发
-
-循环服务器：一个时刻只处理一个请求
-
-易构建，性能稍差
-
-
-并发服务器：一个时刻可以处理多请求
-
-多数只提供表面并发：执行多个线程，每个线程处理一个请求
-使用线程的可能性：计算量小，主要是异步I/O，便于同时使用多个通信信道
-并发处理多个请求，而不是指下层使用了多个并发线程
-难以构建，性能好
-
-
-
- 面向连接和无连接的访问
-
-TCP/IP提供了两种协议
-
-使用TCP的服务器是面向连接的服务器
-
-点到点通信
-建立可靠连接
-可靠交付
-具有流控的传输
-双工传输
-流模式
-
-
-使用UDP的服务器是无连接的服务器
-
-多对多通信
-不可靠服务
-缺乏流控制
-报文模式
-
-
-
-
-选择面向连接或者无连接的服务依赖于应用协议
-
- 面向连接
-
-易于编程
-
-自动处理分组丢失，分组失序
-自动验证数据差错，处理连接状态
-
-
-对每个连接都有一个单独的套接字，耗费更多资源
-在空闲的连接上不发送任何分组
-始终运行的服务器会因为客户的崩溃，导致无用套接字的过多而耗尽资...
+              服务器软件设计
             
           </div>
         
