@@ -21,16 +21,16 @@
   <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
   <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
-  <meta name="description" content="死锁原理  死锁概念  定义：一组相互竞争系统资源或进行通信的进程间的永久资源 当一组进程中的每一个进程都在等待某事件，而只有同组进程中阻塞的进程能够触发该事件时，死锁发生 永久性 无有效的通用解决方案   资源的分类  可重用资源  一次仅供一个进程安全使用且不因使用而耗尽的资源  处理器，I&#x2F;O通道，内存外存，设备，文件，数据库，信号量   竞争可重用资源可能引起死锁    可消耗资源  可">
+  <meta name="description" content="死锁原理与解决方案">
 <meta property="og:type" content="article">
 <meta property="og:title" content="OS第七章 死锁">
 <meta property="og:url" content="https://daydreamerh.github.io/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/index.html">
 <meta property="og:site_name" content="DayDreamer">
-<meta property="og:description" content="死锁原理  死锁概念  定义：一组相互竞争系统资源或进行通信的进程间的永久资源 当一组进程中的每一个进程都在等待某事件，而只有同组进程中阻塞的进程能够触发该事件时，死锁发生 永久性 无有效的通用解决方案   资源的分类  可重用资源  一次仅供一个进程安全使用且不因使用而耗尽的资源  处理器，I&#x2F;O通道，内存外存，设备，文件，数据库，信号量   竞争可重用资源可能引起死锁    可消耗资源  可">
+<meta property="og:description" content="死锁原理与解决方案">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://daydreamerh.github.io/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/banner.jpg">
 <meta property="article:published_time" content="2023-10-26T02:01:45.000Z">
-<meta property="article:modified_time" content="2023-10-27T02:13:04.786Z">
+<meta property="article:modified_time" content="2023-10-27T02:28:05.770Z">
 <meta property="article:author" content="DayDreamer">
 <meta property="article:tag" content="OS">
 <meta property="article:tag" content="进程">
@@ -457,7 +457,7 @@
 </li>
 </ul>
 <h1 id="死锁预防-避免和检测方案小结"><a class="markdownIt-Anchor" href="#死锁预防-避免和检测方案小结"></a> 死锁预防、避免和检测方案小结</h1>
-<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E6%AD%BB%E9%94%81%E6%96%B9%E6%A1%88.png" alt="死锁方案"></p>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E6%AD%BB%E9%94%81%E6%96%B9%E6%A1%88%E6%80%BB%E7%BB%93.png" alt="死锁方案"></p>
 <h1 id="哲学家就餐问题"><a class="markdownIt-Anchor" href="#哲学家就餐问题"></a> 哲学家就餐问题</h1>
 <h2 id="死锁"><a class="markdownIt-Anchor" href="#死锁"></a> 死锁</h2>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">semaphore fork[5] = &#123;1,1,1,1,1&#125;;</span><br><span class="line">void main()&#123;</span><br><span class="line">  cobegin&#123;philosopher(0);philosopher(1);philosopher(2);...philosopher(4);&#125;coend;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void philosopher(int i)&#123;</span><br><span class="line">  while(true)&#123;</span><br><span class="line">    think;</span><br><span class="line">    wait(fork[i]);</span><br><span class="line">    wait(fork[(i+1)%5]);</span><br><span class="line">    eat;</span><br><span class="line">    signal(fork[i]);</span><br><span class="line">    signal(fork[(i+1)%5]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
