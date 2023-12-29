@@ -162,11 +162,6 @@
                 <div class="category-count">10</div>
             </a>
         
-            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
-                项目开发
-                <div class="category-count">2</div>
-            </a>
-        
             <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
                 套接字编程
                 <div class="category-count">4</div>
@@ -177,9 +172,14 @@
                 <div class="category-count">4</div>
             </a>
         
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">2</div>
+            </a>
+        
             <a class="category-link" href="/categories/%E9%A9%AC%E5%8E%9F/">
                 马原
-                <div class="category-count">2</div>
+                <div class="category-count">3</div>
             </a>
         </div>
     </div>
@@ -216,7 +216,7 @@
       
       
       
-      <a class="article-gallery-img" rel="gallery_clnrj6ri80000eov1b1ks4uf5">
+      <a class="article-gallery-img" rel="gallery_clqqkqfmq001mwcv10zaof05y">
         <img src="/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/banner.jpg" itemprop="image">
       </a>
     
@@ -658,12 +658,12 @@
 <ul>
 <li>uniapp未能提供有效的获取canvas的宽高方法，所以第一步需要手动设置参数，调整canvas的高度，宽度统一为750rpx，高度根据实际要求设置</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;canvas class=&quot;mycanvas&quot; canvas-id=&quot;mycanvas&quot;</span><br><span class="line">@touchstart=&quot;touchstart&quot; @touchmove=&quot;touchmove&quot;</span><br><span class="line">		@touchend=&quot;touchend&quot; ref=&#x27;canvas&#x27; </span><br><span class="line">		:style=&quot;&#123;&#x27;height&#x27;:c_height+&#x27;rpx&#x27;&#125;&quot;&gt;&lt;/canvas&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">&lt;canvas class=&quot;mycanvas&quot; canvas-id=&quot;mycanvas&quot;<br>@touchstart=&quot;touchstart&quot; @touchmove=&quot;touchmove&quot;<br>		@touchend=&quot;touchend&quot; ref=&#x27;canvas&#x27; <br>		:style=&quot;&#123;&#x27;height&#x27;:c_height+&#x27;rpx&#x27;&#125;&quot;&gt;&lt;/canvas&gt;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>高度的设置主要依据图像的高度，uniapp的组件image不支持本地图片，故只能使用img标签，但是img与uniapp许多api并不兼容，例如最重要的获取样式，uniapp获取样式无法得到img，返回的对象值是null</li>
 <li>所以放弃直接获取img的高度，干脆自己算，得到正确的高度，保证从视图上用户的画板和图像大小一致</li>
 </ul>
-  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">uni.getImageInfo(&#123;</span><br><span class="line">				src:_this.img_file,</span><br><span class="line">				success(image)&#123;</span><br><span class="line">					let hole_wh = image.width+image.height</span><br><span class="line">					let imgWidth = (image.width/hole_wh)</span><br><span class="line">					let imgHeight = (image.height/hole_wh)</span><br><span class="line">					let img_bl = Math.ceil(750/imgWidth)</span><br><span class="line">					_this.c_height = img_bl*imgHeight</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;)</span><br></pre></td></tr></table></figure>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">uni.getImageInfo(&#123;<br>				src:_this.img_file,<br>				success(image)&#123;<br>					let hole_wh = image.width+image.height<br>					let imgWidth = (image.width/hole_wh)<br>					let imgHeight = (image.height/hole_wh)<br>					let img_bl = Math.ceil(750/imgWidth)<br>					_this.c_height = img_bl*imgHeight<br>				&#125;<br>			&#125;)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>设置canvas的position固定置顶，且z-index更大，自此完成了画布和图像前端样式的重合</li>
 </ul>

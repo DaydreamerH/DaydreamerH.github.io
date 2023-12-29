@@ -160,11 +160,6 @@
                 <div class="category-count">10</div>
             </a>
         
-            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
-                项目开发
-                <div class="category-count">2</div>
-            </a>
-        
             <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
                 套接字编程
                 <div class="category-count">4</div>
@@ -175,9 +170,14 @@
                 <div class="category-count">4</div>
             </a>
         
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">2</div>
+            </a>
+        
             <a class="category-link" href="/categories/%E9%A9%AC%E5%8E%9F/">
                 马原
-                <div class="category-count">2</div>
+                <div class="category-count">3</div>
             </a>
         </div>
     </div>
@@ -214,7 +214,7 @@
       
       
       
-      <a class="article-gallery-img" rel="gallery_clp2otkzx000064v12ojv3p85">
+      <a class="article-gallery-img" rel="gallery_clqqkqfmn0013wcv1gvetfcm8">
         <img src="/2023/11/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E5%9B%9B%EF%BC%89/banner.jpg" itemprop="image">
       </a>
     
@@ -293,9 +293,9 @@
 </li>
 <li>使用INADDR_ANY代替指定的本地IP地址</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">int passivesock(const char *service,</span><br><span class="line">    const char *transport,int qlen)</span><br><span class="line">&#123;</span><br><span class="line">    struct servent *pse;</span><br><span class="line">    struct sockaddr_in sin;</span><br><span class="line">    int s,type;</span><br><span class="line"></span><br><span class="line">    memset(&amp;sin,0,sizeof(sin));</span><br><span class="line">    sin.sin_family = AF_INET;</span><br><span class="line">    sin.sin_addr.s_addr = INADDR_ANY;</span><br><span class="line"></span><br><span class="line">    if(pse = getservbyname(service,transport))</span><br><span class="line">        sin.sin_port = htons(pse -&gt; s_port);</span><br><span class="line">    else if((sin.sin_port = htons((unsigned char)atoi(service)))==0)</span><br><span class="line">        errexit(...) ;</span><br><span class="line">    </span><br><span class="line">    if(strcmp(transport,&quot;udp&quot;) == 0)type = SOCK_DGRAM;</span><br><span class="line">    else type = SOCK_STREAM;</span><br><span class="line"></span><br><span class="line">    if(s = sock(PF_INET,type,0)&lt; 0)errexit(...);</span><br><span class="line"></span><br><span class="line">    if(bind(s,(struct sockaddr_in*)&amp;sin,sizeof(sin))&lt;0)</span><br><span class="line">        errexit(...);</span><br><span class="line"></span><br><span class="line">    if(type == SOCK_STREAM &amp;&amp; listen(s,qlen)&lt;0)</span><br><span class="line">        errexit(...);</span><br><span class="line"></span><br><span class="line">    return s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int passivesock(const char *service,<br>    const char *transport,int qlen)<br>&#123;<br>    struct servent *pse;<br>    struct sockaddr_in sin;<br>    int s,type;<br><br>    memset(&amp;sin,0,sizeof(sin));<br>    sin.sin_family = AF_INET;<br>    sin.sin_addr.s_addr = INADDR_ANY;<br><br>    if(pse = getservbyname(service,transport))<br>        sin.sin_port = htons(pse -&gt; s_port);<br>    else if((sin.sin_port = htons((unsigned char)atoi(service)))==0)<br>        errexit(...) ;<br>    <br>    if(strcmp(transport,&quot;udp&quot;) == 0)type = SOCK_DGRAM;<br>    else type = SOCK_STREAM;<br><br>    if(s = sock(PF_INET,type,0)&lt; 0)errexit(...);<br><br>    if(bind(s,(struct sockaddr_in*)&amp;sin,sizeof(sin))&lt;0)<br>        errexit(...);<br><br>    if(type == SOCK_STREAM &amp;&amp; listen(s,qlen)&lt;0)<br>        errexit(...);<br><br>    return s;<br>&#125;<br></code></pre></td></tr></table></figure>
 <h3 id="passiveudp-passivetcp"><a class="markdownIt-Anchor" href="#passiveudp-passivetcp"></a> passiveUDP &amp; passiveTCP</h3>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">int passiveUDP(const char *service,int qlen)</span><br><span class="line">&#123;</span><br><span class="line">    return passivesock(service,&quot;udp&quot;,qlen);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int passiveTCP(const char *service,int qlen)</span><br><span class="line">&#123;</span><br><span class="line">    return passivesock(service,&quot;tcp&quot;,qlen);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int passiveUDP(const char *service,int qlen)<br>&#123;<br>    return passivesock(service,&quot;udp&quot;,qlen);<br>&#125;<br><br>int passiveTCP(const char *service,int qlen)<br>&#123;<br>    return passivesock(service,&quot;tcp&quot;,qlen);<br>&#125;<br></code></pre></td></tr></table></figure>
 <h2 id="循环无连接服务器"><a class="markdownIt-Anchor" href="#循环无连接服务器"></a> 循环无连接服务器</h2>
 <h3 id="进程结构"><a class="markdownIt-Anchor" href="#进程结构"></a> 进程结构</h3>
 <p>只需要一个执行线程</p>
@@ -510,7 +510,7 @@
 <ul>
 <li>可以使进程检测同时等待的多个I/O设备，当没有设备准备好时，select()阻塞，其中任一设备准备好时，select()就返回准备就绪的文件描述符数</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">int select(int maxfd, fd_set *readfds, fd_set *writefds, fe_set *exceptfds, const struct timeval *timeout);</span><br><span class="line">/*</span><br><span class="line"> maxfd:文件描述符集中要被检测的比特数</span><br><span class="line"> readfds:被读监控的文件描述符集</span><br><span class="line"> writefds:被写监控的文件描述符集</span><br><span class="line"> exceptfds:被例外条件监控的文件描述符集</span><br><span class="line"> timeout:定时器，超时返回调用</span><br><span class="line">*/</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int select(int maxfd, fd_set *readfds, fd_set *writefds, fe_set *exceptfds, const struct timeval *timeout);<br>/*<br> maxfd:文件描述符集中要被检测的比特数<br> readfds:被读监控的文件描述符集<br> writefds:被写监控的文件描述符集<br> exceptfds:被例外条件监控的文件描述符集<br> timeout:定时器，超时返回调用<br>*/<br></code></pre></td></tr></table></figure></li>
 </ul>
 
         
