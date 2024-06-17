@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>马原（一） | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="导论与第一章总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="马原（一）">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/20/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="导论与第一章总结">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/20/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg">
+<meta property="article:published_time" content="2023-11-20T02:16:33.000Z">
+<meta property="article:modified_time" content="2024-06-17T05:57:01.012Z">
+<meta property="article:author" content="DayDreamer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/20/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-马原（一）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm7e003w7gv1g98k2l1i">
+        <img src="/2023/11/20/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        马原（一）
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-20T02:16:33.000Z" itemprop="datePublished">2023-11-20</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">政治课复习</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            4.3k 词 
+          </div>
+        </div>
+        
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="导论"><a class="markdownIt-Anchor" href="#导论"></a> 导论</h1>
+<h2 id="什么是马克思主义p2"><a class="markdownIt-Anchor" href="#什么是马克思主义p2"></a> 什么是马克思主义（p2）</h2>
+<ul>
+<li>马克思主义是由马克思、恩格斯创立并为后继者所不断发展的科学理论体系
+<ul>
+<li>是关于自然、社会和人类思维发展一般规律的学说</li>
+<li>是关于社会主义必然代替资本主义，最终实现共产主义的学说</li>
+<li>是关于无产阶级的解放，全人类的解放和每个人自由而全面发展的学说</li>
+<li>是无产阶级政党和社会主义国家的指导思想</li>
+<li>是指引人民创造美好生活的行动指南</li>
+</ul>
+</li>
+<li>马克思主义的三个基本组成部分
+<ul>
+<li>马克思主义哲学</li>
+<li>马克思主义政治经济学</li>
+<li>科学社会主义</li>
+</ul>
+</li>
+<li>马克思主义基本原理是对马克思主义立场观点方法的集中概括，是马克思主义在其形成、发展和运用过程中经过实践反复检验而确立起来的具有普遍真理性的理论</li>
+</ul>
+<h2 id="马克思主义基本原理非重点p3"><a class="markdownIt-Anchor" href="#马克思主义基本原理非重点p3"></a> 马克思主义基本原理（非重点，p3）</h2>
+<ul>
+<li>基本立场：以无产阶级的解放和全人类的解放为己任，以人的自由而全面发展为美好目标，以人民为中心，坚持一切为了人民，一切依靠人民，全心全意为人民谋幸福</li>
+<li>基本观点：是关于自然、社会和人类思维发展一般规律的科学认识，是对资本主义社会和社会主义社会发展规律的科学认识，是对人类思想成果和社会实践经验的科学总结</li>
+<li>基本方法：是建立在辩证唯物主义和历史唯物主义世界观和方法论基础上，指导我们正确认识世界和改造世界的思想方法和工作方法</li>
+</ul>
+<h2 id="马克思主义的基本特征p13"><a class="markdownIt-Anchor" href="#马克思主义的基本特征p13"></a> 马克思主义的基本特征（p13）</h2>
+<ul>
+<li>科学性：马克思主义是对自然、社会和人类思维发展本质和规律的正确反映；具有科学的世界观和方法论基础，即辩证唯物主义和历史唯物主义。</li>
+<li>人民性：是马克思主义的本质属性，人民至上是马克思主义的政治立场。</li>
+<li>实践性：马克思主义是从实践中来，到实践中去，在实践中接受检验，并随实践而不断发展的学说。</li>
+<li>发展性：马克思主义是不断发展的开放的学说，具有与时俱进的理论品质</li>
+</ul>
+<h2 id="马克思主义的当代价值p16"><a class="markdownIt-Anchor" href="#马克思主义的当代价值p16"></a> 马克思主义的当代价值（p16）</h2>
+<ul>
+<li>观察当代世界变化的认识工具
+<ul>
+<li>马克思主义给予我们观察当代世界的宏大视野</li>
+<li>马克思主义给予我们透视时代风云的锐利目光</li>
+<li>马克思主义给予我们展望未来世界的长远眼光和战略定力</li>
+</ul>
+</li>
+<li>指引当代中国发展的行动指南
+<ul>
+<li>马克思主义是指引当代中国发展的精神旗帜</li>
+<li>马克思主义是推动当代中国发展的精神动力</li>
+<li>马克思主义是引领当代中国实践的行动指南</li>
+</ul>
+</li>
+<li>引领人类社会进步的科学真理
+<ul>
+<li>马克思主义所揭示的人类社会发展规律，所揭示的社会主义代替资本主义的历史趋势，依然存在并发生作用</li>
+<li>人类的未来仍然需要马克思主义的指引</li>
+</ul>
+</li>
+</ul>
+<h2 id="如何自觉和运用马克思主义p21"><a class="markdownIt-Anchor" href="#如何自觉和运用马克思主义p21"></a> 如何自觉和运用马克思主义（p21）</h2>
+<ul>
+<li>努力学习和掌握马克思主义的基本立场观点方法</li>
+<li>努力学习掌握马克思主义中国化时代化的理论成果</li>
+<li>坚持理论联系实际的马克思主义学风</li>
+<li>自觉将马克思主义内化于心、外化于行</li>
+</ul>
+<h1 id="第一章-世界的物质性及发展规律"><a class="markdownIt-Anchor" href="#第一章-世界的物质性及发展规律"></a> 第一章 世界的物质性及发展规律</h1>
+<h2 id="物质及其存在方式"><a class="markdownIt-Anchor" href="#物质及其存在方式"></a> 物质及其存在方式</h2>
+<h3 id="近代哲学的基本问题p26"><a class="markdownIt-Anchor" href="#近代哲学的基本问题p26"></a> 近代哲学的基本问题（p26）</h3>
+<ul>
+<li>存在和思维，物质和意识谁为本原的问题，即何者为第一性的问题
+<ul>
+<li>唯物主义</li>
+<li>唯心主义</li>
+</ul>
+</li>
+<li>存在和思维，物质和意识是否具有同一性的问题，即思维能否正确地反映存在、人能否认识或彻底认识世界的问题
+<ul>
+<li>可知论</li>
+<li>不可知论</li>
+</ul>
+</li>
+</ul>
+<h3 id="列宁对物质的定义及意义p28"><a class="markdownIt-Anchor" href="#列宁对物质的定义及意义p28"></a> 列宁对物质的定义及意义（p28）</h3>
+<ul>
+<li>定义：物质是标志客观实在的哲学范畴，这种客观实在是通过人感觉感知的，它不依赖于我们的感觉而存在，为我们的感觉所复写、摄影、反映</li>
+<li>意义：物质是不依赖于人类的意识而存在的，并能为人类的意识所反映的客观实在。</li>
+</ul>
+<h3 id="马克思主义物质范畴的理论意义p28"><a class="markdownIt-Anchor" href="#马克思主义物质范畴的理论意义p28"></a> 马克思主义物质范畴的理论意义（p28）</h3>
+<ul>
+<li>坚持了唯物主义一元论，同唯心主义一元论和二元论划清了界限</li>
+<li>坚持了能动的反映论和可知论，批判了不可知论</li>
+<li>体现了唯物论和辩证法的统一，克服了形而上学唯物主义的缺陷</li>
+<li>体现了唯物主义自然观与历史观的统一，为彻底的唯物主义奠定了理论基础</li>
+</ul>
+<h3 id="如何把握物质-运动-静止时间和空间的含义-特点或特性及其相互关系p30"><a class="markdownIt-Anchor" href="#如何把握物质-运动-静止时间和空间的含义-特点或特性及其相互关系p30"></a> 如何把握物质、运动、静止，时间和空间的含义、特点（或特性）及其相互关系？（p30）</h3>
+<ul>
+<li>物质的根本属性是运动</li>
+<li>物质世界的运动是绝对的，而物质在运动过程中又有某种的相对的静止
+<ul>
+<li>运动的绝对性体现了物质运动的变动性和无条件性</li>
+<li>静止的相对性体现了物质运动的稳定性和有条件性</li>
+<li>无条件的绝对运动和有条件的相对静止构成了对立统一的关系</li>
+</ul>
+</li>
+<li>时间和空间是运动着的物质的基本存在形式
+<ul>
+<li>时间是指物质运动的持续性、顺序性，特点是一维性，即时间的流逝一去不复返</li>
+<li>空间是指物质运动的广延性、伸张性，特点是三维性，即空间具有长、宽、高三方面的规定性</li>
+</ul>
+</li>
+<li>物质、运动、时间、空间内具有内在的统一性</li>
+</ul>
+<h3 id="物质世界的二重化非重点p31"><a class="markdownIt-Anchor" href="#物质世界的二重化非重点p31"></a> 物质世界的二重化（非重点，p31）</h3>
+<ul>
+<li>世界分为自然界和人类社会
+<ul>
+<li>在自然界中一切都是自发产生的</li>
+<li>在人类社会中一切都打着人的意识的印记，是人有目的的实践活动的结果</li>
+</ul>
+</li>
+<li>世界分为客观世界和主观世界
+<ul>
+<li>客观世界是指不依赖于人的意识而存在的现实世界，包括自然界和人类社会</li>
+<li>主观世界是指人的意识和观念世界，是人的头脑反映和把握物质世界的精神活动的总和</li>
+</ul>
+</li>
+</ul>
+<h2 id="物质与意识的辩证关系"><a class="markdownIt-Anchor" href="#物质与意识的辩证关系"></a> 物质与意识的辩证关系</h2>
+<h3 id="物质对意识决定作用的表现p33"><a class="markdownIt-Anchor" href="#物质对意识决定作用的表现p33"></a> 物质对意识决定作用的表现（p33）</h3>
+<ul>
+<li>意识是人脑的机能和属性，是客观世界的主观映像。物质对意识的决定作用表现在意识的起源和本质上</li>
+<li>意识的起源
+<ul>
+<li>意识是自然界长期发展的产物</li>
+<li>意识也是社会历史发展的产物</li>
+</ul>
+</li>
+<li>意识的本质
+<ul>
+<li>意识是人脑这样一种特殊物质的机能和属性，是客观世界的主观映像。</li>
+<li>意识是物质的产物，但又不是物质本身</li>
+<li>意识在内容上是客观的，在形式上是主观的，是客观内容与主观形式的统一</li>
+</ul>
+</li>
+</ul>
+<h3 id="意识的能动作用p34"><a class="markdownIt-Anchor" href="#意识的能动作用p34"></a> 意识的能动作用（p34）</h3>
+<ul>
+<li>物质决定意识，意识对物质具有反作用
+<ul>
+<li>意识具有目的性和计划性</li>
+<li>意识具有创造性</li>
+<li>意识具有指导实践改造客观世界的作用</li>
+<li>意识具有调控人的行为和生理活动的作用</li>
+</ul>
+</li>
+</ul>
+<h3 id="主观能动性和客观规律性的辩证统一p35"><a class="markdownIt-Anchor" href="#主观能动性和客观规律性的辩证统一p35"></a> 主观能动性和客观规律性的辩证统一（p35）</h3>
+<ul>
+<li>处理主观能动性和客观规律性的关系
+<ul>
+<li>尊重客观规律是正确发挥主观能动性的前提</li>
+<li>只有充分发挥主观能动性，才能正确认识和利用客观规律</li>
+</ul>
+</li>
+<li>发挥人的主观能动性的条件
+<ul>
+<li>从实际出发是正确发挥人的主观能动性的前提</li>
+<li>实践是正确发挥人的主观能动性的根本途径</li>
+<li>正确发挥人的主观能动性，还要依赖于一定的物质条件和物质手段</li>
+</ul>
+</li>
+</ul>
+<h3 id="人工智能无法取代或超越人类p37"><a class="markdownIt-Anchor" href="#人工智能无法取代或超越人类p37"></a> 人工智能无法取代或超越人类（p37）</h3>
+<ul>
+<li>人类意识是知情意的统一体，而人工智能只是对人类的理性智能的模拟和拓展，不具备情感、信念、意志等人类意识形式</li>
+<li>社会性是人的意识所固有的本质属性，而人工智能不可能真正具备人类的社会属性</li>
+<li>人类的自然语言是思维的物质外壳和意识的现实形式，而人工智能难以完全具备理解自然语言真实意义的能力</li>
+<li>人工智能能够获得人类意识中可以化约为数字信号的内容，但人脑中总是有许多东西是无法被化约的</li>
+</ul>
+<h2 id="世界的物质统一性"><a class="markdownIt-Anchor" href="#世界的物质统一性"></a> 世界的物质统一性</h2>
+<h3 id="什么是世界物质的统一性p39"><a class="markdownIt-Anchor" href="#什么是世界物质的统一性p39"></a> 什么是世界物质的统一性（p39）</h3>
+<ul>
+<li>世界的统一性在于它的物质性，世界统一于物质</li>
+<li>自然界是物质的</li>
+<li>人类社会本质上是生产实践基础上形成的物质体系</li>
+<li>人的意识统一于物质</li>
+<li>世界的物质统一性是多样性的统一</li>
+</ul>
+<h2 id="联系和发展的普遍性"><a class="markdownIt-Anchor" href="#联系和发展的普遍性"></a> 联系和发展的普遍性</h2>
+<h3 id="什么是联系有哪些特点p41"><a class="markdownIt-Anchor" href="#什么是联系有哪些特点p41"></a> 什么是联系，有哪些特点（p41）</h3>
+<ul>
+<li>联系是指事物内部各要素之间和事物之间相互影响、相互制约、相互作用的关系</li>
+<li>联系具有客观性</li>
+<li>联系具有普遍性
+<ul>
+<li>任何事物内部的各个部分、要素是相互联系的</li>
+<li>任何事物都与周围的其他事物相互联系</li>
+<li>整个世界是一个相互联系的统一整体</li>
+</ul>
+</li>
+<li>联系具有多样性</li>
+<li>联系具有条件性</li>
+</ul>
+<h3 id="发展观p42"><a class="markdownIt-Anchor" href="#发展观p42"></a> 发展观（p42）</h3>
+<p>世界物质的发展，特别是人类社会的发展，其实质是新事物的产生和旧事物的灭亡</p>
+<ul>
+<li>新事物代表了发展的趋势，适应变化的环境和条件</li>
+<li>新事物是从旧事物中孕育出的，取其精华去其糟粕</li>
+<li>新事物从根本上符合人民群众的利益和要求，能够得到人民的拥护</li>
+<li>新事物是不可战胜的</li>
+</ul>
+<h2 id="对立统一规律是事物发展的根本规律"><a class="markdownIt-Anchor" href="#对立统一规律是事物发展的根本规律"></a> 对立统一规律是事物发展的根本规律</h2>
+<h3 id="事物变化发展的一般规律p43"><a class="markdownIt-Anchor" href="#事物变化发展的一般规律p43"></a> 事物变化发展的一般规律（p43）</h3>
+<ul>
+<li>对立统一规律
+<ul>
+<li>唯物辩证法的实质和核心</li>
+</ul>
+</li>
+<li>量变质变规律</li>
+<li>否定之否定规律</li>
+</ul>
+<h3 id="矛盾的同一性和斗争性及其辩证关系p44"><a class="markdownIt-Anchor" href="#矛盾的同一性和斗争性及其辩证关系p44"></a> 矛盾的同一性和斗争性及其辩证关系（p44）</h3>
+<ul>
+<li>矛盾是反映事物内部和事物之间的对立统一关系的哲学范畴</li>
+<li>矛盾的同一性是指矛盾着的对立面相互依存、相互贯通的性质和趋势
+<ul>
+<li>矛盾着的对立面相互依存，互为存在的前提，并共处于一个统一体中</li>
+<li>矛盾着的对立面相互贯通，在一定条件下可以相互转换</li>
+</ul>
+</li>
+<li>矛盾的斗争性是矛盾着的对立面相互排斥、相互分离的性质和趋势</li>
+<li>辩证关系：矛盾的同一性和斗争性相互联结、相辅相成</li>
+</ul>
+<h3 id="矛盾的同一性和斗争性的意义p44"><a class="markdownIt-Anchor" href="#矛盾的同一性和斗争性的意义p44"></a> 矛盾的同一性和斗争性的意义（p44）</h3>
+<ul>
+<li>同一性
+<ul>
+<li>同一性是事物存在和发展的前提</li>
+<li>同一性使矛盾双方相互吸取有利于自身的因素，在相互作用中各自得到发展</li>
+<li>同一性规定着事物转化的可能和发展的趋势</li>
+</ul>
+</li>
+<li>斗争性
+<ul>
+<li>矛盾双方的斗争促进矛盾双方力量的变化，造成双方力量发展的不平衡，为对立面的转化、事物的质变创造条件</li>
+<li>矛盾双方的斗争是一种矛盾统一体向另一种矛盾统一体过渡的决定性力量</li>
+</ul>
+</li>
+</ul>
+<h3 id="矛盾的普遍性和特殊性p45"><a class="markdownIt-Anchor" href="#矛盾的普遍性和特殊性p45"></a> 矛盾的普遍性和特殊性（p45）</h3>
+<ul>
+<li>普遍性：矛盾存在于一切事物中，存在于一切事物发展过程的始终，旧的矛盾解决了，又产生了新的矛盾，事物始终在矛盾中运动</li>
+<li>特殊性：各个具体事物的矛盾、每一个矛盾的各个方面在发展的不同阶段各有其特点</li>
+<li>普遍性与特殊性是辩证统一的关系，共性与个性相统一</li>
+</ul>
+<h3 id="两点论与重点论p46"><a class="markdownIt-Anchor" href="#两点论与重点论p46"></a> 两点论与重点论（p46）</h3>
+<ul>
+<li>两点论
+<ul>
+<li>在分析事务的矛盾时，不仅要看到矛盾双方的对立，而且要看到矛盾双方的统一</li>
+<li>不仅要看到矛盾体系中存在主要矛盾、矛盾的主要方面，而且要看到次要矛盾、矛盾的次要方面</li>
+</ul>
+</li>
+<li>重点论：着重把握主要矛盾、矛盾的主要方面，并以此作为解决问题的出发点</li>
+</ul>
+<h2 id="量变质变规律和否定之否定规律"><a class="markdownIt-Anchor" href="#量变质变规律和否定之否定规律"></a> 量变质变规律和否定之否定规律</h2>
+<h3 id="度的含义及其方法论意义p47"><a class="markdownIt-Anchor" href="#度的含义及其方法论意义p47"></a> 度的含义及其方法论意义（p47）</h3>
+<ul>
+<li>度是保持事物质的稳定性的数量界限，即事物的限度、幅度和范围</li>
+<li>在认识和处理问题时要掌握适度原则</li>
+</ul>
+<h3 id="量变和质变的辩证关系及其方法论意义p48"><a class="markdownIt-Anchor" href="#量变和质变的辩证关系及其方法论意义p48"></a> 量变和质变的辩证关系及其方法论意义（p48）</h3>
+<ul>
+<li>辩证关系
+<ul>
+<li>量变是质变的必要准备</li>
+<li>质变是量变的必然结果，并为新的量变开辟道路</li>
+<li>量变和质变是相互渗透的
+<ul>
+<li>在总的量变过程中有阶段性和局部性的质变，在质变过程中也有旧质在量上的收缩和新质在量上的扩张</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>意义
+<ul>
+<li>当事物的发展处于量变阶段，要踏踏实实做好日常工作，为未来重大改变做准备</li>
+<li>当质变来临时，要果断地、不失时机地抓住机遇，促成质变，使工作迈上新台阶</li>
+</ul>
+</li>
+</ul>
+<h3 id="否定之否定及其方法论意义p49"><a class="markdownIt-Anchor" href="#否定之否定及其方法论意义p49"></a> 否定之否定及其方法论意义（p49）</h3>
+<ul>
+<li>辩证
+<ul>
+<li>否定是事物的自我否定、自我发展，是事物内部矛盾运动的结果</li>
+<li>否定是事物发展的环节，是旧事物向新事物的转变，是从旧质到新质的飞跃</li>
+<li>否定是新旧事物联系的环节，新事物孕育产生于旧事物，新旧事物是通过否定环节联系起来的</li>
+<li>辩证否定的实质是“扬弃”，即新事物对旧事物既批判又传承，既克服其消极因素又保留其积极因素</li>
+</ul>
+</li>
+<li>意义：我们对待一切事物都要采取科学分析的态度，既要把握它的现存状态又要把握它的发展趋势，反对简单地肯定一切或否定一切</li>
+</ul>
+<h2 id="唯物辩证法是认识世界和改造世界的根本方法"><a class="markdownIt-Anchor" href="#唯物辩证法是认识世界和改造世界的根本方法"></a> 唯物辩证法是认识世界和改造世界的根本方法</h2>
+<h3 id="唯物辩证法的本质特征p54"><a class="markdownIt-Anchor" href="#唯物辩证法的本质特征p54"></a> 唯物辩证法的本质特征（p54）</h3>
+<ul>
+<li>本质
+<ul>
+<li>辩证法在对现存事物的肯定的理解中同时包含对现存事物的否定的理解，即对现存事物的必然灭亡的理解</li>
+<li>辩证法对每一种既成的形式都是从不断的运动中，因而也是从它的暂时性方面去理解</li>
+<li>辩证法不崇拜任何东西，按其本质来说，它是批判的和革命的</li>
+</ul>
+</li>
+</ul>
+<h3 id="唯物辩证法是客观辩证法与主观辩证法的统一"><a class="markdownIt-Anchor" href="#唯物辩证法是客观辩证法与主观辩证法的统一"></a> 唯物辩证法是客观辩证法与主观辩证法的统一</h3>
+<ul>
+<li>客观辩证法采取外部必然性形式，不以人的意志为转移，是物质世界本身的联系和发展</li>
+<li>主观辩证法则采取观念的逻辑的形式，同人类思维的自觉活动相联系，是以概念为基础的辩证思维规律</li>
+</ul>
+<h3 id="唯物辩证法是科学的认识方法"><a class="markdownIt-Anchor" href="#唯物辩证法是科学的认识方法"></a> 唯物辩证法是科学的认识方法</h3>
+<ul>
+<li>矛盾分析法是对立统一规律在方法论上的体现，是唯物辩证法的方法论体系中居于核心定位，是认识事物的根本方法</li>
+<li>坚持问题导向，坚持唯物辩证主义矛盾观点和矛盾方法的时代表达和时代升华</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/"
+      title="马原（二）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        马原（二）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E5%9B%9B%EF%BC%89/"
+      title="套接字编程（四）"
+     >
+
+    <p class="title-text">
+      
+        套接字编程（四）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

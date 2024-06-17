@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第六章 进程互斥与同步 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="进程互斥与同步的实现方法与应用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第六章 进程互斥与同步">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="进程互斥与同步的实现方法与应用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/banner.jpg">
+<meta property="article:published_time" content="2023-10-19T12:32:43.000Z">
+<meta property="article:modified_time" content="2023-12-09T07:12:42.797Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="进程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第六章 进程互斥与同步" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6s000d7gv1byhq02o0">
+        <img src="/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第六章 进程互斥与同步
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-19T12:32:43.000Z" itemprop="datePublished">2023-10-19</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            9.3k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="并发的原理"><a class="markdownIt-Anchor" href="#并发的原理"></a> 并发的原理</h1>
+<h2 id="多道程序设计为什么需要同步"><a class="markdownIt-Anchor" href="#多道程序设计为什么需要同步"></a> 多道程序设计为什么需要同步</h2>
+<ul>
+<li>进程是计算机中的独立个体，并且具有并发性和异步性</li>
+<li>资源是计算机中的稀缺个体，需共享，如CPU、I/O设备</li>
+<li>进程之间可能需要协作完成任务</li>
+</ul>
+<h2 id="并发相关的关键术语"><a class="markdownIt-Anchor" href="#并发相关的关键术语"></a> 并发相关的关键术语</h2>
+<ul>
+<li>原子操作：一组指令要么都执行，要么都不执行</li>
+<li>互斥：进程间的间接制约关系。当一个进程在临界区访问共享资源时，其他进程不能进入该临界区访问共享资源</li>
+<li>临界资源：不可同时访问，必须互斥访问的资源</li>
+<li>临界区：访问临界资源的代码，任何时刻只能由一个进程在这段代码中运行</li>
+<li>同步：进程间的直接制约关系。多个进程共同完成一项任务时直接发生相互作用，在多道环境下，必须协调进程间的执行次序</li>
+<li>活锁：两个或两个以上的进程为响应其他进程而持续改变自己状态但是不做有用工作的情形</li>
+<li>死锁：两个或两个以上的进程因等待其他进程做完某些事而不能继续执行的情形</li>
+<li>竞争条件：多个进程或线程读写共享数据时，结果取决于多个进程的指令执行顺序</li>
+<li>饥饿：一个具备执行条件的进程被调度程序无限期的忽视而不能调度的情形</li>
+<li>忙等现象：当一个进程等待进入临界区时，它会继续消耗处理器时间</li>
+</ul>
+<h2 id="进程的交互方式"><a class="markdownIt-Anchor" href="#进程的交互方式"></a> 进程的交互方式</h2>
+<h3 id="进程间的关系"><a class="markdownIt-Anchor" href="#进程间的关系"></a> 进程间的关系</h3>
+<ul>
+<li>竞争</li>
+<li>通过共享合作</li>
+<li>通过通信合作</li>
+</ul>
+<h3 id="进程间的竞争资源"><a class="markdownIt-Anchor" href="#进程间的竞争资源"></a> 进程间的竞争资源</h3>
+<ul>
+<li>进程间不知道彼此的存在</li>
+<li>进程竞争使用同一资源时，它们之间会发生冲突
+<ul>
+<li>I/O设备</li>
+<li>存储器</li>
+<li>处理器</li>
+<li>时钟</li>
+</ul>
+</li>
+<li>并发控制面临的问题
+<ul>
+<li>互斥</li>
+<li>饥饿</li>
+<li>死锁</li>
+</ul>
+</li>
+</ul>
+<h3 id="进程间通过共享合作"><a class="markdownIt-Anchor" href="#进程间通过共享合作"></a> 进程间通过共享合作</h3>
+<ul>
+<li>多个进程可能共享一个变量、共享文件或数据库</li>
+<li>一个进程的结果可能取决于从另一个进程获得的信息</li>
+<li>进程知道其他进程也可能共享同一个数据，因此必须合作</li>
+<li>并发控制面临的问题
+<ul>
+<li>互斥</li>
+<li>死锁</li>
+<li>饥饿</li>
+<li>数据一致性</li>
+</ul>
+</li>
+</ul>
+<h3 id="进程间通过通信合作"><a class="markdownIt-Anchor" href="#进程间通过通信合作"></a> 进程间通过通信合作</h3>
+<ul>
+<li>进程间通过通信完成同步和协调彼此活动</li>
+<li>一个进程的结果可能取决于从另一个进程获得的信息</li>
+<li>通信可由各种类型的消息组成，发送或接收消息的原语由操作系统或程序设计语言提供</li>
+<li>不涉及对共享资源的访问</li>
+<li>并发控制面临的问题
+<ul>
+<li>死锁</li>
+<li>饥饿</li>
+</ul>
+</li>
+</ul>
+<h1 id="互斥"><a class="markdownIt-Anchor" href="#互斥"></a> 互斥</h1>
+<h2 id="互斥的要求"><a class="markdownIt-Anchor" href="#互斥的要求"></a> 互斥的要求</h2>
+<ul>
+<li>空闲让进：如临界区空闲，则有进程申请就立即进入</li>
+<li>忙则等待：每次只允许一个进程处于临界区</li>
+<li>有限等待：保证进程在有限时间内能进入临界区</li>
+<li>让权等待：进程在临界区不能长时间阻塞等待某事件</li>
+</ul>
+<h2 id="互斥软件方法"><a class="markdownIt-Anchor" href="#互斥软件方法"></a> 互斥：软件方法</h2>
+<ul>
+<li>通过在进入区设置和检查一些标志来判断是否有进程在临界区</li>
+<li>若已有进程在临界区，则在进入区通过循环检测进行等待</li>
+<li>进程离开临界区后在退出区修改标志</li>
+</ul>
+<h3 id="方案一"><a class="markdownIt-Anchor" href="#方案一"></a> 方案一</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int turn =0;<br>/* 进程P0 */<br>do&#123;<br>  while(turn!=0);<br>  /* 临界区代码 */<br>  turn =1;<br>  /* 剩余代码 */<br>&#125;while(true)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>严格轮换，实现了互斥访问</li>
+<li>忙等</li>
+<li>违反了空闲让进的原则</li>
+<li>即时在临界区外失败也会影响另一进程的执行</li>
+</ul>
+<h3 id="方案二"><a class="markdownIt-Anchor" href="#方案二"></a> 方案二</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">boolean flag[2] = &#123;false,false&#125;;<br>/* 进程P0 */<br>do&#123;<br>  while(flag[1]);<br>  flag[0] = true;<br>  /* 临界区代码 */<br>  flag[0] = false;<br>  /* 剩余代码 */<br>&#125;while(true)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>忙等</li>
+<li>违反了忙则等待的原则，互斥访问未实现</li>
+</ul>
+<h3 id="方案三"><a class="markdownIt-Anchor" href="#方案三"></a> 方案三</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">boolean flag[2] = &#123;false,false&#125;;<br>/* 进程P0 */<br>do&#123;<br>  flag[0] = true;<br>  while(flag[1]);<br>  /* 临界区代码 */<br>  flag[0] = false;<br>  /* 剩余代码 */<br>&#125;while(true)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>实现了互斥访问</li>
+<li>违反了空闲让进原则，可能导致死锁</li>
+</ul>
+<h3 id="方案四"><a class="markdownIt-Anchor" href="#方案四"></a> 方案四</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">boolean flag[2] = &#123;false,false&#125;;<br>进程P0<br>do &#123;<br>  flag[0] = true;<br>  while(flag[1])&#123;<br>    flag[0] = false;<br>    /* 随机等待一段时间 */<br>    flag[0] = true;<br>  &#125;<br>  /* 临界区代码 */<br>  flag[0] = false;<br>  /* 剩余代码 */<br>&#125;while(true)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>实现了互斥访问</li>
+<li>非死锁，但可能长时间僵持</li>
+</ul>
+<h3 id="方案五-dekker互斥算法"><a class="markdownIt-Anchor" href="#方案五-dekker互斥算法"></a> 方案五 Dekker互斥算法</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">boolean flag[2] = &#123;false,false&#125;;<br>int turn =1;<br>do&#123;<br>  flag[0] = true;<br>  while(flag[1])&#123;<br>    if(turn ==1)&#123;<br>      flag[0] = false;<br>      while(turn ==1);<br>      flag[0] = true;<br>    &#125;<br>  &#125;<br>  /* 临界区代码 */<br>  flag[0] = false;<br>  turn = 0;<br>  /* 剩余代码 */<br>&#125;while(ture)<br></code></pre></td></tr></table></figure>
+<h3 id="方案六-peterson互斥算法"><a class="markdownIt-Anchor" href="#方案六-peterson互斥算法"></a> 方案六 Peterson互斥算法</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">boolean flag[2] = &#123;false,false&#125;;<br>int turn;<br>/* 进程P0 */<br>do&#123;<br>  flag[0] = true;<br>  turn =1;<br>  while(flag[1]&amp;&amp;turn==1);<br>  /* 临界区代码 */<br>  flag[0] = false;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="软件方法评价"><a class="markdownIt-Anchor" href="#软件方法评价"></a> 软件方法评价</h3>
+<ul>
+<li>软件方法始终不能解决忙等现象，降低系统效率</li>
+<li>采用软件方法实现进程互斥使用临界资源比较困难
+<ul>
+<li>通常能实现两个进程的互斥，很难控制多个进程的互斥</li>
+</ul>
+</li>
+<li>算法设计需要非常小心，否则可能出现死锁或互斥失败等严重问题</li>
+</ul>
+<h2 id="互斥硬件方法"><a class="markdownIt-Anchor" href="#互斥硬件方法"></a> 互斥：硬件方法</h2>
+<h3 id="中断禁用"><a class="markdownIt-Anchor" href="#中断禁用"></a> 中断禁用</h3>
+<ul>
+<li>用于单处理器系统</li>
+<li>通过禁用中断，避免进程切换，实现互斥访问</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">while(true)&#123;<br>  disable interrupt;<br>  critical section;<br>  enable interrupt;<br>  remainder;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>执行效率明显下降
+<ul>
+<li>无法响应外部请求</li>
+<li>无法切换进程</li>
+</ul>
+</li>
+<li>无法工作在多处理器环境
+<ul>
+<li>不能实现互斥</li>
+</ul>
+</li>
+</ul>
+<h3 id="专用机器指令"><a class="markdownIt-Anchor" href="#专用机器指令"></a> 专用机器指令</h3>
+<ul>
+<li>在多处理器环境，几个处理器共享公共主存</li>
+<li>处理器表现出一种对等关系，不存在主/从关系</li>
+<li>处理器之间没有支持互斥的中断机制</li>
+<li>处理器的设计者提出了一些机器指令用于保证两个动作的原子性
+<ul>
+<li>如在一个周期中对一个存储单元的读和写</li>
+<li>这些动作在一个指令周期中执行，不会被打断，不会受到其他指令的干扰</li>
+</ul>
+</li>
+</ul>
+<h4 id="比较和交换指令"><a class="markdownIt-Anchor" href="#比较和交换指令"></a> 比较和交换指令</h4>
+<p>compare &amp; swap</p>
+<ul>
+<li>比较一个内存单元的值和一个测试值，如果相等，则用新值取代，否则保持不变</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int compare_and_swap(int *word,int testval,int newval)&#123;<br>  int oldval = *word;<br>  if(oldval == testval)*word = newval;<br>  return oldval;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>几乎所有的处理器家族都支持该指令的某个版本，多数操作系统都利用该指令支持并发</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">const int n = number_of_processes;<br>int bolt;<br>void P(int i)&#123;<br>  while(true)&#123;<br>    while(compare_and_swap(&amp;bolt,0,1)==1);<br>    /* 临界区代码 */<br>    bolt = 0;<br>    /* 剩余代码 */<br>  &#125;<br>&#125;<br>void main()&#123;<br>  bolt = 0;<br>  parbegin(P(1),P(2),...,P(n));<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="exchange指令"><a class="markdownIt-Anchor" href="#exchange指令"></a> exchange指令</h4>
+<ul>
+<li>原子性地交换寄存器的内容和一个存储单元的值</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">void exchange(int *register,int *memory)&#123;<br>  int temp;<br>  temp = *memory;<br>  *memory = *register;<br>  *register = m;<br>&#125;<br><br>int const n = number_of_processes;<br>int bolt;<br>void P(int i)&#123;<br>  while(true)&#123;<br>    int keyi = 1;<br>    do exchange(&amp;keyi,&amp;bolt)<br>    while(keyi!=0);<br>    /* 临界区代码 */<br>    bolt = 0;<br>    /* 剩余代码 */<br>  &#125;<br>&#125;<br>void main()&#123;<br>  bolt = 0;<br>  parbegin(P(1),P(2),...,P(n));<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="硬件方法评价"><a class="markdownIt-Anchor" href="#硬件方法评价"></a> 硬件方法评价</h3>
+<ul>
+<li>优点
+<ul>
+<li>支持多处理机</li>
+<li>简单易证明</li>
+<li>支持多临界区</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>忙等</li>
+<li>可能饥饿</li>
+<li>可能死锁</li>
+</ul>
+</li>
+</ul>
+<h1 id="信号量"><a class="markdownIt-Anchor" href="#信号量"></a> 信号量</h1>
+<h2 id="信号量实现进程互斥与同步的基本原理"><a class="markdownIt-Anchor" href="#信号量实现进程互斥与同步的基本原理"></a> 信号量实现进程互斥与同步的基本原理</h2>
+<ul>
+<li>两个或多个进程可以通过传递信号进行合作
+<ul>
+<li>迫使进程在某个位置暂停执行</li>
+<li>直到它收到一个可以向前推进的信号</li>
+</ul>
+</li>
+<li>实现信号灯作用的变量称为信号量</li>
+<li>信号量操作
+<ul>
+<li>初始化：一个信号量可以初始化为非负数</li>
+<li>semWait(Wait/P)操作使信号量减少1，若值为负数，则阻塞该操作的进程</li>
+<li>semSignal(Signal/V)操作使信号量加1，若值小于等于则被semWait阻塞的进程解除阻塞</li>
+</ul>
+</li>
+</ul>
+<h2 id="信号量分类"><a class="markdownIt-Anchor" href="#信号量分类"></a> 信号量分类</h2>
+<h3 id="二元信号量"><a class="markdownIt-Anchor" href="#二元信号量"></a> 二元信号量</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">struct binary_semaphore&#123;<br>  enum &#123;zero,one&#125; value;<br>  queueType queue;<br>&#125;<br>void semWaitB(binary_semaphore a)<br>&#123;<br>  if(s.value == one)<br>    s.value = zero;<br>  else &#123;<br>    /* 将该进程放入队列 */<br>    /* 阻塞进程 */<br>  &#125;<br>&#125;<br>void semSignal(binary_semaphore)&#123;<br>  if(s.queue is empty())&#123;<br>    s.value = one;<br>  &#125;<br>  else &#123;<br>    /* 将一个进程从队列中移除 */<br>    /* 将移出的进程变为就绪态 */<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="计数信号量"><a class="markdownIt-Anchor" href="#计数信号量"></a> 计数信号量</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">struct semaphore&#123;<br>  int count;<br>  queueType queue;<br>&#125;<br>void semWait(semaphore s)&#123;<br>  s.count--;<br>  if(s.count&lt;0)&#123;<br>    /* 将该进程放入队列 */<br>    /* 阻塞进程 */<br>  &#125;<br>&#125;<br>void semSignal(semaphore s)&#123;<br>  s.count++;<br>  if(s.count&lt;=0)&#123;<br>    /* 将一个进程从队列中移除 */<br>    /* 将移出的进程变为就绪态 */<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>s.count&gt;0，s.count表示执行semWait操作而不被阻塞的次数</li>
+<li>s.count&lt;0，s.count表示阻塞在s.queue队列上的进程数目</li>
+</ul>
+<h1 id="生产者与消费者问题"><a class="markdownIt-Anchor" href="#生产者与消费者问题"></a> 生产者与消费者问题</h1>
+<ul>
+<li>一个或多个生产者产生数据并放入缓冲</li>
+<li>一个或多个消费者从缓冲中取出数据并效仿</li>
+<li>任何时刻都只能由一个生产者或消费者访问缓存（互斥）</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem s=1;<br>sem n=0;<br>sem e=N;<br><br>void producer()&#123;<br>  while(true)&#123;<br>    produce_data();<br>    P(e);<br>    P(s);<br>    insert_data();<br>    V(n);<br>    V(s);<br>  &#125;<br>&#125;<br><br>void consumer()&#123;<br>  while(true)&#123;<br>    P(n);<br>    P(s);<br>    get_data();<br>    V(e);<br>    V(s);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>应先申请资源信号量在申请互斥信号量，否则可能导致死锁</li>
+<li>缓冲区大小为1时，可以省略互斥信号量</li>
+</ul>
+<h2 id="示例1"><a class="markdownIt-Anchor" href="#示例1"></a> 示例1</h2>
+<p>桌子上有一只盘子，最多可以放入N（N&gt;0）个水果。</p>
+<ul>
+<li>爸爸随机向盘中放入苹果或桔子。儿子只吃盘中的桔子，女儿只吃盘中的苹果。</li>
+<li>只有盘子中水果数目小于N时，爸爸才可以向盘子中放水果；</li>
+<li>仅当盘子中有自己需要的水果时，儿子或女儿才可以从盘子中取出相应的水果；</li>
+<li>每次只能放入或取出一个水果，且不允许多人同时使用盘子。</li>
+</ul>
+<p>用信号量机制实现爸爸、儿子和女儿之间的同步与互斥活动，并说明所定义信号量的含义。要求用伪代码描述。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem orange = 0;<br>sem apple = 0;<br>sem empty = N;<br>sem mutex = 1;<br><br>void father()&#123;<br>  while(true)&#123;<br>    pre_fruit();<br>    P(empty);<br>    P(mutex);<br>    /* 放水果 */<br>    if(/* 放的是苹果 */)V(apple);<br>    else V(orange);<br>    V(mutex);<br>  &#125;<br>&#125;<br><br>void son()&#123;<br>  while(true)&#123;<br>    P(orange);<br>    P(mutex);<br>    /* 取橘子 */<br>    V(mutex);<br>    V(empty);<br>  &#125;<br>&#125;<br><br>void daughter()&#123;...&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="示例2"><a class="markdownIt-Anchor" href="#示例2"></a> 示例2</h2>
+<p>桌子上有一只盘子，爸爸负责向盘中放苹果，妈妈负责向盘中放桔子。</p>
+<ul>
+<li>儿子只吃盘中的桔子，女儿只吃盘中的苹果。</li>
+<li>只有盘子为空时，爸爸或妈妈才可以向盘子中放入一个水果。</li>
+<li>仅当盘子中有自己需要的水果时，儿子或女儿才可以从盘子中取出相应的水果。</li>
+</ul>
+<p>请用信号量机制实现爸爸、妈妈、儿子和女儿之间的同步与互斥活动，并说明所定义信号量的含义。要求用伪代码描述。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem apple = 0;<br>sem orange = 0;<br>sem empty = 1;<br><br>void dad()&#123;<br>  while(true)&#123;<br>  pre_apple();<br>  P(empty);<br>  /* 放苹果 */;<br>  V(apple);&#125;<br>&#125;<br><br>void mom()&#123;...&#125;<br><br>void daughter()&#123;<br>  while(true)&#123;<br>  P(apple);<br>  /* 取苹果 */<br>  V(empty);&#125;<br>&#125;<br><br>void son()&#123;...&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="示例3"><a class="markdownIt-Anchor" href="#示例3"></a> 示例3</h2>
+<p>桌子上有一只盘子，最多可以放入2个水果，</p>
+<ul>
+<li>爸爸负责向盘中放苹果，妈妈负责向盘中放桔子，女儿负责取出并消费水果。</li>
+<li>当且仅当盘子中同时存在苹果和桔子时，女儿才从盘子中取出并消费水果。</li>
+</ul>
+<p>请用信号量机制实现爸爸、妈妈和女儿之间的同步与互斥活动，并说明所定义信号量的含义。要求用伪代码描述。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem empty_apple = 1;<br>sem empty_orange = 1;<br>sem apple = 0;<br>sem orange = 0;<br><br>void father()&#123;<br>  while(true)&#123;<br>  pre_apple();<br>  P(empty_apple);<br>  /* 放苹果 */<br>  V(apple);&#125;<br>&#125;<br><br>void mom()&#123;...&#125;<br><br>void daughter()&#123;<br>  while(true)&#123;<br>    P(apple);<br>    P(orange);<br>    /* 取 */<br>    V(empty_orange);<br>    V(empty_apple);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="示例4"><a class="markdownIt-Anchor" href="#示例4"></a> 示例4</h2>
+<p>女儿负责画画，爸爸、妈妈负责欣赏。女儿在白板上画完一幅画后，请爸爸、妈妈均欣赏过一遍后，再创作新画，依次重复。请用信号量机制实现女儿、爸爸和妈妈之间的同步与互斥活动，并说明所定义信号量的含义。要求用伪代码描述。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem empty_father = 1;<br>sem empty_mother = 1;<br>sem paint_mom = 0;<br>sem paint_father = 0;<br><br>void daughter()&#123;<br>  P(empty_father);<br>  P(empty_mother);<br>  /* 画 */<br>  V(paint_mom);<br>  V(paint_father);<br>&#125;<br><br>void mom()&#123;<br>  P(paint_mother);<br>  /* 看 */<br>  V(empty_mother);<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<h1 id="读者写者问题"><a class="markdownIt-Anchor" href="#读者写者问题"></a> 读者写者问题</h1>
+<ul>
+<li>允许多个读者进程可以同时读数据</li>
+<li>不允许多个写者进程同时写数据，只能互斥写数据</li>
+<li>若有写着进程正在写数据，则不允许读者进程读数据</li>
+</ul>
+<h2 id="读者优先"><a class="markdownIt-Anchor" href="#读者优先"></a> 读者优先</h2>
+<ul>
+<li>一旦有读者正在读数据，则允许随后的读者进入读数据</li>
+<li>只有当读者全部退出，才允许写者写数据</li>
+<li>导致写者饥饿</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int readcount = 0;<br>sem mutex = 1;<br>sem wsem = 1;<br><br>void reader()&#123;<br>  while(true)&#123;<br>    P(mutex);<br>    readcount++;<br>    if(readcount==1)P(wsem);<br>    V(mutex);<br>    /* 读 */<br>    P(mutex);<br>    readcount--;<br>    if(readcount==0)V(wsem);<br>    V(mutex);<br>  &#125;<br>&#125;<br><br>void writer()&#123;<br>  while(true)&#123;<br>    P(wsem);<br>    /* 写 */<br>    V(wsem);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="公平优先"><a class="markdownIt-Anchor" href="#公平优先"></a> 公平优先</h2>
+<p>读写过程若有其他读者写者到来，则按到达顺序处理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem wrsem = 1;<br>sem wsem =1;<br>sem mutex = 1;<br>int readcount = 0;<br><br>void reader()&#123;<br>  while(true)&#123;<br>    P(wrsem);<br>    P(mutex);<br>    readcount++;<br>    if(readcount==1)P(wsem);<br>    V(mutex);<br>    V(wrsem);<br>    read;<br>    P(mutex);<br>    readcount--;<br>    if(readcount==0)V(wsem);<br>    V(mutex);<br>  &#125;<br>&#125;<br><br>void writer()&#123;<br>  P(wrsem);<br>  P(wsem);<br>  write;<br>  V(wsem);<br>  V(wrsem);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="写者优先"><a class="markdownIt-Anchor" href="#写者优先"></a> 写者优先</h2>
+<ul>
+<li>当至少有一个写者准备写数据时，则不允许新的读者进入读数据</li>
+<li>保证当有一个写进程想写时，不允许新的读进程访问数据区</li>
+<li>解决了写着饥饿的问题，但降低了并发程度，系统的并发性能较差</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem rsem = 1;<br>sem wsem = 1;<br>sem mutex_w = 1;<br>sem mutex_r = 1;<br><br>int writecount = 0;<br>int readcount = 0;<br><br>void writer()&#123;<br>  while(true)&#123;<br>    P(mutex_w);<br>    writecount++;<br>    if(writecount == 1)P(rsem);<br>    V(mutex_w);<br>    P(wsem);<br>    write;<br>    V(wsem);<br>    P(mutex_w);<br>    writecount--;<br>    if(writecount == 0)V(rsem);<br>    V(mutex_w);<br>  &#125;<br>&#125;<br><br>void reader()&#123;<br>  while(true)&#123;<br>    P(rsem);<br>    P(mutex_r);<br>    readcount++;<br>    if(readcount == 1)P(wsem);<br>    V(mutex_r);<br>    V(rsem);<br>    read;<br>    P(mutex_r);<br>    readcount--;<br>    if(readcount == 0)V(wsem);<br>    V(mutex_r);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="示例1-2"><a class="markdownIt-Anchor" href="#示例1-2"></a> 示例1</h2>
+<p>有一座东西方向的独木桥，同一方向的行人可连续过桥。当某一方向有行人过桥时，另一方向行人必须等待。桥上没有行人过桥时，任何一端的行人均可上桥。请用P、V操作来实现东西两端人过桥问题。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">//左东右西！<br>sem empty = 1;<br><br>sem mutex_l = 1;<br>sem mutex_r = 1;<br><br>int leftcount = 0;<br>int rightcount = 0;<br><br>void left()&#123;<br>  while(true)&#123;<br>    P(mutex_l);<br>    leftcount++;<br>    if(leftcount == 1)P(empty);<br>    V(mutex_l);<br>    left_right;<br>    P(mutex_l);<br>    leftcount--;<br>    if(leftcount == 0)V(empty);<br>    V(mutex_l);<br>  &#125;<br>&#125;<br><br>void right()&#123;...&#125;;<br></code></pre></td></tr></table></figure>
+<h2 id="示例2-2"><a class="markdownIt-Anchor" href="#示例2-2"></a> 示例2</h2>
+<p>有一座东西方向的独木桥，同一方向的行人可连续过桥。当某一方向有行人过桥时，另一方向行人必须等待。桥上没有行人过桥时，任何一端的行人均可上桥。出于安全考虑，独木桥的最大承重为4人，即同时位于桥上的行人数目不能超过4。请用P、V操作来实现东西两端人过桥问题。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sem mutex = 1;<br>sem count = 4;<br>int westcount = 0;<br>int eastcount = 0;<br>sem mutex_w=1,mutex_e=1;<br><br>void east_west()&#123;<br>  while(true)&#123;<br>  P(mutex_e);<br>  eastcount++;<br>  if(eastcount==1)P(mutex);<br>  V(mutex_e);<br>  P(count);<br>  east_west;<br>  V(count);<br>  P(mutex_e);<br>  eastcount--;<br>  if(eastcount==0)V(mutex);<br>  V(mutex_e);&#125;<br>&#125;<br><br>void west_east()&#123;...&#125;;<br></code></pre></td></tr></table></figure>
+<h1 id="管程"><a class="markdownIt-Anchor" href="#管程"></a> 管程</h1>
+<h2 id="为什么需要管程"><a class="markdownIt-Anchor" href="#为什么需要管程"></a> 为什么需要管程</h2>
+<ul>
+<li>信号量可以高效的实现进程间互斥与同步，但PV操作可能分散在整个程序中，难度高</li>
+<li>管程是一个程序设计语言结构，采用了集中式的进程同步方法，提供了与信号量同样的功能，但易于控制</li>
+</ul>
+<h2 id="管程的概念"><a class="markdownIt-Anchor" href="#管程的概念"></a> 管程的概念</h2>
+<ul>
+<li>管程定义了一个共享数据结构和能为并发进程所指向的一组操作，这组操作能同步进程和改变管程的数据</li>
+<li>共享数据结构时对系统中共享资源的抽象</li>
+<li>对该共享数据结构的操作则定义为一组过程，通过调用这些过程实现对共享资源的申请、释放和其他操作</li>
+</ul>
+<h2 id="管程的组成"><a class="markdownIt-Anchor" href="#管程的组成"></a> 管程的组成</h2>
+<ul>
+<li>局部数据</li>
+<li>过程</li>
+<li>初始化序列</li>
+</ul>
+<h2 id="管程的特点"><a class="markdownIt-Anchor" href="#管程的特点"></a> 管程的特点</h2>
+<ul>
+<li>局部数据变量只能被管程的过程访问，任何外部过程都不能访问</li>
+<li>一个进程通过调用管程的一个过程进入管程</li>
+<li>在任何时刻只能有一个进程正在管程执行，调用管程的任何其他进程都会被阻塞，以等待管程访问</li>
+</ul>
+<h2 id="用管程实现进程同步"><a class="markdownIt-Anchor" href="#用管程实现进程同步"></a> 用管程实现进程同步</h2>
+<ul>
+<li>管程通过使用条件变量提供对进程同步的支持</li>
+<li>条件变量包含在管程中，只能在管程中访问</li>
+<li>操作条件变量
+<ul>
+<li>cwait©调用进程的执行在条件c上阻塞，管程可供其他进程使用</li>
+<li>csignal©恢复在条件c上阻塞的一个进程，若不存在阻塞进程，则什么都不做</li>
+</ul>
+</li>
+</ul>
+<h2 id="生产者消费者-管程解决"><a class="markdownIt-Anchor" href="#生产者消费者-管程解决"></a> 生产者/消费者 管程解决</h2>
+<p><img src="/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/%E5%9B%BE%E7%89%874.png" alt></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">void producer()<br>&#123;<br>    char x;<br>    while (true)  &#123;<br>        produce(x); <br>        append(x);    <br>  &#125;<br>&#125;<br>void consumer<br>&#123;<br>    char x;<br>    while (true) &#123;<br>        take(x);<br>        consume(x);     <br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/"
+      title="OS第七章 死锁"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        OS第七章 死锁
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%89%EF%BC%89/"
+      title="套接字编程（三）"
+     >
+
+    <p class="title-text">
+      
+        套接字编程（三）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

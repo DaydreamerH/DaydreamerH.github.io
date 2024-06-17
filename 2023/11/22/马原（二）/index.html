@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>马原（二） | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="马原第二章重点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="马原（二）">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="马原第二章重点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg">
+<meta property="article:published_time" content="2023-11-22T05:37:15.000Z">
+<meta property="article:modified_time" content="2024-06-17T05:56:42.234Z">
+<meta property="article:author" content="DayDreamer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-马原（二）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm7m005y7gv10birb02b">
+        <img src="/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        马原（二）
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-22T05:37:15.000Z" itemprop="datePublished">2023-11-22</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">政治课复习</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            2.2k 词 
+          </div>
+        </div>
+        
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="实践与认识及其发展规律"><a class="markdownIt-Anchor" href="#实践与认识及其发展规律"></a> 实践与认识及其发展规律</h1>
+<h2 id="实践与认识"><a class="markdownIt-Anchor" href="#实践与认识"></a> 实践与认识</h2>
+<h3 id="科学实践观创立发展的意义p72"><a class="markdownIt-Anchor" href="#科学实践观创立发展的意义p72"></a> 科学实践观创立发展的意义（p72）</h3>
+<ul>
+<li>克服了旧唯物主义的根本缺陷，为辩证唯物主义创立奠定了科学的理论基础</li>
+<li>揭示了实践对认识的决定作用，为能动的、革命的反映论的创立奠定了科学的理论基础</li>
+<li>在人类思想史上第一次揭示了社会生活的实践本质，为唯物史观的创立奠定了科学的理论基础</li>
+<li>为人们能动地认识世界和改造世界提供了基本的思想方法和工作方法</li>
+</ul>
+<h3 id="实践的基本特征p74"><a class="markdownIt-Anchor" href="#实践的基本特征p74"></a> 实践的基本特征（p74）</h3>
+<p>实践是人类能动地改造世界的社会性的物质活动，具有客观实在性、自觉能动性和社会历史性三个基本特征</p>
+<ul>
+<li>客观实在性：实践是人类改造世界的客观物质活动，它虽然是人类有目的、有意识的行为，但本质上是客观的，物质上的活动</li>
+<li>自觉能动性：与动物本能的、被动的适应性活动不同，人的实践活动是一种有目的、有意识的活动。</li>
+<li>社会历史性：实践是社会性的、历史性的活动</li>
+</ul>
+<h3 id="实践的基本结构p75"><a class="markdownIt-Anchor" href="#实践的基本结构p75"></a> 实践的基本结构（p75）</h3>
+<ul>
+<li>实践主体：在实践活动中，实践主体是指具有一定的主体能力、从事现实社会实践活动的人，是实践活动中自主性和能动性的因素，担负着设定实践目的、操作实践中介、改造实践客体任务</li>
+<li>实践客体：实践活动中所指向的对象</li>
+<li>实践中介：各种形式的工具、手段以及运用、操作这些工具、手段的程序和方法</li>
+</ul>
+<h3 id="实践的形式p77"><a class="markdownIt-Anchor" href="#实践的形式p77"></a> 实践的形式（p77）</h3>
+<ul>
+<li>物质生产实践：物质生产实践是人类最基本的实践活动，它解决人与自然的矛盾，满足人们的物质生活资料和生产劳动资料的需要，同时生产和再生产社会的基本经济关系，由此决定着社会的基本性质和面貌</li>
+<li>社会政治实践：处理各种政治关系的实践，主要指人们的政治活动</li>
+<li>科学文化实践：创造精神文化产品的实践活动。</li>
+</ul>
+<h3 id="实践对认识的决定作用p79"><a class="markdownIt-Anchor" href="#实践对认识的决定作用p79"></a> 实践对认识的决定作用（p79）</h3>
+<p>实践是认识的基础，实践在认识活动中起着决定性作用</p>
+<ul>
+<li>实践是认识的来源</li>
+<li>实践是认识发展的动力</li>
+<li>实践是认识的目的</li>
+<li>实践是检验认识真理性的唯一标准</li>
+</ul>
+<h3 id="认识的本质是什么p80"><a class="markdownIt-Anchor" href="#认识的本质是什么p80"></a> 认识的本质是什么？（p80）</h3>
+<ul>
+<li>认识的本质是主体在实践基础上对客体的能动反映。（辩证唯物主义）</li>
+<li>主观唯心主义：人的认识是主观自生的，是生而知之的。</li>
+<li>客观唯心主义：人的认识是上帝的启示或某种客观精神的产物。</li>
+<li>旧唯物主义：以感性直观为基础，把人的认识看成事消极地、被动地反映和接受外界对象</li>
+<li>辩证唯物主义
+<ul>
+<li>把实践的观点引入认识论</li>
+<li>把辩证法应用于反映论考察认识的发展过程</li>
+</ul>
+</li>
+</ul>
+<h3 id="认识运动的基本规律p84p87"><a class="markdownIt-Anchor" href="#认识运动的基本规律p84p87"></a> 认识运动的基本规律（p84,p87）</h3>
+<ol>
+<li>由感性认识能动地飞跃到理性认识，第一次能动飞跃</li>
+<li>由认识回到实践中去，第二次能动飞跃</li>
+</ol>
+<h3 id="感性认识与理性认识的辩证统一p85"><a class="markdownIt-Anchor" href="#感性认识与理性认识的辩证统一p85"></a> 感性认识与理性认识的辩证统一（p85）</h3>
+<ul>
+<li>理性认识依赖于感性认识</li>
+<li>感性认识有待于发展和深化为理性认识</li>
+<li>感性认识和理性认识相互渗透、相互包含</li>
+</ul>
+<h3 id="感性认识上升到理性认识的条件非重点p86"><a class="markdownIt-Anchor" href="#感性认识上升到理性认识的条件非重点p86"></a> 感性认识上升到理性认识的条件（非重点，p86）</h3>
+<ol>
+<li>投身实践，深入调查，获取十分丰富和合乎实际的感性材料</li>
+<li>经过思考的作用，运用理论思维和科学抽象，将丰富的感性材料加以去粗取精、去伪存真、由此及彼、由表及里的处理加工，形成概念和理论的系统</li>
+</ol>
+<h3 id="认识到实践的必要性和重要性p87"><a class="markdownIt-Anchor" href="#认识到实践的必要性和重要性p87"></a> 认识到实践的必要性和重要性（p87）</h3>
+<ul>
+<li>认识世界的目的是改造世界</li>
+<li>认识的真理性只有在实践中才能得到检验和发展</li>
+</ul>
+<h2 id="真理与价值"><a class="markdownIt-Anchor" href="#真理与价值"></a> 真理与价值</h2>
+<h3 id="什么是真理的客观性p92"><a class="markdownIt-Anchor" href="#什么是真理的客观性p92"></a> 什么是真理的客观性（p92）</h3>
+<p>真理的内容是对客观事物及其规律的正确反映，真理中包含着不依赖于人和人的意识的客观内容。</p>
+<h3 id="什么是真理的绝对性和相对性p93"><a class="markdownIt-Anchor" href="#什么是真理的绝对性和相对性p93"></a> 什么是真理的绝对性和相对性（p93）</h3>
+<ul>
+<li>真理的绝对性：真理主客观统一的确定性和发展的无限性</li>
+<li>真理的相对性：人们在一定条件下，对客观事物及其本质和发展规律的正确认识总是有限度的、不完善的</li>
+<li>真理的绝对性和相对性的辩证统一</li>
+</ul>
+<h3 id="真理和谬误的对立统一p97"><a class="markdownIt-Anchor" href="#真理和谬误的对立统一p97"></a> 真理和谬误的对立统一（p97）</h3>
+<ul>
+<li>真理与谬误相互对立</li>
+<li>真理与谬误的对立又是相对的，它们在一定条件下能够相互转化</li>
+<li>真理总是与谬误相比较而存在，相斗争而发展</li>
+</ul>
+<h3 id="为什么实践是检验真理的唯一标准p99"><a class="markdownIt-Anchor" href="#为什么实践是检验真理的唯一标准p99"></a> 为什么实践是检验真理的唯一标准（p99）</h3>
+<p>由真理的本性和实践的特点决定的</p>
+<ul>
+<li>从真理的本性看，真理是人们对客观事物及其发展规律的正确反映，它的本性在于主观与客观相符合</li>
+<li>从实践的特点来看，实践具有直接现实性，实践的直接现实性是它的客观实在性的具体表现</li>
+</ul>
+<h3 id="什么是实践标准的确定性与不确定性p101"><a class="markdownIt-Anchor" href="#什么是实践标准的确定性与不确定性p101"></a> 什么是实践标准的确定性与不确定性（p101）</h3>
+<ul>
+<li>实践标准的确定性即绝对性，是指实践作为检验真理标准的唯一性、归根到底性、最终性，离开实践，再也没有其它公正合理的标准</li>
+<li>实践标准的不确定性即相对性，是指实践作为检验真理标准的条件性</li>
+</ul>
+<h3 id="什么是价值p103"><a class="markdownIt-Anchor" href="#什么是价值p103"></a> 什么是价值（p103）</h3>
+<p>价值是反映主体与客体之间意义关系的哲学范畴，是客体对个人、群体乃至整个社会的生活和活动所具有的意义</p>
+<h3 id="价值的基本特性p103"><a class="markdownIt-Anchor" href="#价值的基本特性p103"></a> 价值的基本特性（p103）</h3>
+<ul>
+<li>主体性</li>
+<li>客观性</li>
+<li>多维性</li>
+<li>社会历史性</li>
+</ul>
+<h3 id="价值评价及其特点p105"><a class="markdownIt-Anchor" href="#价值评价及其特点p105"></a> 价值评价及其特点（p105）</h3>
+<ul>
+<li>价值评价
+<ul>
+<li>是主体对客体的价值以及价值大小所作的评判或判断，因而也被称为价值判断</li>
+<li>是对客观价值关系的主观反映</li>
+</ul>
+</li>
+<li>特点
+<ul>
+<li>评价以主客体之间的价值关系为认识对象</li>
+<li>评价结果与评价主体直接相关</li>
+<li>评价结果的正确与否依赖于对客体状况和主体需要的认识</li>
+<li>价值评价有科学与非科学之别</li>
+</ul>
+</li>
+</ul>
+<h2 id="认识世界和改造世界"><a class="markdownIt-Anchor" href="#认识世界和改造世界"></a> 认识世界和改造世界</h2>
+<h3 id="认识世界与改造世界的概念与关系p110"><a class="markdownIt-Anchor" href="#认识世界与改造世界的概念与关系p110"></a> 认识世界与改造世界的概念与关系（p110）</h3>
+<ul>
+<li>认识世界的目的在于改造世界</li>
+<li>认识世界，就是主体能动地反映客体，获得关于事物的本质和发展规律的科学认识，探索和掌握真理</li>
+<li>改造世界，就是人类按照有利于自己生存和发展的需要，改变事物的现存形式，创造自己的理想世界和生活方式</li>
+</ul>
+<h3 id="为什么要一切从实际出发实事求是p114"><a class="markdownIt-Anchor" href="#为什么要一切从实际出发实事求是p114"></a> 为什么要一切从实际出发，实事求是（p114）</h3>
+<ul>
+<li>一切从实际出发，就是要把客观存在的事物作为观察和处理问题的根本出发点，这是马克思主义认识论的根本要求和具体体现</li>
+<li>实事求是是中国共产党思想路线的核心</li>
+</ul>
+<h3 id="守正创新p118"><a class="markdownIt-Anchor" href="#守正创新p118"></a> 守正创新（p118）</h3>
+<p>人类认识世界和改造世界的过程，是一个不断坚持守正创新，并努力实现理论创新和实践创新良性互动的过程</p>
+<ul>
+<li>实践创新为理论创新提供不竭的动力源泉</li>
+<li>理论创新为实践创新提供科学的行动指南</li>
+</ul>
+<h3 id="根本目标认识自然和争取自由"><a class="markdownIt-Anchor" href="#根本目标认识自然和争取自由"></a> 根本目标：认识自然和争取自由</h3>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/"
+      title="OS第十章 IO管理与磁盘调度"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        OS第十章 IO管理与磁盘调度
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/20/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%80%EF%BC%89/"
+      title="马原（一）"
+     >
+
+    <p class="title-text">
+      
+        马原（一）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

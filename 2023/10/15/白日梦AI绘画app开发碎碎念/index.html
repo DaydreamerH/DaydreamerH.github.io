@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>白日梦AI绘画app开发碎碎念 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="大创AI绘画app开发记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="白日梦AI绘画app开发碎碎念">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="大创AI绘画app开发记录">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/banner.jpg">
+<meta property="article:published_time" content="2023-10-15T13:57:03.000Z">
+<meta property="article:modified_time" content="2024-06-17T07:44:16.920Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="uni-app">
+<meta property="article:tag" content="flask">
+<meta property="article:tag" content="stable-diffusion">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-白日梦AI绘画app开发碎碎念" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm7900327gv1esyj5m56">
+        <img src="/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        白日梦AI绘画app开发碎碎念
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-15T13:57:03.000Z" itemprop="datePublished">2023-10-15</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            7.3k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/flask/" rel="tag">flask</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/stable-diffusion/" rel="tag">stable-diffusion</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/uni-app/" rel="tag">uni-app</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <p>演示视频如下：</p>
+<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=917138949&bvid=BV1Vu4y1s7QK&cid=1298845126&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="80%" height="500"></iframe>
+<h1 id="日志一-记于81"><a class="markdownIt-Anchor" href="#日志一-记于81"></a> 日志(一) 记于8.1</h1>
+<p>本博客系列主要记载ai绘画安卓app开发过程，预计将使用uni-app开发前端，后端使用python提供接口，链接数据库<br>
+开个头，明天再努力</p>
+<h2 id="安装hbuilderx"><a class="markdownIt-Anchor" href="#安装hbuilderx"></a> 安装HBuilderX</h2>
+<p>在官网下载压缩包解压即可</p>
+<h2 id="创建项目"><a class="markdownIt-Anchor" href="#创建项目"></a> 创建项目</h2>
+<p>创建uni-app项目，选择默认，文件格式如下</p>
+<ul>
+<li>pages存储图形界面</li>
+<li>static存静态资源</li>
+<li>pages.json注册页面以及跳转，全局样式</li>
+</ul>
+<h2 id="运行"><a class="markdownIt-Anchor" href="#运行"></a> 运行</h2>
+<p>对于浏览器点击运行即可</p>
+<h3 id="手机运行"><a class="markdownIt-Anchor" href="#手机运行"></a> 手机运行</h3>
+<ul>
+<li>最初尝试真机运行，本人使用meizu18，在启用开发者模式，并允许usb调试的情况下，电脑与手机接入相同网络，但仍无法检测到设备</li>
+<li>后来发现还要下载adb，于是完成下载并在HBuilder X指定路径后检测到了设备</li>
+<li>连接设备后，在手机上允许通过usb安装软件，自动安装HBuilder后即可正常调试</li>
+</ul>
+<h2 id="一想到那么多问题我就头大大创开摆"><a class="markdownIt-Anchor" href="#一想到那么多问题我就头大大创开摆"></a> 一想到那么多问题我就头大，大创开摆</h2>
+<h2 id="上午"><a class="markdownIt-Anchor" href="#上午"></a> 上午</h2>
+<h3 id="uni-app的基础语法"><a class="markdownIt-Anchor" href="#uni-app的基础语法"></a> uni-app的基础语法</h3>
+<ul>
+<li>在非uni块中不能使用网页标签，因为在真实环境中不生效</li>
+<li>pages文件最靠前的为index页面，即首个页面</li>
+<li>将div、span换成view、text使用，以免跨平台不生效，view是div的效果，text是span的效果
+<ul>
+<li>text具有多种属性，如selectable控制该文本是否可选</li>
+</ul>
+</li>
+<li>块的长宽单位可使用rpx，默认宽最大750rpx，高为1314rpx；使用rpx能使得相应块随屏幕自动变化</li>
+<li>scroll-view用以封装需要滑动的块，指定属性scroll-x或者scroll-y即可</li>
+<li>swiper：走马灯，swiper-item为走马灯的一个元素</li>
+<li>image是img的替代品，提供多种图片显示模式</li>
+<li>对于诸如button之类的组件，原生组件样式较少，可以使用uView组件库</li>
+</ul>
+<h2 id="下午"><a class="markdownIt-Anchor" href="#下午"></a> 下午</h2>
+<h3 id="uni-app的基础语法-2"><a class="markdownIt-Anchor" href="#uni-app的基础语法-2"></a> uni-app的基础语法</h3>
+<ul>
+<li>navigator当跳转用，有多种跳转模式，例如navigate将保留上一级页面，而redirect不会保留</li>
+<li>tabBar用以表示app底部菜单栏，在pages中配置，每一个item均可以设置图标、文本、跳转页面等
+<ul>
+<li>需注意设置tabBar页面后，naviagte只能跳转到非tabBar的page去</li>
+<li>reLaunch可以跳转，其本质是进入全新的页面，原有页面栈清空</li>
+</ul>
+</li>
+<li>form表单提交多使用submit更方便</li>
+<li>自定义组件在components文件夹下创建a文件夹并创建a.vue即可自动使用相应组件
+<ul>
+<li>利用props实现组件的变化</li>
+</ul>
+</li>
+</ul>
+<h3 id="完成了底部导航栏的配置"><a class="markdownIt-Anchor" href="#完成了底部导航栏的配置"></a> 完成了底部导航栏的配置</h3>
+<blockquote>
+<p>日志(二)丢失</p>
+</blockquote>
+<h1 id="日志三-记于82"><a class="markdownIt-Anchor" href="#日志三-记于82"></a> 日志(三) 记于8.2</h1>
+<h2 id="上午-2"><a class="markdownIt-Anchor" href="#上午-2"></a> 上午</h2>
+<h3 id="使用uview样式不生效"><a class="markdownIt-Anchor" href="#使用uview样式不生效"></a> 使用uView样式不生效</h3>
+<p>结果发现他的样式用的scss，在app.vue的style引用时应该给style加上lang=“scss”</p>
+<h3 id="u-botton未生效"><a class="markdownIt-Anchor" href="#u-botton未生效"></a> u-botton未生效</h3>
+<p>最初配置pages中的easycom时，配置错误，修改正确后，由于HX为了保证调试的性能，未及时更新该配置，重启即可。</p>
+<h3 id="卡片效果绘制"><a class="markdownIt-Anchor" href="#卡片效果绘制"></a> 卡片效果绘制</h3>
+<p>由于自己的uView不知道为什么缺失了u-card，干脆就自己画了，设置背景、边框圆角、边框颜色即可</p>
+<blockquote>
+<p>mmd画了一上午，就一个登录页面</p>
+</blockquote>
+<h2 id="下午-2"><a class="markdownIt-Anchor" href="#下午-2"></a> 下午</h2>
+<p>mmd,被py的各种包折磨麻了</p>
+<h3 id="后端"><a class="markdownIt-Anchor" href="#后端"></a> 后端</h3>
+<blockquote>
+<p>考虑到后端要使用神经网络，故采取python作为后端语言</p>
+</blockquote>
+<ul>
+<li>安装flask，提供接口</li>
+<li>安装pymysql、flask-sqlalchemy对数据库进行操纵</li>
+<li>考虑到最后要部署在服务器上，索性在已有环境安装，结果包老是报错，将部分包删除或修改版本后最终配置成功</li>
+</ul>
+<h3 id="flask"><a class="markdownIt-Anchor" href="#flask"></a> flask</h3>
+<ul>
+<li>@app.route指定路由，函数紧跟</li>
+<li>request.args.get获取相应请求携带的数据</li>
+<li>直接return就可返回结果</li>
+</ul>
+<h3 id="db"><a class="markdownIt-Anchor" href="#db"></a> db</h3>
+<ul>
+<li>创建db对象，SQLAlchemy（利用app.config完成配置）</li>
+<li>创建与表映射的对象便于操作</li>
+<li>添加操作
+<ul>
+<li>拿到数据用对应对象包裹</li>
+<li>将该对象添加到db.session中</li>
+<li>将该改变同步到数据库中</li>
+<li>返回相应结果resp</li>
+</ul>
+</li>
+<li>查询操作
+<ul>
+<li>get查找：根据主键查找
+<ul>
+<li>Object.query.get返回相应对象结果</li>
+</ul>
+</li>
+<li>filter_by查找：查询多条数据
+<ul>
+<li>Object.query.filter_by(column=condition)返回类数组</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>更新操作
+<ul>
+<li>先获取到相应的对象</li>
+<li>直接拿属性一改就完事</li>
+<li>然后提交</li>
+</ul>
+</li>
+<li>删除操作
+<ul>
+<li>查询获取相应对象</li>
+<li>db.session.delete对象</li>
+<li>提交</li>
+</ul>
+</li>
+<li>多表操作，昏！</li>
+</ul>
+<h2 id="晚上"><a class="markdownIt-Anchor" href="#晚上"></a> 晚上</h2>
+<p><strong>我突然发现，原来学校的实验室的服务器不能直接对外网建立接口！！！</strong><br>
+<strong>于是我开始尝试各种方法使得手机能够访问相应接口</strong></p>
+<h3 id="电脑访问服务器local的基本原理是端口转发服务器-电脑"><a class="markdownIt-Anchor" href="#电脑访问服务器local的基本原理是端口转发服务器-电脑"></a> 电脑访问服务器local的基本原理是端口转发：服务器-&gt;电脑</h3>
+<h3 id="思路一直接把服务器端口转发至手机端口"><a class="markdownIt-Anchor" href="#思路一直接把服务器端口转发至手机端口"></a> 思路一：直接把服务器端口转发至手机端口</h3>
+<ul>
+<li>下载JuiceSSH，连接服务器</li>
+<li>启动相应程序</li>
+<li>curl对应网址成功</li>
+<li><strong>但是浏览器及app请求失败</strong></li>
+<li>可能是安卓的网络配置导致的</li>
+</ul>
+<h3 id="思路二服务器-电脑-手机"><a class="markdownIt-Anchor" href="#思路二服务器-电脑-手机"></a> 思路二：服务器-&gt;电脑-&gt;手机</h3>
+<ul>
+<li>在服务器启动端口转发</li>
+<li>电脑确认可以访问</li>
+<li>adb reverse相应端口</li>
+<li><strong>但手机还是不行！！！</strong></li>
+</ul>
+<h3 id="解决不了问题就消除问题先采用安卓模拟器去进行开发"><a class="markdownIt-Anchor" href="#解决不了问题就消除问题先采用安卓模拟器去进行开发"></a> 解决不了问题，就消除问题，先采用安卓模拟器去进行开发</h3>
+<h2 id="卧槽老子成功了"><a class="markdownIt-Anchor" href="#卧槽老子成功了"></a> 卧槽，老子成功了</h2>
+<p>思路二是正确的</p>
+<ul>
+<li>之前失败的原因是在HXadb之前调用adb命令，启动HX导致之前的adb配置消失</li>
+<li>在启动HX后在使用adb reverse即可使用手机浏览器访问</li>
+<li>之前我跟傻子一样用axios，结果nm真机不适配，然后一看uni.request简单的一批，这下请求也没问题了</li>
+</ul>
+<h1 id="日志四-记于83"><a class="markdownIt-Anchor" href="#日志四-记于83"></a> 日志(四) 记于8.3</h1>
+<h2 id="上午-3"><a class="markdownIt-Anchor" href="#上午-3"></a> 上午</h2>
+<p>卡拉比丘去了</p>
+<h2 id="下午-3"><a class="markdownIt-Anchor" href="#下午-3"></a> 下午</h2>
+<p><strong>傻逼uView，tm按着官网装的文件到处缺组件，安上之后样式又上一堆，真有你的哦</strong><br>
+<strong>画图一分钟，报错两小时，HX和uView混合双打</strong></p>
+<h3 id="关于uview的utoast"><a class="markdownIt-Anchor" href="#关于uview的utoast"></a> 关于uView的uToast</h3>
+<p>title无法显示</p>
+<h3 id="关于hbuilder的编译"><a class="markdownIt-Anchor" href="#关于hbuilder的编译"></a> 关于HBuilder的编译</h3>
+<ul>
+<li>1个小时前，utoast的show可以正常运行</li>
+<li>一个小时后就找不到了</li>
+<li>在这期间没有对uView及相关配件做任何操作</li>
+</ul>
+<h3 id="关于hbuilder真机运行"><a class="markdownIt-Anchor" href="#关于hbuilder真机运行"></a> 关于HBuilder真机运行</h3>
+<ul>
+<li>uni-app自带的navigationbar在写了两小时后，奇迹般的消失了</li>
+</ul>
+<h2 id="垃圾uview"><a class="markdownIt-Anchor" href="#垃圾uview"></a> 垃圾uView</h2>
+<p>高情商：一统江湖</p>
+<p>低情商：一捅江湖</p>
+<h2 id="全部改成uv-ui"><a class="markdownIt-Anchor" href="#全部改成uv-ui"></a> 全部改成uv-ui</h2>
+<h1 id="日志五-记于87"><a class="markdownIt-Anchor" href="#日志五-记于87"></a> 日志(五) 记于8.7</h1>
+<h2 id="对前端进行优化"><a class="markdownIt-Anchor" href="#对前端进行优化"></a> 对前端进行优化</h2>
+<ul>
+<li>更换了组件库</li>
+<li>完成了用户本人信息的基本展示</li>
+</ul>
+<h2 id="后端flask学习"><a class="markdownIt-Anchor" href="#后端flask学习"></a> 后端flask学习</h2>
+<ul>
+<li>了解了基础的数据库操作方式</li>
+<li>了解了基础的文件管理方式</li>
+</ul>
+<h2 id="stable-diffusion了解应用"><a class="markdownIt-Anchor" href="#stable-diffusion了解应用"></a> stable-diffusion了解应用</h2>
+<ul>
+<li>最初想自己写api</li>
+<li>发现网上已经有api开源代码，但是未与数据库进行联动</li>
+<li>目前的主要任务是改写api与数据库联动</li>
+</ul>
+<h1 id="日志六-记于89"><a class="markdownIt-Anchor" href="#日志六-记于89"></a> 日志(六) 记于8.9</h1>
+<h2 id="基本实现了绘画功能"><a class="markdownIt-Anchor" href="#基本实现了绘画功能"></a> 基本实现了绘画功能</h2>
+<ul>
+<li>能够实现参数的配置</li>
+<li>能够实现多模型加载与选择</li>
+<li>能够将传回的base64图像展示与保存</li>
+</ul>
+<h3 id="base64图像的保存"><a class="markdownIt-Anchor" href="#base64图像的保存"></a> base64图像的保存</h3>
+<ul>
+<li>首先利用bitmap将base64保存到指定路径</li>
+<li>由于在真机中无法直接查阅到相应文件（似乎是被隐藏了），在前端利用uniapp的图像保存到相册的功能，进行二次保存</li>
+<li>清楚第一次保存的数据</li>
+</ul>
+<h3 id="参数的展示"><a class="markdownIt-Anchor" href="#参数的展示"></a> 参数的展示</h3>
+<ul>
+<li>由于扩散模型参数众多，故作了一定的简化</li>
+<li>为了能够使用Hire.fix，对多个相关参数进行了固定设置使得用户能一键得到高清优化的图像</li>
+</ul>
+<h2 id="接下来的主要任务"><a class="markdownIt-Anchor" href="#接下来的主要任务"></a> 接下来的主要任务</h2>
+<ul>
+<li>数据库表的设计</li>
+<li>社区版面的渲染</li>
+</ul>
+<h1 id="日志七-记于"><a class="markdownIt-Anchor" href="#日志七-记于"></a> 日志(七) 记于？</h1>
+<h2 id="增添了一些绘画可调参数"><a class="markdownIt-Anchor" href="#增添了一些绘画可调参数"></a> 增添了一些绘画可调参数</h2>
+<ul>
+<li>引入不同风格的模型参数</li>
+<li>可启用自主训练的textual_inversion模型</li>
+</ul>
+<h2 id="完成了所有表格设计"><a class="markdownIt-Anchor" href="#完成了所有表格设计"></a> 完成了所有表格设计</h2>
+<p>预计将实现图像分享社区的核心功能</p>
+<h2 id="完成了图像的发表功能"><a class="markdownIt-Anchor" href="#完成了图像的发表功能"></a> 完成了图像的发表功能</h2>
+<h2 id="完成了预览页面的绘制"><a class="markdownIt-Anchor" href="#完成了预览页面的绘制"></a> 完成了预览页面的绘制</h2>
+<ul>
+<li>实现了分页分类查询</li>
+<li>以触底方式实现分页查询</li>
+<li>以头部tab实现分类查询<br>
+遇到的主要问题与本博客制作时条件查询的问题一致，不同功能的查询相互转换时容易出现错误</li>
+</ul>
+<h2 id="今后主要工作"><a class="markdownIt-Anchor" href="#今后主要工作"></a> 今后主要工作</h2>
+<ul>
+<li>详情页绘制及后端接口的书写</li>
+<li>在绘画部分引入img2img功能</li>
+<li>完善个人空间的内容布置</li>
+<li>调整色彩风格</li>
+</ul>
+<blockquote>
+<p>感觉一个人做这个东西力不从心啊</p>
+</blockquote>
+<h1 id="日志八-记于"><a class="markdownIt-Anchor" href="#日志八-记于"></a> 日志(八) 记于？</h1>
+<h2 id="完成了详情页面的绘制"><a class="markdownIt-Anchor" href="#完成了详情页面的绘制"></a> 完成了详情页面的绘制</h2>
+<ul>
+<li>实现了基本信息的展示
+<ul>
+<li>图像、作者、词条、发表时间</li>
+<li>点赞功能的引入与显示</li>
+<li>下载图像</li>
+<li>评论</li>
+</ul>
+</li>
+<li>主要问题在于分页查询评论
+<ul>
+<li>与网页端不同，评论是以触底方式分页查询的，用户并行时会出现问题
+<ul>
+<li>当我已进入图片详情查询了评论后，若其他用户在此刻对同一图片发表评论，将导致原分页起点向后挪动</li>
+<li>此刻我触底查询后，分页查询结果将得到重复的评论，例如原评论编号1，2，3，4，现插入评论5，每页2个结果，插入前首次查询得到3，4，插入后触底查询得到3，2</li>
+<li>为解决该问题，每一次触底查询，都将额外携带参数cid，作为分页查询的起点，其范围规定在cid评论及其以前的评论</li>
+</ul>
+</li>
+<li>与网页端不同，插入评论不能简单重新获取评论以显示新评论
+<ul>
+<li>在已查询多页情况下，进行评论，如果选择直接查询，将导致目前页面高度减小（相关组件信息先消失，后出现），但是由于触底查询仍然存在，目前所在位置远远低于页面高度，将重复触发触底查询</li>
+<li>故将接口设置为返回该新评论的信息，并将其插入评论列表</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>待解决的问题
+<ul>
+<li>对评论进行回复的前端
+<ul>
+<li>高情商：难以正确展示</li>
+<li>低情商：丑</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="丰富广场页面"><a class="markdownIt-Anchor" href="#丰富广场页面"></a> 丰富广场页面</h2>
+<ul>
+<li>为走马灯添加按点赞、时间排序的前三图像</li>
+<li>添加条件搜索功能，为用户提供对标题的模糊搜索</li>
+</ul>
+<h2 id="添加搜索结果页面"><a class="markdownIt-Anchor" href="#添加搜索结果页面"></a> 添加搜索结果页面</h2>
+<ul>
+<li>该走的分页查询都走了一遍</li>
+</ul>
+<h2 id="主要在于我不会css"><a class="markdownIt-Anchor" href="#主要在于我不会css"></a> 主要在于我不会css</h2>
+<p>qwq</p>
+<h1 id="日志九-记于"><a class="markdownIt-Anchor" href="#日志九-记于"></a> 日志(九) 记于？</h1>
+<h2 id="重新更换了前端的风格"><a class="markdownIt-Anchor" href="#重新更换了前端的风格"></a> 重新更换了前端的风格</h2>
+<p>以绿色为主题，对多个页面进行重新绘制</p>
+<h2 id="引入图生图模块"><a class="markdownIt-Anchor" href="#引入图生图模块"></a> 引入图生图模块</h2>
+<ul>
+<li>简化了一定参数</li>
+<li>当用户已完成文生图模块后，进入图生图模块将使其生成的图像作为图生图的原始图像</li>
+</ul>
+<h2 id="按点赞数查询"><a class="markdownIt-Anchor" href="#按点赞数查询"></a> 按点赞数查询</h2>
+<ul>
+<li>引入了两种模式切换：时间顺序与点赞数顺序</li>
+<li>分页查询的规则做了更改
+<ul>
+<li>由于之前只考虑了按时间顺序排列图像，故第一次获取得到的图像列表中第一个图像的iid为本次分页查询的起点，并作为条件在后续多页查询中传回接口</li>
+<li>但是当使用喜好排序时，第一次获得的图像列表很有可能不含有本次分页查询起点的iid
+<ul>
+<li>这将导致分页查询可能遗失掉部分图像信息，例如：第一次查询时，最大iid为20，但是由于iid为20的图像可能并不能在点赞数中排第一页，故未出现在图像列表，若保持原逻辑不变，再次查询，则将永远查不到20</li>
+<li>总结：原逻辑将导致比点赞数最多图像发表时间晚的图像无法查询</li>
+</ul>
+</li>
+<li>故修改了接口逻辑，在查询页数为1时，将额外返回本次查询得到的最大iid，该iid将作为后续页数查询的起点</li>
+<li>前端接受该iid，并在查询页数大于1时将该iid作为消息返回给接口</li>
+</ul>
+</li>
+</ul>
+<h1 id="日志十-记于"><a class="markdownIt-Anchor" href="#日志十-记于"></a> 日志(十) 记于？</h1>
+<h2 id="对热门模块修改"><a class="markdownIt-Anchor" href="#对热门模块修改"></a> 对热门模块修改</h2>
+<blockquote>
+<p>即按喜好排序</p>
+</blockquote>
+<ul>
+<li>问题 图片喜好排序与时间顺序排序特点不同：
+<ul>
+<li>时间顺序排序的图片只要记录每次排序的图片编号最大值，则分页查询可通过规定iid的范围稳定进行多次查询</li>
+<li>喜好排序乱序，除了可能存在新的图片突然出现导致乱序，还存在某原图片在查询过程中喜好数量发生巨大改变导致分页已有顺序改变
+<ul>
+<li>对于前者，我们仍可采用同时间顺序一样的解决方案</li>
+<li>对于后者，我们不得不思考变化的喜好导致变化的顺序，在不乱序的情况下，如何在前端进行信息呈现</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>方案一 每一次查询逐步扩大per_page，相当于只查一页查得更多，以此保证前后喜好顺序不变
+<ul>
+<li>从理论上讲，该方法从api得到的信息总是准确实时的</li>
+<li>但是不利于前端信息的呈现，因为每一次都会经历图像全部消失再出现的过程，容易误触发触底函数</li>
+</ul>
+<blockquote>
+<p>例如，我已查询两页，试图查询第三页，此时我触底发出请求，页面中的图像在接受新信息时先消失，导致视口高度降低，但我仍位于最底端，所以会反复触发触底查询</p>
+</blockquote>
+</li>
+<li>方案二 每一次查询保证不重复查询已有例子，以维持图像不重复
+<ul>
+<li>但违背了我想要按喜好排序的想法</li>
+</ul>
+</li>
+<li>方案三 最后不得已，选择放弃分页查询，固定查询前10个获得收藏最多的图像
+<blockquote>
+<p>我个人认为，绝对的喜好排序与分页查询本身是矛盾的，喜好是用户随机决定的，会随时间改变，而手机端的触底触发分页查询天然要求已出现的内容不可改变</p>
+</blockquote>
+<ul>
+<li>由于之前均为分页查询，导致之前的分支是先判断是否为第一页（第一页查询时必须返回分页起点编号）在判断排序标准</li>
+<li>现改为，首先判断排序标准，若按时间顺序排序在进行分页查询应有的判断</li>
+<li>为了使热门模块信息更为饱满，额外增加了收藏数量、图像风格、作者的信息，使得页面呈现足够丰富</li>
+<li>对于前端，<s>依据某粉色app排行榜排版</s>，进行重构，展现前10图像</li>
+</ul>
+</li>
+</ul>
+<h2 id="个人空间"><a class="markdownIt-Anchor" href="#个人空间"></a> 个人空间</h2>
+<ul>
+<li>个人空间模块展示个人信息包括：姓名、签名、作品数、收藏数、被收藏数</li>
+<li>个人空间模块内含两个分页查询：
+<ul>
+<li>我的作品：集中我所发表的作品，逻辑同时间顺序分页查询的逻辑</li>
+<li>我的收藏：集中我所喜爱的作品，逻辑同时间顺序分页查询的逻辑</li>
+</ul>
+</li>
+<li>但考虑到强调个人信息的展示，于是不再采用触底查询，而是使用指定块内进行分页查询，保证个人信息出现在视口内</li>
+</ul>
+<h1 id="日志十一-记于93"><a class="markdownIt-Anchor" href="#日志十一-记于93"></a> 日志(十一) 记于9.3</h1>
+<h2 id="引入他人空间模块"><a class="markdownIt-Anchor" href="#引入他人空间模块"></a> 引入他人空间模块</h2>
+<p>基于我的空间模块渲染别人的相关消息</p>
+<h2 id="修改信息显示页"><a class="markdownIt-Anchor" href="#修改信息显示页"></a> 修改信息显示页</h2>
+<ul>
+<li>修改整体前端风格</li>
+<li>引入绘图按钮，将页面重置于绘图界面，并保留浏览图像的生成关键词，方便用户快速使用别人的词语绘图</li>
+</ul>
+<h2 id="为所有表单增加健壮性"><a class="markdownIt-Anchor" href="#为所有表单增加健壮性"></a> 为所有表单增加健壮性</h2>
+<h2 id="修改绘图api"><a class="markdownIt-Anchor" href="#修改绘图api"></a> 修改绘图api</h2>
+<ul>
+<li>用户绘图时需上传uid和secret，检查通过后才可绘图</li>
+<li>尝试使用内存管理，使得多人同时请求，进行排队等待，但是似乎会影响使用服务器的其他人</li>
+</ul>
+<h1 id="日志十二-记于94"><a class="markdownIt-Anchor" href="#日志十二-记于94"></a> 日志(十二) 记于9.4</h1>
+<h2 id="inpaiting"><a class="markdownIt-Anchor" href="#inpaiting"></a> inpaiting</h2>
+<h3 id="开发目标"><a class="markdownIt-Anchor" href="#开发目标"></a> 开发目标</h3>
+<p>用户通过简单的触摸涂抹，对原图部分内容进行覆盖，覆盖部分将重绘，而其余部分不变</p>
+<h3 id="前端图形界面展示"><a class="markdownIt-Anchor" href="#前端图形界面展示"></a> 前端图形界面展示</h3>
+<h4 id="主要难点"><a class="markdownIt-Anchor" href="#主要难点"></a> 主要难点</h4>
+<ul>
+<li>canvas前端样式设置
+<ul>
+<li>uniapp未能提供有效的获取canvas的宽高方法，所以第一步需要手动设置参数，调整canvas的高度，宽度统一为750rpx，高度根据实际要求设置</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">&lt;canvas class=&quot;mycanvas&quot; canvas-id=&quot;mycanvas&quot;<br>@touchstart=&quot;touchstart&quot; @touchmove=&quot;touchmove&quot;<br>		@touchend=&quot;touchend&quot; ref=&#x27;canvas&#x27; <br>		:style=&quot;&#123;&#x27;height&#x27;:c_height+&#x27;rpx&#x27;&#125;&quot;&gt;&lt;/canvas&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>高度的设置主要依据图像的高度，uniapp的组件image不支持本地图片，故只能使用img标签，但是img与uniapp许多api并不兼容，例如最重要的获取样式，uniapp获取样式无法得到img，返回的对象值是null</li>
+<li>所以放弃直接获取img的高度，干脆自己算，得到正确的高度，保证从视图上用户的画板和图像大小一致</li>
+</ul>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">uni.getImageInfo(&#123;<br>				src:_this.img_file,<br>				success(image)&#123;<br>					let hole_wh = image.width+image.height<br>					let imgWidth = (image.width/hole_wh)<br>					let imgHeight = (image.height/hole_wh)<br>					let img_bl = Math.ceil(750/imgWidth)<br>					_this.c_height = img_bl*imgHeight<br>				&#125;<br>			&#125;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>设置canvas的position固定置顶，且z-index更大，自此完成了画布和图像前端样式的重合</li>
+</ul>
+<blockquote>
+<p>该阶段主要问题在于画布随任意图像变化，保持大小一致、位置重合</p>
+</blockquote>
+</li>
+<li>canvas绘画函数
+<ul>
+<li>设置初始化函数</li>
+<li>设置三个阶段的函数，touchstart、touchmove、touchend，代表起笔、运笔、收笔
+<ul>
+<li>起笔函数，获取起点坐标并置入points数组中</li>
+<li>运笔函数，再次获取坐标并置入数组，判断数组长度，若大于2则绘画</li>
+<li>收笔函数，清空points数组</li>
+</ul>
+</li>
+<li>设置存储函数，以jpg形式存储并转为base64编码，置入存储区
+<blockquote>
+<p>jpg存储将保留白色背景与黑色笔画，便于后续操作</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>后端图像处理
+<ul>
+<li>得到base64原图与mask</li>
+<li>利用PIL获取原图宽高</li>
+<li>对mask进行resize</li>
+</ul>
+<blockquote>
+<p>原因在于，前端绘制时，对图像统一进行了宽为750rpx、高度自动的设置，图像本身进行了缩放，虽然画布与缩放后的图像完全匹配，但是，保存时，画布的图像未缩放，往往比原图像更大，故需进行比例缩放，该行为不会导致重绘相对位置发生改变，因为之前计算画布宽高用的是同样的方法，只是逆向罢了</p>
+</blockquote>
+<ul>
+<li>对mask进行invert</li>
+</ul>
+<blockquote>
+<p>原因在于模型要求mask在重绘部分为白色，非重绘部分为黑色，但前端为了方便用户，选择以黑色作为重绘部分的颜色，故在此需要反色</p>
+</blockquote>
+<ul>
+<li>最终得到的mask再输入原有模型</li>
+</ul>
+</li>
+</ul>
+<h1 id="日志十三-记于910"><a class="markdownIt-Anchor" href="#日志十三-记于910"></a> 日志(十三) 记于9.10</h1>
+<h2 id="完善inpainting"><a class="markdownIt-Anchor" href="#完善inpainting"></a> 完善inpainting</h2>
+<ul>
+<li>实现图像可以自如的在多功能中相互流通
+<ul>
+<li>将文生图图像转入图生图</li>
+<li>将图生图图像转入局部重绘</li>
+</ul>
+</li>
+<li>修改了绘画图像的显示逻辑，统一改为base64图像，以避免app端使用文件路径显示图像可能时，图像开裂的情况</li>
+<li>修改了inpainting引入后，不同模式转换的逻辑</li>
+</ul>
+<h2 id="引入词条选择"><a class="markdownIt-Anchor" href="#引入词条选择"></a> 引入词条选择</h2>
+<ul>
+<li>将频繁使用的词条分类归纳（通用、场景、人物）</li>
+<li>用户点击词条，可便捷加入相应提示语</li>
+</ul>
+<h2 id="修改广场图像显示"><a class="markdownIt-Anchor" href="#修改广场图像显示"></a> 修改广场图像显示</h2>
+<p>扩大图像高度，突出图像本身作为主体</p>
+<h2 id="密码加密"><a class="markdownIt-Anchor" href="#密码加密"></a> 密码加密</h2>
+<ul>
+<li>前端向后端传递，进行对称加密</li>
+<li>后端向数据库载入，先解密，再哈希加密</li>
+</ul>
+<h2 id="未来主要工作"><a class="markdownIt-Anchor" href="#未来主要工作"></a> 未来主要工作</h2>
+<ul>
+<li>图像生成过程的操作：如中断、进程显示</li>
+<li>大量用户同时申请无法排队等待问题</li>
+<li>界面<s>太丑</s>不够好看</li>
+</ul>
+<h1 id="日志十四-记于911"><a class="markdownIt-Anchor" href="#日志十四-记于911"></a> 日志(十四) 记于9.11</h1>
+<h2 id="后端区分绘画任务"><a class="markdownIt-Anchor" href="#后端区分绘画任务"></a> 后端区分绘画任务</h2>
+<ul>
+<li>对所有绘画任务绑定task_id</li>
+<li>不同绘画任务排队等待</li>
+<li>基于该id，可对绘画完成情况查询或强制中断</li>
+</ul>
+<h2 id="前端优化"><a class="markdownIt-Anchor" href="#前端优化"></a> 前端优化</h2>
+<ul>
+<li>颜色主体更换为红色</li>
+<li>引入采样方法多选项</li>
+<li>对绘画部分逻辑进行修改
+<ul>
+<li>绘画开始时，每隔一段时间向后端接口询问绘画进度
+<ul>
+<li>若id不一致，显示排队等待</li>
+<li>若id一致，显示绘画完成情况</li>
+</ul>
+</li>
+<li>绘画结束，释放该查询任务</li>
+<li>绘画过程中，可以根据task_id进行中断，中断完成将返回临时图像并销毁进度查询</li>
+</ul>
+</li>
+<li>对绘画页面显示作优化
+<ul>
+<li>引入进度条，显示进度</li>
+<li>中止按钮与创作按钮相互转换</li>
+<li>无图像时，下载、发表、分享按钮消失</li>
+</ul>
+</li>
+</ul>
+<h1 id="日志十五-记于916"><a class="markdownIt-Anchor" href="#日志十五-记于916"></a> 日志(十五) 记于9.16</h1>
+<h2 id="预览图像"><a class="markdownIt-Anchor" href="#预览图像"></a> 预览图像</h2>
+<ul>
+<li>对所有上传图像降低分辨率后，存储在另一个文件夹中</li>
+<li>数据库增加属性，保存预览图像的url</li>
+<li>不进入图像详情页时，均使用预览图像的url进行渲染</li>
+</ul>
+<h2 id="回复评论"><a class="markdownIt-Anchor" href="#回复评论"></a> 回复评论</h2>
+<ul>
+<li>前端多级回复写的太丑了</li>
+<li>干脆压缩至一级回复，允许用户对现有评论进行回复</li>
+<li>回复评论的展示<s>同某粉色软件的样式</s>，点击原评论，将在下方打开回复评论的内容，并可以对点击的评论进行回复</li>
+</ul>
+<h2 id="消息提醒"><a class="markdownIt-Anchor" href="#消息提醒"></a> 消息提醒</h2>
+<ul>
+<li>消息由新的评论产生</li>
+<li>在浏览页将在左上角显示消息的数量</li>
+<li>进入消息详情页，将显示消息的主体信息，包括：用户名、头像、内容、评论所在图像的标题</li>
+<li>可以左滑以删除消息</li>
+<li>可以点击评论进入对应的图像详情页</li>
+</ul>
+<h2 id="图像删除"><a class="markdownIt-Anchor" href="#图像删除"></a> 图像删除</h2>
+<ul>
+<li>允许作者删除自己的图像</li>
+<li>同步删除文件服务器中的原图与预览图</li>
+<li>相关信息级联删除</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/"
+      title="套接字编程（一）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        套接字编程（一）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/15/%E8%AE%BA%E5%9D%9B%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5%E9%9B%86%E5%90%88/"
+      title="论坛开发碎碎念集合"
+     >
+
+    <p class="title-text">
+      
+        论坛开发碎碎念集合
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

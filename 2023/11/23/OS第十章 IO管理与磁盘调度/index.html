@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第十章 IO管理与磁盘调度 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="I&#x2F;O设备、控制方式与缓冲，RAID与磁盘高速缓存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第十章 IO管理与磁盘调度">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="I&#x2F;O设备、控制方式与缓冲，RAID与磁盘高速缓存">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/banner.jpg">
+<meta property="article:published_time" content="2023-11-23T01:29:02.000Z">
+<meta property="article:modified_time" content="2023-12-16T03:03:31.147Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第十章 IO管理与磁盘调度" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6u000k7gv1237lcv11">
+        <img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第十章 IO管理与磁盘调度
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-23T01:29:02.000Z" itemprop="datePublished">2023-11-23</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            5.7k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="io设备"><a class="markdownIt-Anchor" href="#io设备"></a> I/O设备</h1>
+<h2 id="设备分类"><a class="markdownIt-Anchor" href="#设备分类"></a> 设备分类</h2>
+<ul>
+<li>人可读
+<ul>
+<li>适用于计算机和用户之间的交互</li>
+<li>如打印机，终端</li>
+</ul>
+</li>
+<li>机器可读
+<ul>
+<li>适用于电子设备通信</li>
+<li>如磁盘驱动器、USB密钥、传感器和控制器等</li>
+</ul>
+</li>
+<li>通信
+<ul>
+<li>适用于远程设备通信</li>
+<li>如调制解调器、网卡等</li>
+</ul>
+</li>
+</ul>
+<h2 id="io设备的差异"><a class="markdownIt-Anchor" href="#io设备的差异"></a> I/O设备的差异</h2>
+<ul>
+<li>数据传输速率</li>
+<li>应用</li>
+<li>控制的复杂性</li>
+<li>传输单元</li>
+<li>数据表示</li>
+<li>错误条件</li>
+</ul>
+<h1 id="io控制方式"><a class="markdownIt-Anchor" href="#io控制方式"></a> I/O控制方式</h1>
+<ul>
+<li>程序I/O方式</li>
+<li>中断驱动I/O方式</li>
+<li>直接存储器访问（DMA）方式</li>
+</ul>
+<h2 id="程序io方式"><a class="markdownIt-Anchor" href="#程序io方式"></a> 程序I/O方式</h2>
+<ul>
+<li>CPU代表进程给I/O模块发送I/O命令</li>
+<li>该进程进入忙等待，等待操作完成，才可以继续执行</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E7%A8%8B%E5%BA%8FIO.jpg" alt></p>
+<h2 id="中断驱动io方式"><a class="markdownIt-Anchor" href="#中断驱动io方式"></a> 中断驱动I/O方式</h2>
+<ul>
+<li>CPU代表进程给I/O模块发送I/O命令
+<ul>
+<li>如果I/O指令是非阻塞的，则继续执行后续指令</li>
+<li>如果I/O指令是阻塞的，当前进程阻塞，调度其他进程</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E4%B8%AD%E6%96%AD%E9%A9%B1%E5%8A%A8.jpg" alt></p>
+<h2 id="直接存储器访问方式"><a class="markdownIt-Anchor" href="#直接存储器访问方式"></a> 直接存储器访问方式</h2>
+<ul>
+<li>DMA模块控制内存和I/O模块之间的数据交换</li>
+<li>处理器给DMA模块发送请求，整块数据传送结束，才中断处理器</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/DMA.jpg" alt></p>
+<h3 id="工作流程"><a class="markdownIt-Anchor" href="#工作流程"></a> 工作流程</h3>
+<ol>
+<li>处理器需要读写数据时，读或写操作的信号，通过在处理器和DMA模块间的读写控制线发送</li>
+<li>相关的I/O设备地址，通过数据线传送</li>
+<li>从存储器中读或向存储器写的起始地址，在数据线上传输，并由DMA模块保存在地址寄存器中</li>
+<li>读或写的字数，通过数据线传送，并由DMA模块保存在计数寄存器中</li>
+<li>处理器继续执行其他工作，I/O操作委托给DMA模块，DMA直接从存储器读或向存储器写</li>
+<li>整块数据传送结束后，DMA向处理器发送中断信号</li>
+</ol>
+<h3 id="与中断驱动io比较"><a class="markdownIt-Anchor" href="#与中断驱动io比较"></a> 与中断驱动I/O比较</h3>
+<ul>
+<li>中断频率
+<ul>
+<li>中断驱动I/O：每次传输一个数据即产生中断</li>
+<li>DMA：一块数据全部传送结束时才中断CPU</li>
+</ul>
+</li>
+<li>数据传输
+<ul>
+<li>中断驱动I/O：数据传送在中断处理时由CPU控制完成</li>
+<li>DMA：数据传送在DMA控制器的控制下完成</li>
+</ul>
+</li>
+<li>应用
+<ul>
+<li>DMA：块设备，如磁盘</li>
+<li>中断驱动I/O：字符设备，如键盘、鼠标</li>
+</ul>
+</li>
+</ul>
+<h2 id="io通道控制方式"><a class="markdownIt-Anchor" href="#io通道控制方式"></a> I/O通道控制方式</h2>
+<ul>
+<li>一个设备可以连接到多个控制器上，而一个控制器又连接到多个通道上</li>
+<li>可以在不增加成本的基础上，增加设备到主机的通路</li>
+</ul>
+<h3 id="与dma比较"><a class="markdownIt-Anchor" href="#与dma比较"></a> 与DMA比较</h3>
+<ul>
+<li>DMA：CPU每发出一条I/O指令，以一个数据块为单位完成数据读写。CPU控制传输方向、数据大小、数据在内存的位置</li>
+<li>I/O通道：是DMA方式的发展，有自己的I/O指令集，通过执行通道程序，与设备控制器共同实现对I/O设备的控制
+<ul>
+<li>以一组数据块为单位完成数据的读（或写）控制</li>
+<li>通道控制传输方向、数据大小、数据在内存的位置</li>
+</ul>
+</li>
+<li>通道可实现CPU、通道和I/O设备三者的并行操作，从而更有效地提高整个系统的资源利用率</li>
+</ul>
+<h2 id="io功能的发展"><a class="markdownIt-Anchor" href="#io功能的发展"></a> I/O功能的发展</h2>
+<ul>
+<li>处理器直接控制外围设备</li>
+<li>增加了控制器或I/O模块，程序方式控制I/O</li>
+<li>增加了中断方式</li>
+<li>I/O模块通过DMA直接控制存储器</li>
+<li>I/O模块（I/O通道）有单独的处理器，有专门的I/O指令集</li>
+<li>I/O模块（I/O通道）有自己的局部存储器，本身就是一台计算机</li>
+</ul>
+<h1 id="操作系统的设计问题"><a class="markdownIt-Anchor" href="#操作系统的设计问题"></a> 操作系统的设计问题</h1>
+<h2 id="io设计目标"><a class="markdownIt-Anchor" href="#io设计目标"></a> I/O设计目标</h2>
+<h3 id="效率"><a class="markdownIt-Anchor" href="#效率"></a> 效率</h3>
+<ul>
+<li>I/O设计的主要任务</li>
+<li>I/O操作通常是计算机系统的瓶颈</li>
+<li>与内存和处理器相比，大多数I/O设备的速度都很低</li>
+<li>最受关注的是磁盘I/O</li>
+</ul>
+<h3 id="通用性"><a class="markdownIt-Anchor" href="#通用性"></a> 通用性</h3>
+<ul>
+<li>用统一方式处理所有设备</li>
+<li>处理器看待I/O设备的方式统一
+<ul>
+<li>操作系统管理I/O设备统一</li>
+<li>I/O操作的方式统一</li>
+</ul>
+</li>
+<li>设备的多样性使得实现通用性较困难</li>
+<li>因此使用层次化的、模块化的方法设计I/O功能</li>
+</ul>
+<h2 id="层次化设计"><a class="markdownIt-Anchor" href="#层次化设计"></a> 层次化设计</h2>
+<ul>
+<li>操作系统的功能可以根据复杂性、特征时间尺度和层次的抽象来分开</li>
+<li>具体可以采用层次划分的方式来组织操作系统的功能</li>
+<li>每一层执行相关的子功能</li>
+<li>分层定义使得某层的功能变化不影响其他层次</li>
+</ul>
+<h2 id="io功能组织模型"><a class="markdownIt-Anchor" href="#io功能组织模型"></a> I/O功能组织模型</h2>
+<ul>
+<li>逻辑I/O：把设备当作逻辑资源处理，不关心控制设备的细节</li>
+<li>设备I/O：请求的操作和数据被转换成对应的I/O指令、通道指令和控制器指令，并可以使用缓冲提高效率</li>
+<li>调度和控制：与硬件真正发生交互的软件层。处理中断、收集和报告I/O状态</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/IO%E5%8A%9F%E8%83%BD%E7%BB%84%E7%BB%87%E6%A8%A1%E5%9E%8B.jpg" alt></p>
+<h3 id="设备的独立性-无关性"><a class="markdownIt-Anchor" href="#设备的独立性-无关性"></a> 设备的独立性、无关性</h3>
+<ul>
+<li>应用程序独立于具体使用的物理设备</li>
+<li>逻辑I/O模块允许应用程序使用逻辑设备名及简单的设备操作命令与设备打交道</li>
+<li>设备I/O模块讲逻辑I/O的请求和操作转换成对相应物理设备的I/O访问控制</li>
+</ul>
+<h3 id="代表性结构"><a class="markdownIt-Anchor" href="#代表性结构"></a> 代表性结构</h3>
+<h4 id="通信设备"><a class="markdownIt-Anchor" href="#通信设备"></a> 通信设备</h4>
+<ul>
+<li>逻辑I/O模块被通信架构代替</li>
+<li>通信架构本身也包含许多层</li>
+</ul>
+<h4 id="文件系统"><a class="markdownIt-Anchor" href="#文件系统"></a> 文件系统</h4>
+<p>逻辑I/O</p>
+<ul>
+<li>目录管理：符号文件名被转换成标识符，通过该标识符可以访问文件描述符表或索引表</li>
+<li>文件系统：处理文件的逻辑结构和用户指定的操作，如打开、关闭、读写等</li>
+<li>物理系统：基于辅存设备的物理磁道和扇区结构，对文件的逻辑访问转换成对辅存物理地址的访问</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.jpg" alt></p>
+<h1 id="缓冲"><a class="markdownIt-Anchor" href="#缓冲"></a> 缓冲</h1>
+<ul>
+<li>在输入请求发出前开始输入传送</li>
+<li>在输出请求发出后一段时间才开始执行输出传送</li>
+<li>面向块的设备
+<ul>
+<li>信息保存在块中，块的大小固定</li>
+<li>一次传送一个块</li>
+<li>通过块号访问数据</li>
+<li>代表设备：磁盘、USB</li>
+</ul>
+</li>
+<li>面向流的设备
+<ul>
+<li>以字节流的方式输入/输出设备</li>
+<li>没有块的结构</li>
+<li>代表设备：终端、打印机、通信端口、鼠标及其他大多数非辅存设备</li>
+</ul>
+</li>
+</ul>
+<h2 id="无缓冲"><a class="markdownIt-Anchor" href="#无缓冲"></a> 无缓冲</h2>
+<ul>
+<li>无缓冲时，操作系统在需要时直接访问设备</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E6%97%A0%E7%BC%93%E5%86%B2.jpg" alt></p>
+<h2 id="单缓冲"><a class="markdownIt-Anchor" href="#单缓冲"></a> 单缓冲</h2>
+<ul>
+<li>操作系统在内存中给I/O请求分配一个缓冲区</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E5%8D%95%E7%BC%93%E5%86%B2.jpg" alt></p>
+<h3 id="面向块设备的单缓冲"><a class="markdownIt-Anchor" href="#面向块设备的单缓冲"></a> 面向块设备的单缓冲</h3>
+<ul>
+<li>采用预读/预先输入
+<ul>
+<li>期望输入的数据块最终会被使用</li>
+<li>输入的数据被放到系统缓冲区中</li>
+<li>传送完成时，进程将数据块移到用户空间，并立即请求下一块</li>
+</ul>
+</li>
+<li>相对于无系统缓冲情况，预读方式可以提高数据获取速度
+<ul>
+<li>可以在读取下一块数据时，处理已经读入的数据</li>
+</ul>
+</li>
+<li>不足
+<ul>
+<li>使操作系统的逻辑变得更复杂
+<ul>
+<li>操作系统需要记录给每个进程分配的系统缓冲区情况</li>
+</ul>
+</li>
+<li>交换逻辑也受到影响</li>
+</ul>
+</li>
+</ul>
+<h3 id="面向流的单缓冲"><a class="markdownIt-Anchor" href="#面向流的单缓冲"></a> 面向流的单缓冲</h3>
+<ul>
+<li>每次传送一行
+<ul>
+<li>适用于滚动模式的终端</li>
+<li>用户每次输入一行，以回车键结束输入时，也是每次输出一行</li>
+</ul>
+</li>
+<li>每次传送一个字节
+<ul>
+<li>适用于表格式的终端</li>
+<li>用户每次击键很重要</li>
+<li>其他外围设备如传感器、控制器等</li>
+</ul>
+</li>
+</ul>
+<h2 id="双缓冲"><a class="markdownIt-Anchor" href="#双缓冲"></a> 双缓冲</h2>
+<ul>
+<li>使用两个缓冲</li>
+<li>进程向一个缓冲区中传送（或取出）数据时，操作系统正在清空（或填充）另一个缓冲区</li>
+<li>也称为缓冲交换</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E5%8F%8C%E7%BC%93%E5%86%B2.jpg" alt></p>
+<h2 id="循环缓冲"><a class="markdownIt-Anchor" href="#循环缓冲"></a> 循环缓冲</h2>
+<ul>
+<li>使用两个或多个缓冲区构成循环缓冲</li>
+<li>当希望I/O操作跟上进程执行速度时，使用循环缓冲</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E5%BE%AA%E7%8E%AF%E7%BC%93%E5%86%B2.jpg" alt></p>
+<h2 id="缓冲的作用"><a class="markdownIt-Anchor" href="#缓冲的作用"></a> 缓冲的作用</h2>
+<ul>
+<li>缓解I/O设备速度与CPU速度不匹配的矛盾
+<ul>
+<li>当进程的需求大于I/O设备的服务能力时，进程推进与I/O设备的操作将不能并驾齐驱</li>
+<li>进程每处理完一块数据后得停下来等待</li>
+</ul>
+</li>
+<li>在多道程序环境中，当存在多种I/O活动和多种进程活动时，缓冲可以提高操作系统效率，提高单个进程的性能</li>
+</ul>
+<h2 id="spooling技术磁盘中的缓冲"><a class="markdownIt-Anchor" href="#spooling技术磁盘中的缓冲"></a> SPOOLing技术（磁盘中的缓冲）</h2>
+<ul>
+<li>在磁盘中建立I/O缓冲区，缓和CPU的高速性与I/O设备低速性间的矛盾</li>
+<li>在联机（即CPU控制）情况下实现的同时外围操作称为SPOOLing，或称为假脱机操作</li>
+<li>通过SPOOLing技术便可将一台独占物理I/O设备虚拟为多台逻辑I/O设备，从而允许多个用户共享一台物理I/O设备</li>
+<li>特点
+<ul>
+<li>提高I/O速度：对低速I/O设备进行操作，演变为对输入/输出井中数据的存取</li>
+<li>将独占设备改变为共享设备：实际上并没有任何进程分配设备，而只是在输入井或输出井中为进程分配一个存储区和建立一张I/O请求表</li>
+<li>实现了虚拟设备功能：系统实现了将独占设备变换为若干台对应的逻辑设备的功能</li>
+</ul>
+</li>
+</ul>
+<h1 id="磁盘调度"><a class="markdownIt-Anchor" href="#磁盘调度"></a> 磁盘调度</h1>
+<h2 id="磁盘存储器"><a class="markdownIt-Anchor" href="#磁盘存储器"></a> 磁盘存储器</h2>
+<ul>
+<li>磁盘设备可包含一或多个物理盘片，每个磁盘片分一个或两个存储面</li>
+<li>每个磁盘面被组织成若干个同心环，这种环称为磁道</li>
+<li>每条磁道逻辑上划分成若干个扇区</li>
+<li>不同盘面相同的磁道称为柱面<br>
+<img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E7%A3%81%E7%9B%98.jpg" alt></li>
+</ul>
+<h2 id="磁盘类型"><a class="markdownIt-Anchor" href="#磁盘类型"></a> 磁盘类型</h2>
+<ul>
+<li>固定头磁盘：每条磁道上都有一读/写磁头，速度快，成本高</li>
+<li>移动头磁盘：每一个盘面仅配有一个磁头，结构简单，成本低</li>
+</ul>
+<h2 id="磁盘性能参数"><a class="markdownIt-Anchor" href="#磁盘性能参数"></a> 磁盘性能参数</h2>
+<h3 id="读写头的位置"><a class="markdownIt-Anchor" href="#读写头的位置"></a> 读写头的位置</h3>
+<ul>
+<li>当磁盘驱动器开始工作时，磁盘以一个恒定的速度旋转</li>
+<li>为了读或写，磁头定位于指定的磁道和该磁道中指定扇区的开始处</li>
+<li>寻道操作
+<ul>
+<li>磁头可移动系统：将磁头移动到指定磁道</li>
+<li>磁头固定系统：机械自动选择合适的磁头</li>
+</ul>
+</li>
+<li>寻道时间<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">T_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>：在磁头可移动系统中，将磁头臂移动到指定磁道所需的时间</li>
+</ul>
+<h3 id="旋转延迟"><a class="markdownIt-Anchor" href="#旋转延迟"></a> 旋转延迟</h3>
+<ul>
+<li>磁头定位到指定磁道后，等待磁盘旋转，将待访问的扇区移动到磁头位置所花时间称为旋转延迟</li>
+<li>平均旋转延迟：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>r</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>r</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">T_r = \frac{1}{2r}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></li>
+</ul>
+<h3 id="传输时间"><a class="markdownIt-Anchor" href="#传输时间"></a> 传输时间</h3>
+<ul>
+<li>
+<p>向磁盘传送或从磁盘传送数据的时间，取决于磁盘的旋转速度</p>
+</li>
+<li>
+<p>T为传输时间，b表示要传送的字节数，r表示旋转速度，N表示一个磁道中的字节数</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>t</mi></msub><mo>=</mo><mfrac><mi>b</mi><mrow><mi>r</mi><mi>N</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">T_t = \frac{b}{rN}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.2251079999999999em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8801079999999999em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight" style="margin-right:0.10903em;">N</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">b</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+</li>
+</ul>
+<h3 id="磁盘访问时间"><a class="markdownIt-Anchor" href="#磁盘访问时间"></a> 磁盘访问时间</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>a</mi></msub><mo>=</mo><msub><mi>T</mi><mi>s</mi></msub><mo>+</mo><msub><mi>T</mi><mi>r</mi></msub><mo>+</mo><msub><mi>T</mi><mi>t</mi></msub><mo>=</mo><msub><mi>T</mi><mi>s</mi></msub><mo>+</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>r</mi></mrow></mfrac><mo>+</mo><mfrac><mi>b</mi><mrow><mi>r</mi><mi>N</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">T_a = T_s + T_r + T_t = T_s + \frac{1}{2r} + \frac{b}{rN}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">a</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.2251079999999999em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8801079999999999em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mathdefault mtight" style="margin-right:0.10903em;">N</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">b</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+<h3 id="例题"><a class="markdownIt-Anchor" href="#例题"></a> 例题</h3>
+<p>考虑一个典型的磁盘，平均寻道时间为4ms，转速为7500r/m，每个磁道有500个扇区，每个扇区有512个字节。假设有一个文件存放在2500个扇区上，估算下列两种情况下读取该文件需要的时间。</p>
+<p>（1）2500个扇区分别位于5个相邻磁道上，且文件按扇区顺序存放；<br>
+（2）2500个扇区随机分布。</p>
+<ul>
+<li>寻道时间：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>s</mi></msub><mo>=</mo><mn>4</mn><mi>m</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">T_s = 4ms</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord mathdefault">m</span><span class="mord mathdefault">s</span></span></span></span></li>
+<li>平均旋转延迟：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>r</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mo>×</mo><mn>7500</mn><mi>r</mi><mi mathvariant="normal">/</mi><mi>m</mi></mrow></mfrac><mo>=</mo><mn>4</mn><mi>m</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">T_r = \frac{1}{2\times 7500r/m} = 4ms</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.365108em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mbin mtight">×</span><span class="mord mtight">7</span><span class="mord mtight">5</span><span class="mord mtight">0</span><span class="mord mtight">0</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mtight">/</span><span class="mord mathdefault mtight">m</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord mathdefault">m</span><span class="mord mathdefault">s</span></span></span></span></li>
+<li>顺序存放
+<ul>
+<li>每个磁道：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>t</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>7500</mn><mi>r</mi><mi mathvariant="normal">/</mi><mi>m</mi></mrow></mfrac><mo>=</mo><mn>8</mn><mi>m</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">T_t = \frac{1}{7500r/m} = 8ms</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.365108em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">7</span><span class="mord mtight">5</span><span class="mord mtight">0</span><span class="mord mtight">0</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mtight">/</span><span class="mord mathdefault mtight">m</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">8</span><span class="mord mathdefault">m</span><span class="mord mathdefault">s</span></span></span></span></li>
+</ul>
+</li>
+<li>随机存放：
+<ul>
+<li>每个扇区:<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>T</mi><mi>t</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>500</mn><mo>×</mo><mn>7500</mn><mi>r</mi><mi mathvariant="normal">/</mi><mi>m</mi></mrow></mfrac><mo>=</mo><mn>0.016</mn><mi>m</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">T_t = \frac{1}{500\times 7500r/m} = 0.016ms</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.365108em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">5</span><span class="mord mtight">0</span><span class="mord mtight">0</span><span class="mbin mtight">×</span><span class="mord mtight">7</span><span class="mord mtight">5</span><span class="mord mtight">0</span><span class="mord mtight">0</span><span class="mord mathdefault mtight" style="margin-right:0.02778em;">r</span><span class="mord mtight">/</span><span class="mord mathdefault mtight">m</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">0</span><span class="mord">.</span><span class="mord">0</span><span class="mord">1</span><span class="mord">6</span><span class="mord mathdefault">m</span><span class="mord mathdefault">s</span></span></span></span></li>
+</ul>
+</li>
+<li>第一题：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>4</mn><mo>+</mo><mo stretchy="false">(</mo><mn>4</mn><mo>+</mo><mn>8</mn><mo stretchy="false">)</mo><mo>×</mo><mn>5</mn><mo>=</mo><mn>0.064</mn><mi>s</mi></mrow><annotation encoding="application/x-tex">4 + (4 + 8)\times 5 = 0.064s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">8</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">0</span><span class="mord">.</span><span class="mord">0</span><span class="mord">6</span><span class="mord">4</span><span class="mord mathdefault">s</span></span></span></span></li>
+<li>第二题：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo stretchy="false">(</mo><mn>4</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>0.016</mn><mo stretchy="false">)</mo><mo>×</mo><mn>2500</mn><mo>=</mo><mn>20.04</mn><mi>s</mi></mrow><annotation encoding="application/x-tex">(4 + 4 +0.016) \times 2500 = 20.04s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mord">.</span><span class="mord">0</span><span class="mord">1</span><span class="mord">6</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mord">5</span><span class="mord">0</span><span class="mord">0</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mord">0</span><span class="mord">.</span><span class="mord">0</span><span class="mord">4</span><span class="mord mathdefault">s</span></span></span></span></li>
+</ul>
+<p>数据连续存储，有利于提高存取效率</p>
+<h2 id="磁盘调度策略"><a class="markdownIt-Anchor" href="#磁盘调度策略"></a> 磁盘调度策略</h2>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E8%B0%83%E5%BA%A6.jpg" alt></p>
+<h3 id="fifo"><a class="markdownIt-Anchor" href="#fifo"></a> FIFO</h3>
+<ul>
+<li>根据进程请求访问磁盘的先后顺序，处理队列中的访问需求</li>
+<li>公平</li>
+<li>大量进程竞争一个磁盘时，性能接近随机调度</li>
+</ul>
+<h3 id="优先级priority"><a class="markdownIt-Anchor" href="#优先级priority"></a> 优先级Priority</h3>
+<ul>
+<li>调度的控制不属于磁盘管理软件的范畴</li>
+<li>目标不是优化磁盘的利用，而是满足其他操作系统的其他需求</li>
+<li>给短的批处理作业和交互式作业赋予较高优先级</li>
+<li>提供了较好的交互响应时间</li>
+<li>长作业得等待较长时间</li>
+<li>对数据库系统，这类策略性能较差</li>
+</ul>
+<h3 id="lifo后进先出"><a class="markdownIt-Anchor" href="#lifo后进先出"></a> LIFO后进先出</h3>
+<ul>
+<li>优先处理新到请求</li>
+<li>在事务处理系统中，由于顺序读取文件，利用局部性，优先处理新到的请求，可以减少磁臂移动</li>
+<li>大量请求到达导致磁盘忙碌时，会出现先到请求的饥饿</li>
+</ul>
+<h3 id="最短服务时间优先最短寻道时间优先sstf"><a class="markdownIt-Anchor" href="#最短服务时间优先最短寻道时间优先sstf"></a> 最短服务时间优先/最短寻道时间优先（SSTF）</h3>
+<ul>
+<li>选择从磁臂当前位置开始移动到最短距离的磁盘I/O请求</li>
+<li>总是选择最短寻道时间的请求</li>
+</ul>
+<h3 id="scan电梯算法"><a class="markdownIt-Anchor" href="#scan电梯算法"></a> SCAN电梯算法</h3>
+<ul>
+<li>磁头只沿着一个方向移动</li>
+<li>在移动途中满足所有未完成的请求，直到到达移动方向的尽头，然后掉头，沿反方向扫描</li>
+<li>偏爱那些最靠里和最靠外的磁道请求</li>
+</ul>
+<h3 id="c-scan"><a class="markdownIt-Anchor" href="#c-scan"></a> C-SCAN</h3>
+<ul>
+<li>限定只朝一个方向扫描</li>
+<li>当磁臂沿指定方向扫描到磁盘最后一个磁道时，磁臂返回到反方向末端，再次沿指定方向扫描</li>
+</ul>
+<h3 id="n-step-scan"><a class="markdownIt-Anchor" href="#n-step-scan"></a> N-Step-SCAN</h3>
+<ul>
+<li>SSTF,SCAN和C-SCAN具有磁头臂黏着现象
+<ul>
+<li>当一个或多个进程对同一个磁道具有较高访问速度时，磁头臂黏在相应磁道上不移动</li>
+</ul>
+</li>
+<li>为了避免黏着问题，N-Stap-SCAN将磁盘访问请求序列分为若干个子队列，每个子队列的长度为N</li>
+<li>每次使用SCAN方法处理一个队列</li>
+<li>当前队列正在处理时，新到的访问请求必须加到其他队列中</li>
+<li>当扫描到最后一个队列，如果队列中的请求数小于N，则下次再扫描</li>
+<li>N较大时，性能接近SCAN；N=1时，就是FIFO</li>
+</ul>
+<h3 id="fscan"><a class="markdownIt-Anchor" href="#fscan"></a> FSCAN</h3>
+<ul>
+<li>使用两个子队列</li>
+<li>当扫描开始时，所有请求都放在一个队列中，另一个队列为空</li>
+<li>扫描过程中，新到的请求被放到另外一个队列中</li>
+<li>当原来队列里的请求处理完毕时，才会处理另一个队列里的请求</li>
+</ul>
+<h1 id="raid"><a class="markdownIt-Anchor" href="#raid"></a> RAID</h1>
+<h2 id="设计体系共享三个特性"><a class="markdownIt-Anchor" href="#设计体系共享三个特性"></a> 设计体系共享三个特性</h2>
+<ul>
+<li>RAID是一组物理磁盘驱动器，操作系统把它视为单个逻辑驱动器</li>
+<li>数据分布在物理驱动器阵列中，这种设计机制被称为条带化</li>
+<li>使用冗余的磁盘容量来保存奇偶校验信息，使得当一个磁盘失效时，能够通过检验信息加以恢复数据</li>
+</ul>
+<h2 id="raid分级"><a class="markdownIt-Anchor" href="#raid分级"></a> RAID分级</h2>
+<h3 id="raid-0"><a class="markdownIt-Anchor" href="#raid-0"></a> RAID 0</h3>
+<ul>
+<li>不是真正的RAID，不提供冗余功能</li>
+<li>用户数据和系统数据被视为存储一个逻辑磁盘，这个逻辑磁盘被划分成多个条带</li>
+<li>这些条带被映射到多个物理磁盘中</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID0.jpg" alt></p>
+<h3 id="raid-1"><a class="markdownIt-Anchor" href="#raid-1"></a> RAID 1</h3>
+<ul>
+<li>通过简单的镜像来提供冗余功能</li>
+<li>写数据时没有因奇偶校验产生的开销</li>
+<li>当一个磁盘失效时，可以通过另外一个盘访问数据</li>
+<li>写性能比RAID 0无明显优势</li>
+<li>主要问题时成本问题</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID1.jpg" alt></p>
+<h3 id="raid-2"><a class="markdownIt-Anchor" href="#raid-2"></a> RAID 2</h3>
+<ul>
+<li>使用并行访问技术，所有磁盘参与每个I/O请求</li>
+<li>条带非常小</li>
+<li>为数据盘中相应位计算错误校验码，校验码通常使用汉明码，保存在多个校验盘相应位中</li>
+<li>在可能发生很多磁盘错误的环境中，RAID2是一个有效的选择</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID2.jpg" alt></p>
+<h3 id="raid-3"><a class="markdownIt-Anchor" href="#raid-3"></a> RAID 3</h3>
+<ul>
+<li>不管磁盘阵列有多大，只需要一个荣誉盘</li>
+<li>采用奇偶校验，为所有盘中同一位的集合计算奇偶校验位</li>
+<li>采用了并行访问技术，所有磁盘参与每个I/O请求，数据分布在较小的条带中</li>
+<li>可以达到很高的数据传输速率</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID3.jpg" alt></p>
+<h3 id="raid-4"><a class="markdownIt-Anchor" href="#raid-4"></a> RAID 4</h3>
+<ul>
+<li>只需要使用一个冗余磁盘来完成奇偶校验</li>
+<li>数据以较大的条带分布在各个盘中，每个磁盘单独运转，不同I/O请求可以同时满足</li>
+<li>为所有数据磁盘中同一位置的位计算逐位的奇偶校验位，这个位保存在奇偶校验盘</li>
+<li>开销：写数据时还需要计算校验位并存放在校验位中</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID4.jpg" alt></p>
+<h3 id="raid-5"><a class="markdownIt-Anchor" href="#raid-5"></a> RAID 5</h3>
+<ul>
+<li>与RAID4相似，不同的是奇偶校验条带循环分布在各个盘中</li>
+<li>避免一个RAID4奇偶校验盘潜在的瓶颈问题。任意一个盘上的数据失效不会引起数据丢失</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID5.jpg" alt></p>
+<h3 id="raid-6"><a class="markdownIt-Anchor" href="#raid-6"></a> RAID 6</h3>
+<ul>
+<li>采用了两种不同的奇偶校验计算，分别保存在不同磁盘的不同块中</li>
+<li>高可靠性：除了同级数据异或校验区外，还有一个针对每个数据块的独立校验区。使得即使有两个包含用户数据的磁盘发生错误，也可以重新生成数据</li>
+<li>产生了额外开销，写数据时需生成两个校验盘数据</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/RAID6.jpg" alt></p>
+<h1 id="磁盘高速缓冲"><a class="markdownIt-Anchor" href="#磁盘高速缓冲"></a> 磁盘高速缓冲</h1>
+<h2 id="高速缓存cache-memory"><a class="markdownIt-Anchor" href="#高速缓存cache-memory"></a> 高速缓存(cache memory)</h2>
+<ul>
+<li>比内存小，比内存快的存储器，用在处理器与内存之间</li>
+<li>基于局部性原理，减少对内存的平均访问时间</li>
+</ul>
+<h2 id="磁盘高速缓存"><a class="markdownIt-Anchor" href="#磁盘高速缓存"></a> 磁盘高速缓存</h2>
+<ul>
+<li>为磁盘扇区而设置，位于内存的缓冲区</li>
+<li>包含了磁盘某些扇区的副本</li>
+</ul>
+<h2 id="置换策略"><a class="markdownIt-Anchor" href="#置换策略"></a> 置换策略</h2>
+<h3 id="lru算法"><a class="markdownIt-Anchor" href="#lru算法"></a> LRU算法</h3>
+<ul>
+<li>最常用的算法</li>
+<li>位于磁盘高速缓存中最近最少使用的块被换出</li>
+<li>逻辑实现
+<ul>
+<li>用指向磁盘高速缓存的指针栈来组织块</li>
+<li>最近被访问过的块被放在栈顶
+<ul>
+<li>当一个块被引用或从磁盘放入高速缓存时，将它放在栈顶</li>
+</ul>
+</li>
+<li>位于栈底的块即是置换对象</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/LRU.jpg" alt></p>
+<h3 id="lfu"><a class="markdownIt-Anchor" href="#lfu"></a> LFU</h3>
+<ul>
+<li>置换访问次数最少的块</li>
+<li>为每个块关联一个计数器</li>
+<li>每次访问时，对应块的计数器增加1</li>
+<li>当需要置换时，选择计数器值最小的块置换</li>
+<li>当一个块短期内被频繁访问，计数器值迅速增加，之后即使长时间不访问，也不会被选作置换对象
+<ul>
+<li>将磁盘高速缓存分区<br>
+<img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/%E5%88%86%E5%8C%BA.jpg" alt></li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/LFU.jpg" alt></p>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"
+      title="OS第十一章 文件系统"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        OS第十一章 文件系统
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/22/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%BA%8C%EF%BC%89/"
+      title="马原（二）"
+     >
+
+    <p class="title-text">
+      
+        马原（二）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

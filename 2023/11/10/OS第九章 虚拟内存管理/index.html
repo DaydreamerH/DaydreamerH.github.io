@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第九章 虚拟内存管理 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="多级页表、分页、分段、段页式与其他相关内容">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第九章 虚拟内存管理">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="多级页表、分页、分段、段页式与其他相关内容">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.jpg">
+<meta property="article:published_time" content="2023-11-10T01:36:33.000Z">
+<meta property="article:modified_time" content="2023-12-13T03:12:30.012Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="内存">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第九章 虚拟内存管理" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6p00067gv14br46izt">
+        <img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第九章 虚拟内存管理
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-10T01:36:33.000Z" itemprop="datePublished">2023-11-10</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            6k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%86%85%E5%AD%98/" rel="tag">内存</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="基本概念"><a class="markdownIt-Anchor" href="#基本概念"></a> 基本概念</h1>
+<ul>
+<li>虚拟内存：在存储机制中，辅存可以被看作是主存的一部分来完成寻址。程序使用的地址与内存系统用于识别的物理存储的地址是不同的，程序生成的地址会自动转换为机器地址，虚拟存储的大小受计算机系统寻址机制和可用的辅存容量限制，而不受主存储实际大小的限制</li>
+<li>虚拟地址：在虚拟内存中分配给某一位置的地址，它使得该位置可被访问，就好像是主存的一部分那样。有时也称为逻辑地址。</li>
+<li>虚拟地址空间：分配给进程的虚拟存储</li>
+<li>地址空间：用于某进程的内存地址范围</li>
+<li>实地址：内存中存储位置的地址</li>
+</ul>
+<h1 id="硬件和控制结构"><a class="markdownIt-Anchor" href="#硬件和控制结构"></a> 硬件和控制结构</h1>
+<h2 id="分页和分段内存管理的两个基本特征"><a class="markdownIt-Anchor" href="#分页和分段内存管理的两个基本特征"></a> 分页和分段内存管理的两个基本特征</h2>
+<ul>
+<li>进程中所有的内存访问都是逻辑地址，这些逻辑地址会在运行时动态地转换为物理地址</li>
+<li>一个进程可划分为许多块，在执行过程中，这些块不需要连续地位于内存中</li>
+</ul>
+<h2 id="进程的执行过程"><a class="markdownIt-Anchor" href="#进程的执行过程"></a> 进程的执行过程</h2>
+<ul>
+<li>操作系统仅读取包含程序开始处的一个或几个块进入内存</li>
+<li>任意时刻，进程驻留在内存中的部分——驻留集</li>
+<li>访问一个不在内存中的逻辑地址时，称为内存失效，产生一个中断</li>
+<li>操作系统把被中断的进程置为阻塞态</li>
+<li>操作系统把该进程中包含引发内存失效的部分读入内存
+<ul>
+<li>操作系统产生一个磁盘I/O读请求</li>
+<li>在执行磁盘I/O期间，操作系统调度另外一个进程运行</li>
+<li>磁盘I/O完成后产生中断，操作系统将相应的进程置于就绪状态</li>
+</ul>
+</li>
+</ul>
+<h2 id="提高系统资源利用率的方法"><a class="markdownIt-Anchor" href="#提高系统资源利用率的方法"></a> 提高系统资源利用率的方法</h2>
+<ul>
+<li>内存中保留多个进程
+<ul>
+<li>每个进程仅装入了部分块</li>
+<li>在任何时刻内存中的进程至少有一个处于就绪状态</li>
+<li>提高了处理器的利用率</li>
+</ul>
+</li>
+<li>进程可以比内存的全部空间还大
+<ul>
+<li>基于分页和分段的技术，操作系统和硬件只加载程序的一部分</li>
+<li>程序员面对的是一个巨大内存，大小与磁盘存储器相关</li>
+</ul>
+</li>
+</ul>
+<h2 id="分页和分段在不同情况下的特点"><a class="markdownIt-Anchor" href="#分页和分段在不同情况下的特点"></a> 分页和分段在不同情况下的特点</h2>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E9%A1%B5%E5%92%8C%E5%88%86%E6%AE%B5.png" alt></p>
+<h2 id="局部性和虚拟内存"><a class="markdownIt-Anchor" href="#局部性和虚拟内存"></a> 局部性和虚拟内存</h2>
+<ul>
+<li>进程只有部分块在内存，这样可在内存中保留更多进程</li>
+<li>当内存空间几乎被进程块占据时，每读取一块，必须把另一块换出，可能出现抖动
+<ul>
+<li>抖动：将要用到的块被换出，系统又很快将它取回，导致页面被频繁地换入换出，缺页率急剧增加</li>
+</ul>
+</li>
+</ul>
+<h3 id="局部性原理"><a class="markdownIt-Anchor" href="#局部性原理"></a> 局部性原理</h3>
+<ul>
+<li>存储器的访问呈簇性，簇在很长一段时间内，使用的簇会发生变换，但在很短的时间内，处理器基本上只与固定的簇打交道</li>
+<li>描述了进程中程序和数据引用的集簇倾向</li>
+<li>在很短的时间内仅需要进程的一部分块</li>
+<li>对将来可能访问的块进行猜测，以避免抖动</li>
+</ul>
+<h2 id="分页"><a class="markdownIt-Anchor" href="#分页"></a> 分页</h2>
+<ul>
+<li>虚拟内存通常与使用分页的系统联系在一起</li>
+<li>每个进程都有自己的页表
+<ul>
+<li>分页的虚存方案中，页表项变得更复杂</li>
+</ul>
+</li>
+</ul>
+<h3 id="页表项"><a class="markdownIt-Anchor" href="#页表项"></a> 页表项</h3>
+<ul>
+<li>存在位P：表明对应的页是否在内存</li>
+<li>页框号：若页在内存，则有对应的页框号</li>
+<li>修改位M：表明相应页上次装入内存到限制是否已被修改过
+<ul>
+<li>是，换出时更新辅存上对应页</li>
+<li>否，换出时不必更新</li>
+</ul>
+</li>
+</ul>
+<h3 id="分页系统中的地址转换"><a class="markdownIt-Anchor" href="#分页系统中的地址转换"></a> 分页系统中的地址转换</h3>
+<ul>
+<li>页表位于内存</li>
+<li>进程运行时，一个寄存器保护页表的起始地址</li>
+<li>虚拟地址的页号用于检索页表，查找对应页框号</li>
+<li>页框号与虚拟地址的偏移量结合起来形成物理地址</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2.png" alt></p>
+<h3 id="多级页表"><a class="markdownIt-Anchor" href="#多级页表"></a> 多级页表</h3>
+<ul>
+<li>庞大页表需要离散存储</li>
+<li>将页表进行分页，典型情况下，每页大小最大限制与进程分页大小一致，如pentium处理器</li>
+<li>建立页目录，每项指向一页页表</li>
+<li>如果页目录长度为X，一个页表的包含的页表项数为Y，则一个进程可以有XY页</li>
+</ul>
+<h3 id="两级分页的逻辑地址结构"><a class="markdownIt-Anchor" href="#两级分页的逻辑地址结构"></a> 两级分页的逻辑地址结构</h3>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E4%B8%A4%E7%BA%A7%E5%88%86%E9%A1%B5%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80.png" alt></p>
+<h3 id="两级分页中的地址转换"><a class="markdownIt-Anchor" href="#两级分页中的地址转换"></a> 两级分页中的地址转换</h3>
+<ul>
+<li>虚拟地址（逻辑地址）结构中分离出根页标号</li>
+<li>检索根页表，查找关于用户页的页表项
+<ul>
+<li>如果不在内存，产生一次 缺页中断</li>
+<li>若在内存，用虚拟地址中间页号，检索用户页表，查找对应的页表项</li>
+</ul>
+</li>
+<li>得到页框号，和页内偏移量一起形成物理地址</li>
+</ul>
+<h4 id="二级页表示例一"><a class="markdownIt-Anchor" href="#二级页表示例一"></a> 二级页表示例一</h4>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/example_1.jpg" alt></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mn>16</mn></msup><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><msup><mn>2</mn><mn>10</mn></msup><mi mathvariant="normal">/</mi><mn>2</mn><mo stretchy="false">)</mo><mo>=</mo><mn>128</mn></mrow><annotation encoding="application/x-tex">2^{16}/(2^{10}/2) = 128</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.064108em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">6</span></span></span></span></span></span></span></span></span><span class="mord">/</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">0</span></span></span></span></span></span></span></span></span><span class="mord">/</span><span class="mord">2</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mord">2</span><span class="mord">8</span></span></span></span></p>
+<h4 id="二级页表示例二"><a class="markdownIt-Anchor" href="#二级页表示例二"></a> 二级页表示例二</h4>
+<p>80x86硬件分页地址，32位逻辑地址空间、4KB页面、4B页表项，如何将逻辑地址0x20021406转换为物理地址？</p>
+<ul>
+<li>将逻辑地址转为二进制：0010 0000 0000 0010 0001 0100 0000 0110</li>
+<li>4KB页面说明，页内偏移占12位，即0100 0000 0110</li>
+<li>一个页面可用装入<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mn>1</mn></msup><mn>0</mn></mrow><annotation encoding="application/x-tex">2^10</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span></span></span></span></span><span class="mord">0</span></span></span></span>个页表项，二级页表字段占10位即00 0010 0001</li>
+<li>顶级页表占10位，即0010 0000 00</li>
+</ul>
+<h4 id="二级页表示例三"><a class="markdownIt-Anchor" href="#二级页表示例三"></a> 二级页表示例三</h4>
+<p>32位逻辑地址空间、4KB页面、4B页表项、求逻辑地址4197721的物理地址？<br>
+<img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/example_3.jpg" alt></p>
+<ul>
+<li>页内偏移：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>4197721</mn><mi>m</mi><mi>o</mi><mi>d</mi><mn>4096</mn><mo>=</mo><mn>3417</mn></mrow><annotation encoding="application/x-tex">4197721 mod 4096 = 3417</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord">1</span><span class="mord">9</span><span class="mord">7</span><span class="mord">7</span><span class="mord">2</span><span class="mord">1</span><span class="mord mathdefault">m</span><span class="mord mathdefault">o</span><span class="mord mathdefault">d</span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">4</span><span class="mord">1</span><span class="mord">7</span></span></span></span></li>
+<li>顶级页表：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1024</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>4</mn><mi>K</mi><mi>B</mi><mi mathvariant="normal">/</mi><mn>4</mn><mi>B</mi><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1024 / (4KB/4B) = 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord">0</span><span class="mord">2</span><span class="mord">4</span><span class="mord">/</span><span class="mopen">(</span><span class="mord">4</span><span class="mord mathdefault" style="margin-right:0.07153em;">K</span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mord">/</span><span class="mord">4</span><span class="mord mathdefault" style="margin-right:0.05017em;">B</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span></span></span></span>，物理块号为202</li>
+<li>二级页表：第0项，505</li>
+<li>最终：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>505</mn><mo>×</mo><mn>4096</mn><mo>+</mo><mn>3417</mn><mo>=</mo><mn>2071897</mn></mrow><annotation encoding="application/x-tex">505 \times 4096+3417 = 2071897</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">5</span><span class="mord">0</span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">4</span><span class="mord">1</span><span class="mord">7</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mord">0</span><span class="mord">7</span><span class="mord">1</span><span class="mord">8</span><span class="mord">9</span><span class="mord">7</span></span></span></span></li>
+</ul>
+<h4 id="二级页表示例四"><a class="markdownIt-Anchor" href="#二级页表示例四"></a> 二级页表示例四</h4>
+<p>32位逻辑地址空间、4KB页面、4B页表项，物理地址2485593的逻辑地址？<br>
+<img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/example_3.jpg" alt></p>
+<ul>
+<li>页内偏移：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>2485593</mn><mi>m</mi><mi>o</mi><mi>d</mi><mn>4096</mn><mo>=</mo><mn>3417</mn></mrow><annotation encoding="application/x-tex">2485593 mod 4096 = 3417</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mord">4</span><span class="mord">8</span><span class="mord">5</span><span class="mord">5</span><span class="mord">9</span><span class="mord">3</span><span class="mord mathdefault">m</span><span class="mord mathdefault">o</span><span class="mord mathdefault">d</span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">4</span><span class="mord">1</span><span class="mord">7</span></span></span></span></li>
+<li>页框号：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>2485593</mn><mi mathvariant="normal">/</mi><mn>4096</mn><mo>=</mo><mn>606...3417</mn></mrow><annotation encoding="application/x-tex">2485593 / 4096 = 606 ... 3417</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mord">4</span><span class="mord">8</span><span class="mord">5</span><span class="mord">5</span><span class="mord">9</span><span class="mord">3</span><span class="mord">/</span><span class="mord">4</span><span class="mord">0</span><span class="mord">9</span><span class="mord">6</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">6</span><span class="mord">0</span><span class="mord">6</span><span class="mord">.</span><span class="mord">.</span><span class="mord">.</span><span class="mord">3</span><span class="mord">4</span><span class="mord">1</span><span class="mord">7</span></span></span></span>，606为页框号</li>
+<li>位于202号物理块，则顶级页表偏移1，二级页表偏移1</li>
+<li>顶级页表与二级页表占10位</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mo>×</mo><msup><mn>2</mn><mn>22</mn></msup><mo>+</mo><mn>1</mn><mo>×</mo><msup><mn>2</mn><mn>12</mn></msup><mo>+</mo><mn>3417</mn><mo>=</mo><mn>4201817</mn></mrow><annotation encoding="application/x-tex">1 \times 2^{22} + 1 \times 2^{12} + 3417 = 4201817</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.897438em;vertical-align:-0.08333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.897438em;vertical-align:-0.08333em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">3</span><span class="mord">4</span><span class="mord">1</span><span class="mord">7</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">4</span><span class="mord">2</span><span class="mord">0</span><span class="mord">1</span><span class="mord">8</span><span class="mord">1</span><span class="mord">7</span></span></span></span></li>
+</ul>
+<h3 id="倒置页表"><a class="markdownIt-Anchor" href="#倒置页表"></a> 倒置页表</h3>
+<ul>
+<li>虚拟地址的页号部分使用一个简单的散列函数映射到散列中
+<ul>
+<li>哈希值指向倒排页表</li>
+</ul>
+</li>
+<li>无论有多少进程、支持多少虚拟页，页表都只需要实存中的一个固定部分</li>
+<li>页表结构称为倒置的原因是，它使用页框号而非虚拟页号来索引页表项</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%80%92%E7%BD%AE%E9%A1%B5%E8%A1%A8.jpg" alt></p>
+<h3 id="转换检测缓冲区tlb快表"><a class="markdownIt-Anchor" href="#转换检测缓冲区tlb快表"></a> 转换检测缓冲区TLB(快表)</h3>
+<ul>
+<li>每次虚存访问都可能会引起两次物理地址访问
+<ul>
+<li>一次取相应的页表项</li>
+<li>一次取需要的数据</li>
+</ul>
+</li>
+<li>为克服上述问题，大多数虚拟内存方案都为页表项使用了一个高速缓存，称为TLB
+<ul>
+<li>包含最近使用过的页表项</li>
+</ul>
+</li>
+</ul>
+<h4 id="tlb地址转换流程"><a class="markdownIt-Anchor" href="#tlb地址转换流程"></a> TLB地址转换流程</h4>
+<ul>
+<li>给定一个虚拟地址，处理器首先检查TLB</li>
+<li>若命中：即页表项在TLB中，检索页框号形成物理地址</li>
+<li>若未命中：即页表项不在TLB中，检索进程页表，查找相应页表项
+<ul>
+<li>若存在位已置位，页位于内存，用页框号+偏移量形成物理地址，同时更新快表</li>
+<li>若存在位未置位，页不在内存，产生缺页中断，装入所需页，更新页表</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/TLB.jpg" alt></p>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/TLB2.jpg" alt></p>
+<h4 id="tlb查找"><a class="markdownIt-Anchor" href="#tlb查找"></a> TLB查找</h4>
+<ul>
+<li>TLB包含整个页表中的部分表项，因此不能简单把页号编入TLB索引，必须包含页号和完整的页表项</li>
+<li>处理器的硬件机制允许同时查询许多TLB页，以确定是否存在匹配的页号</li>
+</ul>
+<h4 id="tlb操作和内存高速缓存操作"><a class="markdownIt-Anchor" href="#tlb操作和内存高速缓存操作"></a> TLB操作和内存高速缓存操作</h4>
+<p>单次访问内存设计CPU硬件的复杂性</p>
+<ul>
+<li>页表项可能在TLB中，也可能在内存或磁盘中</li>
+<li>被访问的字可能在高速缓存中，也可能在内存或磁盘中</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/TLB%E6%93%8D%E4%BD%9C.jpg" alt></p>
+<h3 id="页尺寸"><a class="markdownIt-Anchor" href="#页尺寸"></a> 页尺寸</h3>
+<ul>
+<li>页越小，内部碎片的总量越小</li>
+<li>页越小，每个进程需要的页的数量越多</li>
+<li>页数量越多，进程的页表越大</li>
+<li>对于多道程序设计，这意味着某些活动进程可能有一部分页表在虚存而非内存，则一次内存访问可能产生两次缺页中断
+<ul>
+<li>一次读取所需页表</li>
+<li>一次读取进程页</li>
+</ul>
+</li>
+<li>基于大多数辅存设备的物理特性，希望页尺寸较大，从而实现更有效的数据传输</li>
+</ul>
+<h4 id="缺页率与页尺寸-分配页框数"><a class="markdownIt-Anchor" href="#缺页率与页尺寸-分配页框数"></a> 缺页率与页尺寸、分配页框数</h4>
+<ul>
+<li>页尺寸很小时，缺页率低</li>
+<li>页尺寸增加时，缺页率增加</li>
+<li>页尺寸较大时，缺页率下降</li>
+<li>对固定的页尺寸，当分配给进程的页框数增加时，缺页率下降</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E7%BC%BA%E9%A1%B5%E7%8E%87.jpg" alt></p>
+<h2 id="分段"><a class="markdownIt-Anchor" href="#分段"></a> 分段</h2>
+<ul>
+<li>允许程序员把内存视作由多个地址空间或段组成</li>
+<li>段大小不等，可以动态变化</li>
+<li>内存访问：段号+段内偏移量</li>
+<li>优点
+<ul>
+<li>简化了对不断增长的数据结构的处理</li>
+<li>允许程序独立地改变或重新编译</li>
+<li>有助于进程间的共享</li>
+<li>有助于保护</li>
+</ul>
+</li>
+</ul>
+<h3 id="段的组织"><a class="markdownIt-Anchor" href="#段的组织"></a> 段的组织</h3>
+<ul>
+<li>存在位P，标识相应的段是否位于内存
+<ul>
+<li>若存在，段表项包含：段基址，段长度</li>
+</ul>
+</li>
+<li>修改位M，标识相应的段是否已被修改
+<ul>
+<li>是，换出时需要写回辅存</li>
+<li>否，换出时不需写回</li>
+</ul>
+</li>
+<li>其他控制位，如用于保护和共享</li>
+</ul>
+<h3 id="分段系统中的地址转换"><a class="markdownIt-Anchor" href="#分段系统中的地址转换"></a> 分段系统中的地址转换</h3>
+<ul>
+<li>逻辑地址 = 段号+段内偏移量，寄存器存储段表地址</li>
+<li>根据段表地址和段号查找段表，找到相应段在内存中的及地址</li>
+<li>得到物理地址=基地址+段内偏移量</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E6%AE%B5%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2.jpg" alt></p>
+<h2 id="段页式"><a class="markdownIt-Anchor" href="#段页式"></a> 段页式</h2>
+<p>用户的地址空间被程序员划分为许多段，每段划分为许多固定大小的页</p>
+<ul>
+<li>分段对程序员可见
+<ul>
+<li>支持数据结构增长</li>
+<li>段长可变</li>
+<li>支持共享和保护</li>
+</ul>
+</li>
+<li>分页对程序员透明
+<ul>
+<li>消除外部碎片</li>
+<li>有效利用内存</li>
+</ul>
+</li>
+</ul>
+<h3 id="段页式的逻辑地址"><a class="markdownIt-Anchor" href="#段页式的逻辑地址"></a> 段页式的逻辑地址</h3>
+<ul>
+<li>程序员角度：逻辑地址 = 段号 + 段内偏移</li>
+<li>系统的角度：段内偏移 = 页号 + 页内偏移</li>
+<li>每个进程一个段表</li>
+<li>每个段一个页表</li>
+<li>段表项：包含段长和对应页表的起始地址</li>
+<li>页表项：含页框号、存在位P、修改位M</li>
+</ul>
+<h3 id="段页式地址转换"><a class="markdownIt-Anchor" href="#段页式地址转换"></a> 段页式地址转换</h3>
+<ul>
+<li>虚拟地址 = 段号 + 页号 + 偏移量，寄存器存放段表起始地址</li>
+<li>根据段表起始地址和段号查找段表，得到对应段的页表起始地址</li>
+<li>根据页表起始地址和页号查找页表，得到页框号</li>
+<li>页框号和偏移量构成物理地址</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E6%AE%B5%E9%A1%B5%E5%BC%8F%E8%BD%AC%E6%8D%A2.jpg" alt></p>
+<h2 id="保护和共享"><a class="markdownIt-Anchor" href="#保护和共享"></a> 保护和共享</h2>
+<ul>
+<li>保护：每个段都包含一个长度和一个基地址，可以控制非法访问</li>
+<li>共享：一个段可以在多个进程的段表中被引用，实现共享</li>
+</ul>
+<h1 id="操作系统软件"><a class="markdownIt-Anchor" href="#操作系统软件"></a> 操作系统软件</h1>
+<p>内存管理设计的三个基本选择：</p>
+<ul>
+<li>是否使用虚拟技术</li>
+<li>使用分页还是分段或者二者同用</li>
+<li>为各种存储管理特征采用的算法</li>
+</ul>
+<h2 id="读取策略"><a class="markdownIt-Anchor" href="#读取策略"></a> 读取策略</h2>
+<p>决定某页何时进入内存</p>
+<h3 id="请求调页"><a class="markdownIt-Anchor" href="#请求调页"></a> 请求调页</h3>
+<ul>
+<li>仅在引用页面时，才把相应的页面调入内存</li>
+<li>进程首次启动时，会发生很多缺页中断</li>
+<li>局部性原则表明，大多数将来访问的页面都是最近读取的页面，一段时间后，缺页中断会降低到很低的水平</li>
+</ul>
+<h3 id="预调页"><a class="markdownIt-Anchor" href="#预调页"></a> 预调页</h3>
+<ul>
+<li>额外读取所缺页面以外的页面</li>
+<li>考虑大多数辅助存储设备的特性</li>
+<li>若进程的页面连续存储在辅存中，则一次读取多个页面会更有效</li>
+<li>如果额外读入的页面未使用，则低效</li>
+</ul>
+<h2 id="置换策略"><a class="markdownIt-Anchor" href="#置换策略"></a> 置换策略</h2>
+<ul>
+<li>确定进程驻留在内存中的位置</li>
+<li>分段系统中的重要设计内容，如首次匹配、循环匹配等</li>
+<li>分页或段内分页是无关紧要的，因为硬件以相同的效率执行地址转换功能</li>
+<li>对于非一致存储访问多处理器，需要自动放置策略</li>
+</ul>
+<h3 id="相关问题"><a class="markdownIt-Anchor" href="#相关问题"></a> 相关问题</h3>
+<ul>
+<li>给每个活动进行分配多少个页框</li>
+<li>置换范围，即计划置换的页集局限于产生缺页的进程本身，还是内存内的所有进程</li>
+<li>具体淘汰哪个页面用以置换</li>
+</ul>
+<h3 id="页框锁定"><a class="markdownIt-Anchor" href="#页框锁定"></a> 页框锁定</h3>
+<ul>
+<li>当页框锁定时，当前存储在该页框中的页面不能被置换</li>
+<li>操作系统内核和重要的数据结构保存在锁定的页框中</li>
+<li>I/O缓冲区和时间要求严格的区域可能保存在锁定的页框中</li>
+<li>通过将锁定位与每个页框相关联来实现</li>
+</ul>
+<h3 id="选择置换页的基本算法"><a class="markdownIt-Anchor" href="#选择置换页的基本算法"></a> 选择置换页的基本算法</h3>
+<ul>
+<li>最佳OPT
+<ul>
+<li>置换下次访问距当前时间最长的页面</li>
+<li>理想算法，缺页率最少</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/OPT.jpg" alt></p>
+<ul>
+<li>最近最久未使用(LRU，最近最少使用)
+<ul>
+<li>置换内存中最长时间未引用的页面</li>
+<li>根据局部性原理，这也是最近最不可能访问的页面</li>
+<li>难以实施
+<ul>
+<li>每页添加最近访问时间戳——开销大</li>
+<li>建立链表——开销大</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/LRU.jpg" alt></p>
+<ul>
+<li>先进先出(FIFO)
+<ul>
+<li>将分配给进程的页框视为循环缓冲区</li>
+<li>页面将以循环方式删除——简单的置换策略</li>
+<li>置换驻留在内存中时间最长的页面</li>
+<li>Belady异常
+<ul>
+<li>分配的页框数增加，缺页中断次数有时反而增加</li>
+<li>页地址流：1 2 3 4 1 2 5 1 2 3 4 5</li>
+<li>页框数为3：缺页中断9次；页框数为4：缺页中断10次</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/FIFO.jpg" alt></p>
+<ul>
+<li>时钟置换(CLOCK)
+<ul>
+<li>每个页框关联一个使用位</li>
+<li>当页面首次加载到内存中，或被引用时，使用位设置为1</li>
+<li>用于置换的候选页框视作一个循环缓冲区</li>
+<li>发生缺页中断时，首先检查表针指向页面，如果使用位为0，则新页面替换之；如果使用位为1，则清0，表针前移一个位置，重复上述过程</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/CLOCK.jpg" alt></p>
+<ul>
+<li>改进型时钟置换
+<ul>
+<li>考虑页面修改情况</li>
+<li>页面分类（u表示访问位，m表示修改位）
+<ul>
+<li>一类：最近未被访问，又未被修改，最佳淘汰页</li>
+<li>二类：最近未被访问，但已被修改页</li>
+<li>三类：最近已被访问，但未被修改</li>
+<li>四类：最近已被访问且被修改，最不应淘汰页</li>
+</ul>
+</li>
+<li>算法实现
+<ul>
+<li>选择最佳淘汰页面</li>
+<li>如果选择最佳淘汰页面失败，寻找第2类页面，并把所有扫描过的页面的访问位u置0</li>
+<li>如果选择第2类页面失败，返回第一步</li>
+</ul>
+</li>
+<li>改进型时钟置换算法实现简单，性能比较理想，被广泛采用</li>
+</ul>
+</li>
+</ul>
+<h2 id="驻留集管理"><a class="markdownIt-Anchor" href="#驻留集管理"></a> 驻留集管理</h2>
+<h3 id="驻留集大小"><a class="markdownIt-Anchor" href="#驻留集大小"></a> 驻留集大小</h3>
+<ul>
+<li>操作系统必须决定将多少页面带入主内存</li>
+<li>分配给每个进程的内存量越小，可以驻留在内存中的进程数量越多</li>
+<li>加载少量页面会增加缺页</li>
+<li>超出一定大小，进一步分配页面不会影响缺页率</li>
+<li>固定分配
+<ul>
+<li>在主存储器中为进程提供固定数量的帧以在其中执行</li>
+<li>发生缺失时，必须替换该进程的其中一个页面</li>
+</ul>
+</li>
+<li>可变分配
+<ul>
+<li>允许分配给进程的页面帧数在进程的生命周期内变化</li>
+</ul>
+</li>
+</ul>
+<h3 id="置换范围"><a class="markdownIt-Anchor" href="#置换范围"></a> 置换范围</h3>
+<ul>
+<li>置换策略的作用范围分为全局和局部两类</li>
+<li>两种类型策略的实施都是在没有空闲页框时由缺页中断激活</li>
+<li>局部置换：仅在产生缺页中断的进程的驻留页中选择置换对象</li>
+<li>全局置换：在整个内存中选择置换对象，只要不是锁定的页，都可以作为候选页</li>
+</ul>
+<h3 id="管理方法"><a class="markdownIt-Anchor" href="#管理方法"></a> 管理方法</h3>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E9%85%8D%E5%92%8C%E7%BD%AE%E6%8D%A2.jpg" alt></p>
+<ul>
+<li>固定分配、局部置换
+<ul>
+<li>需要事先确定分配给一个进程的页框数量</li>
+<li>如果给进程分配的数量太小，将会产生较高的缺页率</li>
+<li>如果分配的页框数太多，内存中只能有较少的程序
+<ul>
+<li>增加了处理器的空闲时间</li>
+<li>增加了花在交换上的时间</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>可变分配、全局置换
+<ul>
+<li>最容易实现的方法，在很多操作系统里采用</li>
+<li>操作系统维护一个空闲页框列表</li>
+<li>当缺页中断发生，一个空闲页框分配给缺页的进程</li>
+<li>如果没有空闲页框，操作系统必须选择一个内存中的页框，作为置换对象</li>
+<li>如果选择置换对象不当，将容易再次发生缺页中断，使用页缓冲可以解决这个问题</li>
+</ul>
+</li>
+<li>可变分配、局部置换
+<ul>
+<li>当一个新进程装入内存时，分配一定数量的页框作为它的驻留集</li>
+<li>当缺页中断发生时，从进程驻留集中选择一页用于置换</li>
+<li>不时重新评估进程的页框分配情况，增加或减少分配的页框，以提高整体性能</li>
+</ul>
+</li>
+</ul>
+<h3 id="工作集"><a class="markdownIt-Anchor" href="#工作集"></a> 工作集</h3>
+<ul>
+<li>进程在虚拟时间t的参数Δ的工作集W(t,Δ)，表示该进程在过去的Δ个虚拟时间单位被访问到的页集合</li>
+<li>用进程访问内存的次数来衡量虚拟世界t，例如进程一系列的内存访问为r(1),r(2),…,r(i)，r(i)表示第i次对内存页的访问，对应的虚拟时间1,2,…,i。</li>
+<li>虚拟时间窗口越大，则工作集越大<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>W</mi><mo stretchy="false">(</mo><mi>t</mi><mo separator="true">,</mo><mi>δ</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mo>⊇</mo><mi>W</mi><mo stretchy="false">(</mo><mi>t</mi><mo separator="true">,</mo><mi>δ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">W(t,\delta + 1) \supseteq W(t,\delta)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="mopen">(</span><span class="mord mathdefault">t</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03785em;">δ</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">⊇</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="mopen">(</span><span class="mord mathdefault">t</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03785em;">δ</span><span class="mclose">)</span></span></span></span></li>
+<li>工作集策略
+<ul>
+<li>根据工作集来决定驻留集的大小</li>
+<li>周期性的从驻留集中移去不在工作集中的页</li>
+<li>只有驻留集包含工作集时，才执行进程</li>
+<li>缺点
+<ul>
+<li>工作集大小随时间变化</li>
+<li>给每个进程测量工作集不现实，Δ最优值未知</li>
+</ul>
+</li>
+<li>近似工作集策略的应用
+<ul>
+<li>用缺页率导致驻留集</li>
+<li>缺页率低于某个阈值，减小驻留集</li>
+<li>缺页率超过某个阈值，增加驻留集</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>平均访问时间：缺页率p，内存访问时间为ma，发生缺页访问时间为da，则平均访问时间为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo><mi>m</mi><mi>a</mi><mo>+</mo><mi>p</mi><mo>×</mo><mi>d</mi><mi>a</mi></mrow><annotation encoding="application/x-tex">(1-p)ma+p \times da</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">p</span><span class="mclose">)</span><span class="mord mathdefault">m</span><span class="mord mathdefault">a</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.7777700000000001em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">p</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">d</span><span class="mord mathdefault">a</span></span></span></span></li>
+<li>有效访问时间
+<ul>
+<li>缺页服务时间</li>
+<li>进程重新执行时间</li>
+<li>页面调入时间：寻道时间+旋转时间+数据传送时间</li>
+</ul>
+</li>
+</ul>
+<h2 id="清除策略"><a class="markdownIt-Anchor" href="#清除策略"></a> 清除策略</h2>
+<p>用于确定何时将修改过的页写回辅存</p>
+<ul>
+<li>请求式清除：只有当一页被选择用于置换时才被写回辅存
+<ul>
+<li>发生缺页中断的进程在解除阻塞前需等待两次页传送，写回修改页和读入新页</li>
+</ul>
+</li>
+<li>预约式清除：将修改的多页在需要使用它们占据页框之前，成批写回辅存
+<ul>
+<li>预先写回辅存的页，在置换前可能又会被修改，使得预清除意义不大</li>
+</ul>
+</li>
+<li>结合页缓冲技术
+<ul>
+<li>只清除用于置换的页</li>
+<li>通过页缓冲，将置换的页放在已修改表和未修改表中，已修改表中的页可以成批写回辅存</li>
+</ul>
+</li>
+</ul>
+<h2 id="加载控制"><a class="markdownIt-Anchor" href="#加载控制"></a> 加载控制</h2>
+<ul>
+<li>决定驻留在内存中的进程数量</li>
+<li>对于有效的内存管理来讲非常重要</li>
+<li>内存驻留的进程太少，当所有进程阻塞时，大量时间花在交换上</li>
+<li>内存驻留的进程太多会导致抖动</li>
+</ul>
+<p><img src="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%84%E7%90%86%E5%99%A8%E5%88%A9%E7%94%A8%E7%8E%87.jpg" alt></p>
+<h3 id="ls准则"><a class="markdownIt-Anchor" href="#ls准则"></a> L=S准则</h3>
+<p>发生缺页的平均时间L等于处理缺页故障的平均时间S，此时处理器的利用率最大</p>
+<h3 id="控制多道程序度"><a class="markdownIt-Anchor" href="#控制多道程序度"></a> 控制多道程序度</h3>
+<ul>
+<li>需挂起一个或多个驻留进程</li>
+<li>选择进程挂起
+<ul>
+<li>最低优先级进程</li>
+<li>缺页中断的进程</li>
+<li>最后被激活的进程</li>
+<li>最小驻留集的进程</li>
+<li>最大空间的进程</li>
+<li>最大剩余执行时间的进程</li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/11/17/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E5%9B%9B%EF%BC%89/"
+      title="套接字编程（四）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        套接字编程（四）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/"
+      title="OS第八章 内存管理"
+     >
+
+    <p class="title-text">
+      
+        OS第八章 内存管理
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

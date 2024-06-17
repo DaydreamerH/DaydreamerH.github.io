@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第十一章 文件系统 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="文件系统概述、文件组织、文件目录、文件共享、记录组块、辅存管理等">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第十一章 文件系统">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="文件系统概述、文件组织、文件目录、文件共享、记录组块、辅存管理等">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/banner.jpg">
+<meta property="article:published_time" content="2023-11-28T05:24:39.000Z">
+<meta property="article:modified_time" content="2023-12-25T08:06:38.252Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第十一章 文件系统" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6t000h7gv1eda4fv0x">
+        <img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第十一章 文件系统
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-28T05:24:39.000Z" itemprop="datePublished">2023-11-28</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            5.4k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="文件系统概述"><a class="markdownIt-Anchor" href="#文件系统概述"></a> 文件系统概述</h1>
+<h2 id="文件"><a class="markdownIt-Anchor" href="#文件"></a> 文件</h2>
+<ul>
+<li>文件：用户创建的数据集</li>
+<li>从用户的角度来看，文件是操作系统的重要组成部分</li>
+</ul>
+<h3 id="理想属性"><a class="markdownIt-Anchor" href="#理想属性"></a> 理想属性</h3>
+<ul>
+<li>长期存在：文件存储在硬盘或其他辅存中，用户退出系统时文件不会消失</li>
+<li>可在进程间共享：文件有名字，具有允许受控共享的相关访问权限</li>
+<li>结构：文件可以组织成为层次结构或更复杂的结构，以反映文件之间的关系</li>
+</ul>
+<h2 id="文件系统"><a class="markdownIt-Anchor" href="#文件系统"></a> 文件系统</h2>
+<ul>
+<li>提供存储数据的手段</li>
+<li>为文件维护一组属性，如所有者、创建时间、最后修改时间和访问权限等</li>
+<li>典型文件操作功能接口：
+<ul>
+<li>创建</li>
+<li>删除</li>
+<li>打开</li>
+<li>关闭</li>
+<li>读</li>
+<li>写</li>
+</ul>
+</li>
+</ul>
+<h2 id="文件结构"><a class="markdownIt-Anchor" href="#文件结构"></a> 文件结构</h2>
+<ul>
+<li>域
+<ul>
+<li>基本数据单元</li>
+<li>包含一个值</li>
+<li>定长或变长</li>
+</ul>
+</li>
+<li>记录
+<ul>
+<li>一组相关域的集合，可视为应用程序的一个单元</li>
+<li>定长或变长</li>
+</ul>
+</li>
+<li>文件
+<ul>
+<li>一组相似记录的集合</li>
+<li>可被用户和应用程序视为一个实体</li>
+<li>通过名字访问</li>
+<li>访问控制通常在文件级实施</li>
+</ul>
+</li>
+<li>数据库
+<ul>
+<li>相关的数据集合</li>
+<li>数据元素之间存在明确的关系</li>
+<li>供不同的应用程序使用</li>
+<li>由一种或多种类型的文件组成</li>
+</ul>
+</li>
+</ul>
+<h2 id="文件管理目标"><a class="markdownIt-Anchor" href="#文件管理目标"></a> 文件管理目标</h2>
+<ol>
+<li>满足用户的数据管理需求</li>
+<li>保证文件中的数据有效</li>
+<li>优化性能，如吞吐量、响应时间</li>
+<li>为各种类型的存储设备提供I/O支持</li>
+<li>最大限度地减少丢失或破坏数据的可能性</li>
+<li>为用户进程提供标准I/O接口例程集</li>
+<li>在多用户系统中为多个用户提供I/O支持</li>
+</ol>
+<h3 id="最小用户需求"><a class="markdownIt-Anchor" href="#最小用户需求"></a> 最小用户需求</h3>
+<ol>
+<li>能够创建、删除、读取和修改文件</li>
+<li>能够受控地访问其他用户的文件</li>
+<li>控制允许进行哪些类型的访问</li>
+<li>能够以适合问题的形成重组文件</li>
+<li>能够在文件间移动数据</li>
+<li>能够备份文件，且在文件遭到破坏时恢复文件</li>
+<li>能够通过名字而非数字标识符访问自己的文件</li>
+</ol>
+<h2 id="文件系统架构"><a class="markdownIt-Anchor" href="#文件系统架构"></a> 文件系统架构</h2>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84.jpg" alt></p>
+<h3 id="设备驱动"><a class="markdownIt-Anchor" href="#设备驱动"></a> 设备驱动</h3>
+<ul>
+<li>最底层</li>
+<li>直接与外围设备（或它们的控制器或通道）通信</li>
+<li>负责启动设备上的I/O操作</li>
+<li>处理I/O请求的完成</li>
+<li>通常视为操作系统的一个组成部分</li>
+</ul>
+<h3 id="基本文件系统"><a class="markdownIt-Anchor" href="#基本文件系统"></a> 基本文件系统</h3>
+<ul>
+<li>也称为物理I/O层</li>
+<li>与计算机外部环境的基本接口</li>
+<li>处理在磁盘间或磁带系统间的数据块</li>
+<li>关注数据块在辅存的放置位置</li>
+<li>关注数据块在内存缓冲区的放置位置</li>
+<li>通常视为操作系统的一个组成部分</li>
+</ul>
+<h3 id="基本io管理程序"><a class="markdownIt-Anchor" href="#基本io管理程序"></a> 基本I/O管理程序</h3>
+<ul>
+<li>负责所有文件I/O的初始化和终止</li>
+<li>维护处理设备I/O的设备，调度和文件状态的控制结构</li>
+<li>选择要执行I/O的设备</li>
+<li>关注调度磁盘和磁带访问以优化性能</li>
+<li>I/O缓冲区的指定和辅存的分配</li>
+<li>通常视为操作系统的一个组成部分</li>
+</ul>
+<h3 id="逻辑io"><a class="markdownIt-Anchor" href="#逻辑io"></a> 逻辑I/O</h3>
+<ul>
+<li>使用户和应用程序能够访问记录</li>
+<li>提供一种通用的记录I/O能力</li>
+<li>维护文件基本数据</li>
+</ul>
+<h3 id="访问方法"><a class="markdownIt-Anchor" href="#访问方法"></a> 访问方法</h3>
+<ul>
+<li>文件系统中与用户最近的一层</li>
+<li>提供应用程序和文件系统以及保存数据的设备之间的接口</li>
+<li>不同的访问方法反映了不同的文件结构以及访问和处理数据的不同方式</li>
+</ul>
+<h2 id="文件管理的要素"><a class="markdownIt-Anchor" href="#文件管理的要素"></a> 文件管理的要素</h2>
+<ul>
+<li>用户和应用程序通过文件操作与文件系统交互，通过目录确定文件的位置</li>
+<li>授权用户以特定的方式访问特定的文件</li>
+<li>用户通过文件操作函数，基于字符流或记录来操作文件</li>
+<li>系统对文件的I/O是以块为单位，基于块来完成输入/输出</li>
+<li>操作系统需要为文件在磁盘上分配空闲块，同时还需要管理空闲空间</li>
+</ul>
+<h1 id="文件的组织或访问"><a class="markdownIt-Anchor" href="#文件的组织或访问"></a> 文件的组织或访问</h1>
+<ul>
+<li>文件组织指文件中记录的逻辑结构，由用户访问记录的方式确定</li>
+<li>选择文件组织的5个重要原则
+<ul>
+<li>快速访问</li>
+<li>易于修改</li>
+<li>节约存储空间</li>
+<li>维护简单</li>
+<li>可靠性</li>
+</ul>
+</li>
+<li>原则的优先级取决于使用文件的应用程序</li>
+</ul>
+<h2 id="堆文件"><a class="markdownIt-Anchor" href="#堆文件"></a> 堆文件</h2>
+<ul>
+<li>最简单的文件组织形式</li>
+<li>按照到达的顺序收集数据</li>
+<li>每条记录由一串数据组成</li>
+<li>目的是积累大量数据并保存</li>
+<li>通过穷举查找方法检索记录</li>
+<li>特点
+<ul>
+<li>变长记录</li>
+<li>可变域集</li>
+<li>按时间先后排序</li>
+</ul>
+</li>
+</ul>
+<h2 id="顺序文件"><a class="markdownIt-Anchor" href="#顺序文件"></a> 顺序文件</h2>
+<ul>
+<li>最常见的文件组织形式</li>
+<li>记录采用固定格式</li>
+<li>关键字唯一标识一条记录</li>
+<li>记录按照关键域组织</li>
+<li>通常用于批处理应用中</li>
+<li>很容易存储在磁盘和磁带</li>
+</ul>
+<h2 id="索引顺序文件"><a class="markdownIt-Anchor" href="#索引顺序文件"></a> 索引顺序文件</h2>
+<ul>
+<li>保留顺序文件的关键特征：记录按照关键域组织</li>
+<li>增加了支持随机访问的索引和溢出文件</li>
+<li>索引提供快速接近目标的查找能力</li>
+<li>溢出文件类似于日志文件，要往文件中插入记录时，可以将其放在溢出文件中，并由主文件中它的前一个记录通过指针指向</li>
+<li>可按批处理方式合并溢出文件</li>
+<li>索引可以有多级</li>
+</ul>
+<h2 id="索引文件"><a class="markdownIt-Anchor" href="#索引文件"></a> 索引文件</h2>
+<ul>
+<li>只能通过索引访问记录</li>
+<li>可以使用变长度记录</li>
+<li>完全缩索引包含主文件中每条记录的索引项</li>
+<li>部分索引只包含有感兴趣域的记录的索引项</li>
+<li>主要用于信息及时性要求比较严格且很少对所有数据处理的应用程序</li>
+</ul>
+<h2 id="直接文件或散列文件"><a class="markdownIt-Anchor" href="#直接文件或散列文件"></a> 直接文件或散列文件</h2>
+<ul>
+<li>直接访问一个磁盘中任意一个地址已知的数据块</li>
+<li>使用基于关键字的散列</li>
+<li>典型应用场景
+<ul>
+<li>快速访问</li>
+<li>固定长度记录</li>
+<li>一次访问一个记录</li>
+</ul>
+</li>
+</ul>
+<h1 id="文件目录"><a class="markdownIt-Anchor" href="#文件目录"></a> 文件目录</h1>
+<h2 id="目录信息单元"><a class="markdownIt-Anchor" href="#目录信息单元"></a> 目录信息单元</h2>
+<h3 id="文件目录的基本信息"><a class="markdownIt-Anchor" href="#文件目录的基本信息"></a> 文件目录的基本信息</h3>
+<ul>
+<li>文件名：由创建者选择的名字，在同一个目录中必须唯一</li>
+<li>文件类型：如文本文件、二进制文件、加载模块等</li>
+<li>文件组织：供那些支持不同组织形式的系统使用</li>
+</ul>
+<h3 id="文件目录的地址信息"><a class="markdownIt-Anchor" href="#文件目录的地址信息"></a> 文件目录的地址信息</h3>
+<ul>
+<li>卷：指示存储文件的设备</li>
+<li>起始地址：文件在辅存中的起始物理地址</li>
+<li>使用大小：文件的当前大小，单位为字节、字或块</li>
+<li>分配大小：文件的最大尺寸</li>
+</ul>
+<h3 id="文件目录的访问控制信息"><a class="markdownIt-Anchor" href="#文件目录的访问控制信息"></a> 文件目录的访问控制信息</h3>
+<ul>
+<li>所有者：文件主，可以授权或拒绝其他用户的访问、改变给予他们的权限</li>
+<li>访问信息：该单位的最简单形式包括每个授权用户的用户名和口令</li>
+<li>权限信息：控制读、写、执行及在网上传输</li>
+</ul>
+<h3 id="文件目录的使用信息"><a class="markdownIt-Anchor" href="#文件目录的使用信息"></a> 文件目录的使用信息</h3>
+<ul>
+<li>数据创建：文件首次放到目录中的时间</li>
+<li>创建者身份：通常是当前所有者，但不一定必须是当前所有者</li>
+<li>最后一次访问的日期</li>
+<li>最后一次读用户的身份</li>
+<li>最后一次修改的日期</li>
+<li>最后一次修改者的身份</li>
+<li>最后一次备份的日期</li>
+<li>当前使用：当前文件活动的信息，如打开文件的进程、加锁等</li>
+</ul>
+<h2 id="目录操作类型"><a class="markdownIt-Anchor" href="#目录操作类型"></a> 目录操作类型</h2>
+<ul>
+<li>查找</li>
+<li>创建文件</li>
+<li>删除文件</li>
+<li>显示目录</li>
+<li>修改目录</li>
+</ul>
+<h2 id="目录结构"><a class="markdownIt-Anchor" href="#目录结构"></a> 目录结构</h2>
+<h3 id="单级结构"><a class="markdownIt-Anchor" href="#单级结构"></a> 单级结构</h3>
+<ul>
+<li>在整个文件系统中只建立一张目录表，其中每个目录项对应一个文件</li>
+<li>主要优点是实现简单</li>
+<li>缺点：不允许文件重名；文件查找速度慢</li>
+</ul>
+<h3 id="两级结构"><a class="markdownIt-Anchor" href="#两级结构"></a> 两级结构</h3>
+<ul>
+<li>主目录：每个用户一个目录项，提供地址和访问控制信息</li>
+<li>用户目录：用户文件的简单列表，文件名称须唯一</li>
+</ul>
+<h3 id="树状结构"><a class="markdownIt-Anchor" href="#树状结构"></a> 树状结构</h3>
+<ul>
+<li>每一级目录可以包含文件，也可以包含下一级目录</li>
+<li>只有一个根目录，而且除根目录外，其余每个目录或者文件都有唯一的一个上级目标</li>
+<li>单个父目录</li>
+<li>多个子目录</li>
+</ul>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E6%A0%91%E7%8A%B6%E7%BB%93%E6%9E%84.jpg" alt></p>
+<ul>
+<li>路径名
+<ul>
+<li>任何文件可以按照根目录或主目录向下到各个分支，最后达到该文件的路径来定位</li>
+<li>多个文件可以同名，只要保证它们的路径名是唯一的即可</li>
+</ul>
+</li>
+<li>工作目录
+<ul>
+<li>对于用户，总有一个当前路径与之相关联，称作工作目录</li>
+<li>多个文件可以同名，只要保证它们的路径名是唯一的即可</li>
+</ul>
+</li>
+<li>绝对路径：从根目录开始指定的目录</li>
+<li>相对路径：从当前工作目录开始</li>
+</ul>
+<h3 id="无环图结构"><a class="markdownIt-Anchor" href="#无环图结构"></a> 无环图结构</h3>
+<ul>
+<li>在树型目录的基础上，允许多个目录项指向同一个数据文件或者目录文件，实现了目录或者数据文件的共享</li>
+<li>不同的主目录可以共享一个文件和分目录，而不受各自拥有文件或分目录的拷贝</li>
+<li>UNIX目录结构即属于无环图结构</li>
+<li>目录项的删除
+<ul>
+<li>若对应的文件只有一个引用时，同时删除该文件</li>
+<li>若对应的文件存在多个引用时，只删除引用，而不删除文件。只有在所有文件引用都被删除后才删除文件</li>
+</ul>
+</li>
+</ul>
+<h1 id="文件共享"><a class="markdownIt-Anchor" href="#文件共享"></a> 文件共享</h1>
+<h2 id="用户共享"><a class="markdownIt-Anchor" href="#用户共享"></a> 用户共享</h2>
+<h3 id="用户权限"><a class="markdownIt-Anchor" href="#用户权限"></a> 用户权限</h3>
+<ul>
+<li>无：不允许用户读取包含该文件的用户目录</li>
+<li>知道：用户可以确定文件的存在性、所有者，可以向所有者请求更多地访问权限</li>
+<li>执行：用户可以加载并执行程序，但不能复制</li>
+<li>读：用户可以读取文件，包含复制和执行</li>
+<li>追加：用户可以将数据添加到文件中，但不能修改或删除文件内容</li>
+<li>更新：用户可以修改、删除和添加文件内容</li>
+<li>改变保护：用户可以更改授予其他用户的访问权限</li>
+<li>删除：用户可以从文件系统中删除该文件</li>
+</ul>
+<h3 id="用户划分"><a class="markdownIt-Anchor" href="#用户划分"></a> 用户划分</h3>
+<ul>
+<li>文件主
+<ul>
+<li>通常是文件的初始创建者</li>
+<li>全部权限</li>
+<li>给其他用户授权</li>
+</ul>
+</li>
+<li>特定用户
+<ul>
+<li>由用户ID指定的用户集合</li>
+</ul>
+</li>
+<li>组用户
+<ul>
+<li>非单独定义的一组用户</li>
+</ul>
+</li>
+<li>全部
+<ul>
+<li>有权访问该系统的所有用户</li>
+<li>公共文件</li>
+</ul>
+</li>
+</ul>
+<h2 id="实体共享"><a class="markdownIt-Anchor" href="#实体共享"></a> 实体共享</h2>
+<ul>
+<li>一份物理存储</li>
+<li>多个别名</li>
+<li>在UNIX操作系统上，可通过链接实现文件共享</li>
+</ul>
+<h3 id="硬链接"><a class="markdownIt-Anchor" href="#硬链接"></a> 硬链接</h3>
+<ul>
+<li>多个文件名链接到同一个索引节点</li>
+<li>索引节点的引用计数记录在索引结点的链接计数中，若其减至0，则文件被删除</li>
+<li>链接文件和被链接文件必须位于同一个文件系统中</li>
+</ul>
+<h3 id="软链接-符号链接"><a class="markdownIt-Anchor" href="#软链接-符号链接"></a> 软链接、符号链接</h3>
+<ul>
+<li>特殊类型的文件，其链接内容是另一个目录或文件的路径</li>
+<li>建立符号链接文件，并不影响原文件，它们是独立的文件</li>
+<li>空间和时间开销更大</li>
+</ul>
+<h3 id="两种链接比较"><a class="markdownIt-Anchor" href="#两种链接比较"></a> 两种链接比较</h3>
+<ul>
+<li>硬链接
+<ul>
+<li>只允许同一个文件系统范围内进行，不允许跨文件系统</li>
+<li>删除文件时，如果还有其它链接链至该文件，则该文件不能被删除</li>
+</ul>
+</li>
+<li>软链接
+<ul>
+<li>访问速度相对慢，但适用范围和灵活性更大</li>
+<li>允许目录链接，允许运行在不同的文件系统间进行链接，这些文件系统可以在相同或不同的计算机上</li>
+<li>被链接文件的删除和符号链接的删除是相互独立的</li>
+</ul>
+</li>
+</ul>
+<h1 id="记录组块"><a class="markdownIt-Anchor" href="#记录组块"></a> 记录组块</h1>
+<ul>
+<li>块是与辅存进行I/O操作的基本单位</li>
+<li>为执行I/O，记录必须组织成块</li>
+</ul>
+<h2 id="组块方法"><a class="markdownIt-Anchor" href="#组块方法"></a> 组块方法</h2>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E7%BB%84%E5%9D%97.jpg" alt></p>
+<h3 id="定长组块"><a class="markdownIt-Anchor" href="#定长组块"></a> 定长组块</h3>
+<ul>
+<li>使用定长的记录，且若干完整的记录保持在一个块中</li>
+<li>内部碎片：每个块的末尾可能存在的未使用的空间</li>
+</ul>
+<h3 id="变长跨越式组块"><a class="markdownIt-Anchor" href="#变长跨越式组块"></a> 变长跨越式组块</h3>
+<ul>
+<li>使用变长的记录，并紧缩到块中，使得块中不存在未使用的空间</li>
+</ul>
+<h3 id="变长非跨越式组块"><a class="markdownIt-Anchor" href="#变长非跨越式组块"></a> 变长非跨越式组块</h3>
+<ul>
+<li>使用变长记录，但不采用跨越式方式，存在内部碎片</li>
+</ul>
+<h1 id="辅存管理"><a class="markdownIt-Anchor" href="#辅存管理"></a> 辅存管理</h1>
+<h2 id="文件分配"><a class="markdownIt-Anchor" href="#文件分配"></a> 文件分配</h2>
+<ul>
+<li>在辅存中，文件由许多块组成</li>
+<li>操作系统或文件管理系统负责为文件分配块</li>
+<li>文件分配采用的方法可能会影响到空闲空间管理的方法</li>
+<li>给文件分配的是一个或多个分区</li>
+<li>文件分配表：用于跟踪分配给文件的分区的数据结构</li>
+</ul>
+<h3 id="预分配与动态分配"><a class="markdownIt-Anchor" href="#预分配与动态分配"></a> 预分配与动态分配</h3>
+<ul>
+<li>预分配策略要求在文件创建时声明文件的最大尺寸
+<ul>
+<li>对于许多应用程序，很难可靠估计文件的最大尺寸</li>
+<li>用户和应用程序往往估大文件的最大尺寸，造成浪费</li>
+</ul>
+</li>
+<li>动态分配只有在需要时才给文件分配空间</li>
+</ul>
+<h2 id="分区大小"><a class="markdownIt-Anchor" href="#分区大小"></a> 分区大小</h2>
+<ul>
+<li>在选择分区大小时，需要折中考虑单个文件的效率和整个系统的效率</li>
+<li>分区大小的考虑因素
+<ul>
+<li>邻近空间可以提高性能</li>
+<li>数量较多的小分区会增加用于管理分配信息的表的大小</li>
+<li>使用固定大小的分区可以简化空间的再分配</li>
+<li>使用可变大小的分区或固定大小的小分区，可减少超额分配导致的未使用存储空间的浪费</li>
+</ul>
+</li>
+</ul>
+<h2 id="选择策略"><a class="markdownIt-Anchor" href="#选择策略"></a> 选择策略</h2>
+<h3 id="大小可变的大规模连续分区"><a class="markdownIt-Anchor" href="#大小可变的大规模连续分区"></a> 大小可变的大规模连续分区</h3>
+<ul>
+<li>性能较好</li>
+<li>避免浪费</li>
+<li>文件分配表较小</li>
+<li>空间难以再次利用</li>
+</ul>
+<h3 id="块"><a class="markdownIt-Anchor" href="#块"></a> 块</h3>
+<ul>
+<li>小的固定分区能提供更大的灵活性</li>
+<li>需要较大表或更复杂的结构来管理块的分配情况</li>
+<li>邻近性不是主要目的</li>
+<li>主要目的是根据需要来分配块</li>
+</ul>
+<h2 id="文件分配方法"><a class="markdownIt-Anchor" href="#文件分配方法"></a> 文件分配方法</h2>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E6%96%87%E4%BB%B6%E5%88%86%E9%85%8D.jpg" alt></p>
+<h3 id="连续分配"><a class="markdownIt-Anchor" href="#连续分配"></a> 连续分配</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E8%BF%9E%E7%BB%AD%E5%88%86%E9%85%8D.jpg" alt></p>
+<ul>
+<li>大小可变的预分配策略：创建文件时，分配一组连续的块</li>
+<li>文件分配表里每个文件只需一个表项：说明起始块和长度</li>
+<li>适合顺序文件，检索容易</li>
+<li>问题
+<ul>
+<li>外部碎片，需要紧凑</li>
+<li>预分配可能带来的问题</li>
+</ul>
+</li>
+</ul>
+<h3 id="链式分配"><a class="markdownIt-Anchor" href="#链式分配"></a> 链式分配</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E9%93%BE%E5%BC%8F%E5%88%86%E9%85%8D.jpg" alt></p>
+<ul>
+<li>
+<p>隐式链接：每个块都包含指向下一个块的指针</p>
+</li>
+<li>
+<p>文件分配表里每个文件只需要一个表项：声明起始块和长度</p>
+</li>
+<li>
+<p>可以根据需要分配块，加入链中</p>
+</li>
+<li>
+<p>适合顺序处理文件</p>
+</li>
+<li>
+<p>问题</p>
+<ul>
+<li>多个块离散分配，使得局部性原理不再适用，若需要一次读入多个块，得访问磁盘不同的部分
+<ul>
+<li>需要周期性合并文件</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>显式链接：用于链接文件各物理块的指针，显式地存放在文件分配表FAT中，该表在整个磁盘分区中仅一张</p>
+</li>
+</ul>
+<h3 id="基于块的索引分配"><a class="markdownIt-Anchor" href="#基于块的索引分配"></a> 基于块的索引分配</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E5%9D%97%E7%9A%84%E7%B4%A2%E5%BC%95%E5%88%86%E9%85%8D.jpg" alt></p>
+<ul>
+<li>分配给文件的每个块在索引中都有一个表项</li>
+<li>索引作为单独的块来保存，文件分配表中的表项指向索引块</li>
+<li>每个文件在文件分配表中都有一个一级索引</li>
+</ul>
+<h3 id="基于长度可变分区的索引分配"><a class="markdownIt-Anchor" href="#基于长度可变分区的索引分配"></a> 基于长度可变分区的索引分配</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E5%8F%98%E9%95%BF%E5%88%86%E5%8C%BA%E7%B4%A2%E5%BC%95.jpg" alt></p>
+<ul>
+<li>分配给文件的每个分区在索引中都有一个表项</li>
+<li>基于大小可变分区分配可提高局部性</li>
+<li>基于分区索引的文件整理可以减少索引数量，但是基于块索引则不行</li>
+</ul>
+<h2 id="空闲空间管理"><a class="markdownIt-Anchor" href="#空闲空间管理"></a> 空闲空间管理</h2>
+<h3 id="位示图位表"><a class="markdownIt-Anchor" href="#位示图位表"></a> 位示图（位表）</h3>
+<ul>
+<li>使用一个向量，向量中的每一位对应于磁盘中的每一块</li>
+<li>0表示空闲块，1表示已使用块</li>
+<li>优点
+<ul>
+<li>适用于任何文件分配方法</li>
+<li>非常小</li>
+<li>很容易找到一个或一组连续的空闲块</li>
+</ul>
+</li>
+<li>位示图占用存储空间大小：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mrow><mi mathvariant="normal">磁</mi><mi mathvariant="normal">盘</mi><mi mathvariant="normal">容</mi><mi mathvariant="normal">量</mi></mrow><mrow><mn>8</mn><mo>×</mo><mi mathvariant="normal">数</mi><mi mathvariant="normal">据</mi><mi mathvariant="normal">块</mi><mi mathvariant="normal">大</mi><mi mathvariant="normal">小</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\frac{磁盘容量}{8\times 数据块大小}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.797331em;vertical-align:-0.403331em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.394em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">8</span><span class="mbin mtight">×</span><span class="mord cjk_fallback mtight">数</span><span class="mord cjk_fallback mtight">据</span><span class="mord cjk_fallback mtight">块</span><span class="mord cjk_fallback mtight">大</span><span class="mord cjk_fallback mtight">小</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord cjk_fallback mtight">磁</span><span class="mord cjk_fallback mtight">盘</span><span class="mord cjk_fallback mtight">容</span><span class="mord cjk_fallback mtight">量</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.403331em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></li>
+<li>大位示图搜索将会降低文件系统的性能</li>
+</ul>
+<h3 id="链接空间分区"><a class="markdownIt-Anchor" href="#链接空间分区"></a> 链接空间分区</h3>
+<ul>
+<li>使用指向每个空闲区的指针和它们的长度值，可将空闲区链接在一起</li>
+<li>不需要磁盘分配表，空间开销可以忽略不计</li>
+<li>适用于所有的文件分配方法</li>
+<li>缺点
+<ul>
+<li>存在碎片</li>
+<li>每次分配块时，在把数据写到块中之前，需要先读取这个块，以便找到指向新的第一个空闲块的指针</li>
+</ul>
+</li>
+</ul>
+<h3 id="索引"><a class="markdownIt-Anchor" href="#索引"></a> 索引</h3>
+<ul>
+<li>将空闲空间视为一个文件，并使用索引表为文件分配空间</li>
+<li>为了提高效率，索引应基于可变大小的分区而不是块</li>
+<li>适用于所有的文件分配方法</li>
+</ul>
+<h3 id="空闲块列表"><a class="markdownIt-Anchor" href="#空闲块列表"></a> 空闲块列表</h3>
+<ul>
+<li>每个块指定一个序号：所有空闲块的序号保存在磁盘的一个保留区中</li>
+<li>根据磁盘的大小，存储一个块号需要24位或32位</li>
+<li>可把该表的一小部分保存到内存
+<ul>
+<li>该表可视为一个下推栈，栈中靠前的数千个元素保留在内存中</li>
+<li>该表可视为一个FIFO队列，队列头和队列尾的几千项在内存中</li>
+</ul>
+</li>
+</ul>
+<h2 id="卷"><a class="markdownIt-Anchor" href="#卷"></a> 卷</h2>
+<ul>
+<li>不同操作系统和不同的文件管理系统中含义不同</li>
+<li>本质上是逻辑磁盘</li>
+<li>指一组在辅存上可寻址的扇区的集合，操作系统或应用程序用卷来存储数据
+<ul>
+<li>卷中的扇区在物理存储设备上不需要链接</li>
+<li>只需要对操作系统或应用程序来说连续即可</li>
+<li>卷可能由更小的卷合并或组合而成</li>
+</ul>
+</li>
+</ul>
+<h1 id="unix文件管理"><a class="markdownIt-Anchor" href="#unix文件管理"></a> UNIX文件管理</h1>
+<h2 id="文件类型"><a class="markdownIt-Anchor" href="#文件类型"></a> 文件类型</h2>
+<ul>
+<li>普通文件
+<ul>
+<li>可存储任意数据，视为字节流，保存在一个或多个数据块中</li>
+</ul>
+</li>
+<li>目录
+<ul>
+<li>包含文件名列表和指向与之相关联的索引节点的指针</li>
+</ul>
+</li>
+<li>特殊文件
+<ul>
+<li>不包含数据，但提供一个将物理设备映射到一个文件名的机制</li>
+</ul>
+</li>
+<li>命名管道
+<ul>
+<li>进程间通信的基础设施</li>
+</ul>
+</li>
+<li>链接文件
+<ul>
+<li>一个文件的别名</li>
+</ul>
+</li>
+<li>符号链接
+<ul>
+<li>一个数据文件，包含其所链接的文件的文件名</li>
+</ul>
+</li>
+</ul>
+<h2 id="索引节点"><a class="markdownIt-Anchor" href="#索引节点"></a> 索引节点</h2>
+<ul>
+<li>所有类型的UNIX文件都是由操作系统通过索引节点来管理的</li>
+<li>索引节点是一个控制结构，包含操作系统所需的关于某个文件的关键信息</li>
+<li>多个文件名能与一个索引节点相关联</li>
+<li>优点
+<ul>
+<li>索引节点大小固定，且相对较小，因此能在内存中保留较长的时间</li>
+<li>访问小文件时，几乎可不间接进行，因此能减少处理时间和磁盘访问时间</li>
+<li>理论上，文件大小对所有应用程序来说都是足够的</li>
+</ul>
+</li>
+</ul>
+<h3 id="freebsd"><a class="markdownIt-Anchor" href="#freebsd"></a> FreeBSD</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/FreeBSD.jpg" alt></p>
+<ul>
+<li>文件分配是以块为基础完成的</li>
+<li>按需动态分配，而非预定义分配</li>
+<li>系统为了知道每个文件，采用一种索引方法，索引的一部分保存在该文件的索引结点中</li>
+<li>在UNIX实现中，索引结点都包含一些直接指针和三个间接指针</li>
+</ul>
+<h2 id="unix文件系统驻留在单个逻辑磁盘或磁盘分区"><a class="markdownIt-Anchor" href="#unix文件系统驻留在单个逻辑磁盘或磁盘分区"></a> UNIX文件系统驻留在单个逻辑磁盘或磁盘分区</h2>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E7%A3%81%E7%9B%98%E5%88%86%E5%8C%BA.jpg" alt></p>
+<ul>
+<li>引导块
+<ul>
+<li>包含引导操作系统的代码</li>
+</ul>
+</li>
+<li>超级块
+<ul>
+<li>包含有关文件系统的属性和信息</li>
+</ul>
+</li>
+<li>索引结点表
+<ul>
+<li>所有文件的索引节点集</li>
+</ul>
+</li>
+<li>数据块
+<ul>
+<li>数据文件和子目录文件所需的存储空间</li>
+</ul>
+</li>
+</ul>
+<h3 id="路径解析"><a class="markdownIt-Anchor" href="#路径解析"></a> 路径解析</h3>
+<p><img src="/2023/11/28/OS%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E8%B7%AF%E5%BE%84.jpg" alt></p>
+<p>/programs/pong.c</p>
+<ol>
+<li>找到索引节点表里第一个表项，记录了根目录文件的存储位置，第一个为14块</li>
+<li>找到14块，看到programs文件的inode号为7</li>
+<li>在索引节点表里找到第7个表项，记录了programs目录文件的存放位置，第一个块为23</li>
+<li>找到23块，看到pong.c文件的inode号为9</li>
+<li>在索引节点表里找到第9个表项，记录了pong.c文件的存放位置，第一个块为61块</li>
+<li>一次访问61、44、15块，可得到pong.c文件的内容</li>
+</ol>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/12/29/%E9%A9%AC%E5%8E%9F%EF%BC%88%E4%B8%89%EF%BC%89/"
+      title="马原（三）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        马原（三）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/23/OS%E7%AC%AC%E5%8D%81%E7%AB%A0%20IO%E7%AE%A1%E7%90%86%E4%B8%8E%E7%A3%81%E7%9B%98%E8%B0%83%E5%BA%A6/"
+      title="OS第十章 IO管理与磁盘调度"
+     >
+
+    <p class="title-text">
+      
+        OS第十章 IO管理与磁盘调度
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

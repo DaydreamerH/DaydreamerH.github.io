@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第八章 内存管理 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="链接与加载的基础，分页分段与段页式介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第八章 内存管理">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="链接与加载的基础，分页分段与段页式介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.png">
+<meta property="article:published_time" content="2023-11-05T12:10:51.000Z">
+<meta property="article:modified_time" content="2023-12-24T13:59:12.190Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="内存">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.png">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第八章 内存管理" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6r000c7gv17k252ogt">
+        <img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/banner.png" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第八章 内存管理
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-05T12:10:51.000Z" itemprop="datePublished">2023-11-05</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            6.8k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%86%85%E5%AD%98/" rel="tag">内存</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="程序的加载和链接"><a class="markdownIt-Anchor" href="#程序的加载和链接"></a> 程序的加载和链接</h1>
+<h2 id="高级语言源代码转化为进程的3个基本步骤"><a class="markdownIt-Anchor" href="#高级语言源代码转化为进程的3个基本步骤"></a> 高级语言源代码转化为进程的3个基本步骤</h2>
+<ol>
+<li>编译：由编译器将用户源代码编译成若干个目标模块</li>
+<li>链接：由链接器将编译后形成的一组目标模块，以及它们所需要的库函数链接在一起，形成一个完整的装入模块</li>
+<li>加载：由加载器将装入模块装入内存</li>
+</ol>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%BD%AC%E8%BF%9B%E7%A8%8B.png" alt></p>
+<h2 id="空间分类"><a class="markdownIt-Anchor" href="#空间分类"></a> 空间分类</h2>
+<h3 id="名空间"><a class="markdownIt-Anchor" href="#名空间"></a> 名空间</h3>
+<p>用汇编语言或高级语言编写程序时，常常用符号名来访问某一单元。把程序中由符号组成的程序空间称为符号名空间，简称名空间。</p>
+<h3 id="逻辑空间"><a class="markdownIt-Anchor" href="#逻辑空间"></a> 逻辑空间</h3>
+<ul>
+<li>由源程序经过汇编或编译后，形成目标程序，每个目标程序都是以0为基址顺序进行编址，符号名访问的单元被单元号取代。</li>
+<li>生成的目标程序占据一定的地址空间，称为逻辑地址空间，简称逻辑空间。</li>
+<li>在逻辑空间中每条指令的地址和指令中要访问的操作数地址统称为逻辑地址</li>
+</ul>
+<h2 id="地址映射"><a class="markdownIt-Anchor" href="#地址映射"></a> 地址映射</h2>
+<p>将逻辑地址转换为运行时由机器直接寻址的物理地址</p>
+<ul>
+<li>当程序装入内存时，操作系统要为该程序分配一个合适的内存空间</li>
+<li>由于程序的逻辑地址与分配的内存物理地址未必一致，CPU执行指令按物理地址进行，需要进行地址转换</li>
+<li>重定位</li>
+</ul>
+<h2 id="链接"><a class="markdownIt-Anchor" href="#链接"></a> 链接</h2>
+<p>源程序经过编译后，可得到一组目标模块，再利用链接程序将这组目标模块链接形成加载模块</p>
+<h3 id="链接方式"><a class="markdownIt-Anchor" href="#链接方式"></a> 链接方式</h3>
+<ul>
+<li>静态链接</li>
+<li>加载时动态链接</li>
+<li>运行时动态链接</li>
+</ul>
+<h3 id="静态链接"><a class="markdownIt-Anchor" href="#静态链接"></a> 静态链接</h3>
+<p>在程序运行之前，先将各目标模块及它们所需的库函数，链接成一个完整的加载模块，以后不再拆开</p>
+<ul>
+<li>主要工作
+<ul>
+<li>相对地址的修改：由编译程序产生的所有目标模块中，使用的都是相对地址，其起始地址都为0，在链接成一个加载模块时修改模块的相对地址</li>
+<li>变换外部引用地址：将每个模块所用的外部调用符号也变换为相对地址</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>不利于代码共享</li>
+<li>不利于模块的独立升级</li>
+<li>可能链接一些不会执行的模块，浪费存储空间和处理器时间</li>
+</ul>
+</li>
+</ul>
+<h3 id="加载时动态链接"><a class="markdownIt-Anchor" href="#加载时动态链接"></a> 加载时动态链接</h3>
+<p>目标模块在装入内存时，采用边装入边链接的链接方式</p>
+<ul>
+<li>优点
+<ul>
+<li>便于各个模块的独立升级</li>
+<li>便于实现模块的共享</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>可能链接一些不会执行的模块，浪费存储空间和处理机时间</li>
+<li>模块装入后不能移动位置</li>
+</ul>
+</li>
+</ul>
+<h3 id="运行时动态链接"><a class="markdownIt-Anchor" href="#运行时动态链接"></a> 运行时动态链接</h3>
+<p>对某些目标模块的链接，是在程序执行中需要该目标模块时，由操作系统去找到该模块并将之装入内存，随后把它链接到调用者模块上</p>
+<ul>
+<li>优点
+<ul>
+<li>加快程序的装入过程，节省大量内存空间</li>
+</ul>
+</li>
+</ul>
+<h2 id="加载"><a class="markdownIt-Anchor" href="#加载"></a> 加载</h2>
+<h3 id="装入任务"><a class="markdownIt-Anchor" href="#装入任务"></a> 装入任务</h3>
+<ul>
+<li>将可装入模块装入内存</li>
+<li>地址重定位：将执行文件中的逻辑地址转化为内存物理地址的过程</li>
+</ul>
+<h3 id="装入方式分类"><a class="markdownIt-Anchor" href="#装入方式分类"></a> 装入方式分类</h3>
+<ul>
+<li>绝对加载方式</li>
+<li>可重定位（静态重定位）加载方式</li>
+<li>运行时重定位（动态重定位）加载方式</li>
+</ul>
+<h3 id="绝对加载方式"><a class="markdownIt-Anchor" href="#绝对加载方式"></a> 绝对加载方式</h3>
+<ul>
+<li>在编译时就知道程序将驻留在内存中的具体位置，编译程序产生绝对地址的目标代码</li>
+<li>绝对加载程序按照装入模块中的地址，将程序和数据装入内存。装入模块在装入内存时，由于程序的逻辑地址与实际内存地址完全相同，故不需对程序和数据的地址进行修改</li>
+<li>为了便于程序的修改，对编译的程序采用符号地址，然后在编译或汇编时，再将这些符号地址转换为绝对地址</li>
+<li>优点
+<ul>
+<li>实现简单，无须进行逻辑地址到物理地址的变换</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>程序员每次必须装入同一内存区</li>
+<li>程序员必须事先了解内存的使用情况，根据内存情况确定程序的逻辑地址</li>
+<li>不适用于多道程序系统</li>
+</ul>
+</li>
+</ul>
+<h3 id="可重定位加载方式"><a class="markdownIt-Anchor" href="#可重定位加载方式"></a> 可重定位加载方式</h3>
+<ul>
+<li>编译时采用相对地址，即编译器假设装入到从零开始的内存位置</li>
+<li>允许将程序装入与逻辑地址不同的物理内存空间。即程序可以装入到内存的任何位置，其逻辑地址与装入内存后的物理地址无直接关系</li>
+<li>必须进行重定位，即装入程序根据装入的位置将逻辑地址转换为物理地址</li>
+<li>静态重定位技术，地址映射在程序装入时进行，以后不再更改程序地址</li>
+<li>优点
+<ul>
+<li>易实现，无需硬件支持</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>程序重定位后就不能移动，因而不能重新分配内存，不利于内存的有效利用</li>
+<li>程序在存储空间中只能连续分配，不能分布在内存的不同区域</li>
+<li>难于共享</li>
+</ul>
+</li>
+</ul>
+<h3 id="运行时重定位动态重定位加载方式"><a class="markdownIt-Anchor" href="#运行时重定位动态重定位加载方式"></a> 运行时重定位（动态重定位）加载方式</h3>
+<ul>
+<li>程序的地址转换不是在装入时进行，而是在程序运行时动态进行</li>
+<li>运行时动态装入需要硬件支持，即重定位寄存器，用于保存程序在内存中的起始地址</li>
+<li>程序被执行时，通过重定位寄存器内的起始物理地址和指令或数据的逻辑地址计算其物理地址</li>
+<li>优点
+<ul>
+<li>程序不必连续存放在内存中，可分散存储，可移动</li>
+<li>便于共享</li>
+<li>有利于紧凑、碎片问题的解决</li>
+<li>主流方式</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>需要硬件支持，实现存储管理的软件算法比较复杂</li>
+<li>同一地址可能多次转换</li>
+<li>DLL地狱：两个或多个进程共享一个DLL模块，但它们希望链接不同版本的模块</li>
+</ul>
+</li>
+</ul>
+<h3 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h3>
+<ul>
+<li>绝对加载：编译时执行，编译时就知道进程在内存中的驻留地址，生成绝对代码，即可执行文件中记录内存地址，装入时直接定位在该内存地址
+<ul>
+<li>如果将来开始地址发生变化，必须重新编译代码</li>
+</ul>
+</li>
+<li>可重定位加载：加载时执行，地址绑定在装入内存时才进行。系统根据内存当时的使用情况，决定将目标代码放在内存的什么位置
+<ul>
+<li>不允许程序在内存中移动</li>
+</ul>
+</li>
+<li>动态执行时加载：动态地址重定位，地址绑定延迟到执行时才进行
+<ul>
+<li>支持执行时进程在内存中移动</li>
+</ul>
+</li>
+</ul>
+<h1 id="内存管理的需求"><a class="markdownIt-Anchor" href="#内存管理的需求"></a> 内存管理的需求</h1>
+<ul>
+<li>重定位</li>
+<li>保护</li>
+<li>共享</li>
+<li>逻辑组织</li>
+<li>物理组织</li>
+</ul>
+<h2 id="重定位"><a class="markdownIt-Anchor" href="#重定位"></a> 重定位</h2>
+<ul>
+<li>程序员事先并不知道在某个程序执行期间会有哪些程序驻留在内存</li>
+<li>需要把活动进程换入或换出内存，进而使处理器的利用率最大化</li>
+<li>进程下次切换时要放置在与换出前相同的区域存在诸多困难</li>
+<li>需要将进程重定位到内存的不同区域</li>
+</ul>
+<h2 id="保护"><a class="markdownIt-Anchor" href="#保护"></a> 保护</h2>
+<ul>
+<li>进程以外的其他进程中的程序不能未经授权地访问（进行读操作或写操作）该进程的内存单元</li>
+<li>程序在内存中的位置不可预测</li>
+<li>需要既要重定位也支持保存的机制</li>
+</ul>
+<h2 id="共享"><a class="markdownIt-Anchor" href="#共享"></a> 共享</h2>
+<ul>
+<li>多个进程正在执行同一程序时，允许每个进程访问该程序的同一个副本，要比让每个进程有自己独立的副本更有利</li>
+<li>需要既支持重定位也支持共享机制</li>
+</ul>
+<h2 id="逻辑组织"><a class="markdownIt-Anchor" href="#逻辑组织"></a> 逻辑组织</h2>
+<ul>
+<li>内存被组织成线性地址空间
+<ul>
+<li>可以独立编写和编译模块</li>
+<li>可以为不同的模块提供不同的保护级别</li>
+<li>模块可以被多个进程共享，与用户看待问题的方式一致</li>
+</ul>
+</li>
+<li>分段可以满足该需求</li>
+</ul>
+<h2 id="物理组织"><a class="markdownIt-Anchor" href="#物理组织"></a> 物理组织</h2>
+<ul>
+<li>不应让程序员负责管理内存</li>
+<li>供程序和数据使用的内存可能不足</li>
+<li>程序员不知道可用空间的大小和位置</li>
+<li>覆盖：允许不同的模块占用相同的存储空间，但编程耗时</li>
+</ul>
+<h1 id="内存分区"><a class="markdownIt-Anchor" href="#内存分区"></a> 内存分区</h1>
+<p>内存管理的主要操作是处理器把程序装入内存中执行</p>
+<ul>
+<li>连续分配
+<ul>
+<li>固定分区</li>
+<li>动态分区分配</li>
+<li>可重定位分区定位</li>
+<li>覆盖</li>
+<li>对换</li>
+</ul>
+</li>
+<li>离散分配
+<ul>
+<li>分页存储管理</li>
+<li>段式存储管理</li>
+<li>段页式存储管理</li>
+</ul>
+</li>
+<li>虚拟存储器
+<ul>
+<li>请求分页存储管理</li>
+<li>请求分段储存管理</li>
+<li>段页式虚拟存储</li>
+</ul>
+</li>
+</ul>
+<h2 id="基本原理"><a class="markdownIt-Anchor" href="#基本原理"></a> 基本原理</h2>
+<ul>
+<li>操作系统占据内存中某些固定部分，用户进程使用其余部分</li>
+<li>将用户空间的内存区域进行划分，形成若干个边界固定的区域</li>
+<li>每个分区装入一个进程</li>
+</ul>
+<h2 id="固定分区"><a class="markdownIt-Anchor" href="#固定分区"></a> 固定分区</h2>
+<h3 id="分区大小相等"><a class="markdownIt-Anchor" href="#分区大小相等"></a> 分区大小相等</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E5%8C%BA%E5%A4%A7%E5%B0%8F%E7%9B%B8%E7%AD%89.png" alt></p>
+<ul>
+<li>程序不能太大而不能放到一个分区
+<ul>
+<li>程序员必须使用覆盖技术设计程序</li>
+</ul>
+</li>
+<li>内存的利用率非常低
+<ul>
+<li>很小的程序也必须占据一个完整的分区序</li>
+<li>内部碎片：由于装入的数据块小于分区大小，分区内部存在空间浪费</li>
+</ul>
+</li>
+</ul>
+<h3 id="分区大小不等"><a class="markdownIt-Anchor" href="#分区大小不等"></a> 分区大小不等</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E5%8C%BA%E5%A4%A7%E5%B0%8F%E4%B8%8D%E7%AD%89.png" alt></p>
+<ul>
+<li>分区的数量在系统生成阶段已经确定，因而限制了系统活动进程的数量</li>
+<li>小作业仍不能有效利用分区空间</li>
+</ul>
+<h2 id="动态分区"><a class="markdownIt-Anchor" href="#动态分区"></a> 动态分区</h2>
+<ul>
+<li>分区大小和数量不固定</li>
+<li>分配与进程需求完全一致的空闲内存空间</li>
+<li>外部碎片
+<ul>
+<li>动态分区方法在内存中产生越来越多的碎片</li>
+<li>内存利用率下降</li>
+</ul>
+</li>
+<li>紧凑（压缩）
+<ul>
+<li>解决外部碎片问题的技术</li>
+<li>操作系统移动进程，使进程占用的空间连续</li>
+<li>所有空闲时间连成一片</li>
+<li>紧凑费时，浪费处理器时间</li>
+</ul>
+</li>
+</ul>
+<h3 id="首次匹配"><a class="markdownIt-Anchor" href="#首次匹配"></a> 首次匹配</h3>
+<ul>
+<li>思想：从头开始扫描内存，选择大小足够的第一个可用块</li>
+<li>实现：要求空闲分区以地址递增的顺序链接，从链首开始查找</li>
+<li>评价
+<ul>
+<li>简单快速</li>
+<li>为大作业分配大的内存空间创造条件</li>
+<li>内存前端出现很多小的空闲分区，且每次查找都要经过这些分区</li>
+</ul>
+</li>
+</ul>
+<h3 id="下次循环匹配"><a class="markdownIt-Anchor" href="#下次循环匹配"></a> 下次/循环匹配</h3>
+<ul>
+<li>思想：从上一次放置的位置开始扫描内存，选择下一个大小足够的可用块</li>
+<li>实现：空闲分区按地址从低到高排列（链接）</li>
+<li>评价
+<ul>
+<li>比首次匹配性能差，常常在内存末尾分配空间，导致空闲的分区均匀</li>
+<li>缺少大的空闲块，需要更多次数紧凑</li>
+</ul>
+</li>
+</ul>
+<h3 id="最佳匹配"><a class="markdownIt-Anchor" href="#最佳匹配"></a> 最佳匹配</h3>
+<ul>
+<li>思想：选择空间大小与需求最接近的空闲块分配</li>
+<li>实现：空闲分区按容量从小到大链接</li>
+<li>评价
+<ul>
+<li>产生的外部碎片都很小</li>
+<li>内存中形成很多小到无法满足任何分配需求的块</li>
+<li>需要更频繁的进行内存压缩</li>
+</ul>
+</li>
+</ul>
+<h3 id="最差匹配"><a class="markdownIt-Anchor" href="#最差匹配"></a> 最差匹配</h3>
+<ul>
+<li>思想：选择满足需求的最大的空闲分区分配</li>
+<li>实现：空闲分区按容量从大到小链接</li>
+<li>评价
+<ul>
+<li>每次分配留下的空闲空间较大，便于再次利用</li>
+<li>大的空间不容易保留，对大作业不利</li>
+</ul>
+</li>
+</ul>
+<h3 id="例题"><a class="markdownIt-Anchor" href="#例题"></a> 例题</h3>
+<p>某操作系统采用动态分区存储管理技术。操作系统在低地址占用了100KB的空间，用户区主存从100KB处开始占用512KB。初始时，用户区全部为空闲，分配时截取空闲分区的低地址部分作为分配区。在执行以下申请、释放操作序列后：请求300KB、请求100KB、释放300KB、请求150KB、请求50KB、请求90KB，请回答</p>
+<ol>
+<li>采用首次适应算法时，主存中有哪些空闲分区？画出主存分布图，并指出空闲分区的首地址和大小。</li>
+<li>采用最佳适应算法时，主存中有哪些空闲分区？画出主存分布图，并指出空闲分区的首地址和大小。</li>
+<li>若随后又申请80KB，针对上述两种情况产生什么后果？说明了什么问题</li>
+</ol>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E5%8C%BA%E4%BE%8B%E9%A2%98.png" alt></p>
+<h2 id="分区管理操作"><a class="markdownIt-Anchor" href="#分区管理操作"></a> 分区管理操作</h2>
+<h3 id="分配"><a class="markdownIt-Anchor" href="#分配"></a> 分配</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E9%85%8D.jpg" alt></p>
+<h3 id="回收"><a class="markdownIt-Anchor" href="#回收"></a> 回收</h3>
+<ul>
+<li>当进程运行完毕释放内存时，需合并相邻的空闲分区，形成大的分区，称为合并技术</li>
+<li>系统根据回收区的首址，从空闲区链中找到想要的插入点，此时可能出现四种情况</li>
+</ul>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%9B%9E%E6%94%B6.jpg" alt></p>
+<h2 id="伙伴系统"><a class="markdownIt-Anchor" href="#伙伴系统"></a> 伙伴系统</h2>
+<ul>
+<li>静态分区方案限制了系统中活跃进程的数目，并且只能运行不超过分区大小的进程，如果进程远远小于分区大小，则内存空间的利用率非常低</li>
+<li>动态划分方案使存储管理复杂化，并且需要系统付出紧凑的额外开销</li>
+</ul>
+<h3 id="基本思想"><a class="markdownIt-Anchor" href="#基本思想"></a> 基本思想</h3>
+<ul>
+<li>无论已分配分区或空闲分区，其大小均为2的k次幂，k为整数，l≤k≤m，其中<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mn>1</mn></msup></mrow><annotation encoding="application/x-tex">2^1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span>分配的最小分区的大小，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">2^m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">m</span></span></span></span></span></span></span></span></span></span></span>表示分配的最大分区的大小，通常是整个可分配内存的大小。</li>
+<li>假设系统的可利用空间容量为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">2^m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">m</span></span></span></span></span></span></span></span></span></span></span>个字节，则系统开始运行时，整个内存区是一个大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">2^m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">m</span></span></span></span></span></span></span></span></span></span></span>的空闲分区。在系统运行过程中，由于不断的划分，可能会形成若干个不连续的空闲分区，将这些空闲分区根据分区的大小进行分类，对于每一类具有相同大小的所有空闲分区，单独设立一个空闲分区双向链表。这样，不同大小的空闲分区形成了k个空闲分区链表。</li>
+</ul>
+<h3 id="存储空间分配"><a class="markdownIt-Anchor" href="#存储空间分配"></a> 存储空间分配</h3>
+<p>进程申请大小为k的空间，系统为之分配一个<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区，其中，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>＜k≤<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span></p>
+<ol>
+<li>查找大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区，若找到则分配；</li>
+<li>若未找到大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区，则查找大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区；若找到，则将该空闲分区划分为相等的两个分区（一对伙伴），其中的一个用于分配，另一个分区加入大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区链中；</li>
+<li>若未找到<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区，则需要查找大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区，若找到则需要进行两次划分。第一次将其分割为大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的两个分区，一个用于分配，另一个加入到大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区链中；第二次将第一次用于分配的空闲分区分割为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的两个分区，一个用于分配，另一个加入到大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区链中。</li>
+<li>若仍未找到<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区，则继续查找<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区，以此类推。</li>
+</ol>
+<h3 id="存储空间回收"><a class="markdownIt-Anchor" href="#存储空间回收"></a> 存储空间回收</h3>
+<p>当进程执行完毕，释放一个大小为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的分区时，系统用下面的算法回收该分区：</p>
+<ol>
+<li>若事先不存在<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区，则保留该分区为一个独立的空闲分区；</li>
+<li>若事先已存在<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的空闲分区时，则将其与伙伴分区合并为大小为为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区；</li>
+<li>若事先已存在<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区时，继续合并为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mrow><mi>i</mi><mo>+</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{i+2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mbin mtight">+</span><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span>的空闲分区，以此类推。</li>
+</ol>
+<h3 id="示例"><a class="markdownIt-Anchor" href="#示例"></a> 示例</h3>
+<p>系统的初始内存为1MB，若请求A、B、C、D、E相继申请100KB、240KB、64KB、256KB、75KB的内存空间，其申请、释放顺序为A申请、B申请、C申请、D申请、B释放、A释放、E申请、C释放、E释放、D释放。则系统分配、回收（合并）伙伴分区的过程如图所示：</p>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F.jpg" alt></p>
+<h3 id="特点"><a class="markdownIt-Anchor" href="#特点"></a> 特点</h3>
+<ul>
+<li>较为合理的折中方案，一定程度上克服了固定分区和动态分区的缺陷</li>
+<li>是并行程序分配和释放的一种有效方案</li>
+</ul>
+<h2 id="可重定位分区"><a class="markdownIt-Anchor" href="#可重定位分区"></a> 可重定位分区</h2>
+<ul>
+<li>进程被多次装入内存时，可能位于内存中的不同位置</li>
+<li>压缩（紧凑）技术：移动进程，使得进程占用的空间连续，并使所有空闲空间连成一片</li>
+</ul>
+<h3 id="地址类型"><a class="markdownIt-Anchor" href="#地址类型"></a> 地址类型</h3>
+<ul>
+<li>逻辑地址：与当前数据在内存中的物理分配无关的访问地址，执行前要转换成物理地址</li>
+<li>相对地址：逻辑地址的特例，相对于某些已知点的存储单元</li>
+<li>物理地址、绝对地址：内存中的实际地址</li>
+</ul>
+<h3 id="重定位的硬件支持"><a class="markdownIt-Anchor" href="#重定位的硬件支持"></a> 重定位的硬件支持</h3>
+<ul>
+<li>基地址寄存器</li>
+<li>界限寄存器</li>
+</ul>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E7%A1%AC%E4%BB%B6.jpg" alt></p>
+<h3 id="可重定位分区分配算法"><a class="markdownIt-Anchor" href="#可重定位分区分配算法"></a> 可重定位分区分配算法</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%8F%AF%E9%87%8D%E5%AE%9A%E4%BD%8D.png" alt></p>
+<ul>
+<li>优点
+<ul>
+<li>支持多道程序</li>
+<li>管理方案相对简单，不需要更多的软硬件开销</li>
+<li>实现存储保护的手段比较简单</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>主存利用不够充分，存在外部碎片</li>
+<li>无法实现多进程共享存储器的信息</li>
+<li>无法实现主存的逻辑扩充，进程的地址空间受物理内存的限制</li>
+</ul>
+</li>
+</ul>
+<h2 id="覆盖与对换"><a class="markdownIt-Anchor" href="#覆盖与对换"></a> 覆盖与对换</h2>
+<ul>
+<li>内存扩充：借助大容量辅存在逻辑上实现内存扩充。来解决内存容量不足的问题</li>
+</ul>
+<h3 id="覆盖"><a class="markdownIt-Anchor" href="#覆盖"></a> 覆盖</h3>
+<ul>
+<li>基本思想：一个程序的几个代码段或数据段，按照时间先后来占用公共的内存空间</li>
+<li>实现
+<ul>
+<li>将程序的必要部分代码和数据常驻内存</li>
+<li>可选部分在其他程序模块中实现，平时放在外存，需要用到时才装入内存</li>
+<li>不存在调用关系的模块不必同时装入到内存，可相互覆盖</li>
+</ul>
+</li>
+<li>优点
+<ul>
+<li>覆盖不需要OS提供特殊的支持</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>程序员必须适当地设计和编写覆盖结构，即编程时必须划分程序模块和确定程序模块之间的覆盖关系，增加编程复杂度</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%A6%86%E7%9B%96.jpg" alt></p>
+<h3 id="对换"><a class="markdownIt-Anchor" href="#对换"></a> 对换</h3>
+<ul>
+<li>基本思想：把内存中暂不能运行的进程或者暂不使用的程序和数据换出到外存上，以腾出足够的内存空间，把已具备运行条件的进程或进程所需要的数据换入内存</li>
+<li>交换粒度
+<ul>
+<li>整体交换：交换是以整个进程为单位，目的是解决内存紧张问题，进一步提高内存利用率</li>
+<li>部分交换：页面交换、分段交换，目的是为了支持虚拟存储系统</li>
+</ul>
+</li>
+<li>对换空间的管理
+<ul>
+<li>外存：对换区比文件区侧重于对换速度</li>
+<li>对换区一般采用连续分配</li>
+</ul>
+</li>
+<li>优点
+<ul>
+<li>换入换出操作由内存管理模块完成，与程序结构无关</li>
+</ul>
+</li>
+</ul>
+<h3 id="比较"><a class="markdownIt-Anchor" href="#比较"></a> 比较</h3>
+<ul>
+<li>覆盖技术主要用在早期的操作系统中</li>
+<li>交换技术被广泛用于小型分时系统中，交换技术的发展导致了虚存技术的出现</li>
+<li>覆盖只能覆盖那些与覆盖段无关的程序段</li>
+<li>交换技术不要求用户给出程序段之间的逻辑覆盖结构</li>
+<li>交换发生在进程之间，覆盖发生在同一进程内</li>
+</ul>
+<h1 id="离散分配"><a class="markdownIt-Anchor" href="#离散分配"></a> 离散分配</h1>
+<h2 id="引入原因"><a class="markdownIt-Anchor" href="#引入原因"></a> 引入原因</h2>
+<ul>
+<li>固定分区存在内部碎片</li>
+<li>动态分区存在外部碎片</li>
+<li>可重定位动态分区的系统开销大</li>
+</ul>
+<h2 id="基本思想-2"><a class="markdownIt-Anchor" href="#基本思想-2"></a> 基本思想</h2>
+<p>一个进程分配的内存由多个离散的空间组成</p>
+<h2 id="分页"><a class="markdownIt-Anchor" href="#分页"></a> 分页</h2>
+<ul>
+<li>将内存划分成大小固定、相等的块，且块相对较小（页框）</li>
+<li>进程也划分成同样大小的块（页）</li>
+</ul>
+<h3 id="页表"><a class="markdownIt-Anchor" href="#页表"></a> 页表</h3>
+<ul>
+<li>操作系统为每个进程维护一个页表</li>
+<li>页表给出了该进程的每页所对应页框的位置</li>
+<li>处理器必须知道如何访问当前进程的页表</li>
+<li>逻辑地址到物理地址的转换由处理器硬件完成</li>
+</ul>
+<h3 id="逻辑地址结构"><a class="markdownIt-Anchor" href="#逻辑地址结构"></a> 逻辑地址结构</h3>
+<p>页号+页内偏移（页内地址）<br>
+<img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80.jpg" alt></p>
+<h3 id="页号与页内地址的计算"><a class="markdownIt-Anchor" href="#页号与页内地址的计算"></a> 页号与页内地址的计算</h3>
+<p>若给定一个逻辑地址空间中的地址为A，页面的大小为L，则页号P和页内地址d可按下式</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>d</mi><mo>=</mo><mi>A</mi><mi>m</mi><mi>o</mi><mi>d</mi><mi>L</mi></mrow><annotation encoding="application/x-tex">d = A mod L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">d</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">A</span><span class="mord mathdefault">m</span><span class="mord mathdefault">o</span><span class="mord mathdefault">d</span><span class="mord mathdefault">L</span></span></span></span><br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>P</mi><mo>=</mo><mo stretchy="false">(</mo><mi>A</mi><mo>−</mo><mi>d</mi><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mi>L</mi></mrow><annotation encoding="application/x-tex">P = (A-d)/L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault">A</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">d</span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathdefault">L</span></span></span></span></p>
+<h3 id="普通分页系统地址转换示例"><a class="markdownIt-Anchor" href="#普通分页系统地址转换示例"></a> 普通分页系统地址转换示例</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2.jpg" alt></p>
+<h3 id="页表的存储"><a class="markdownIt-Anchor" href="#页表的存储"></a> 页表的存储</h3>
+<ul>
+<li>页表存放在内存</li>
+<li>PCB保存有页表的起始地址</li>
+<li>页表寄存器存放当前运行进程的页表的起始地址</li>
+</ul>
+<h3 id="页表例题"><a class="markdownIt-Anchor" href="#页表例题"></a> 页表例题</h3>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E9%A1%B5%E8%A1%A8%E4%BE%8B%E9%A2%98.jpg" alt></p>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E4%BE%8B%E9%A2%98%E6%BC%94%E7%A4%BA.jpg" alt></p>
+<p><img src="/2023/11/05/OS%E7%AC%AC%E5%85%AB%E7%AB%A0%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%88%86%E9%A1%B5%E4%BE%8B%E4%BA%8C.jpg" alt></p>
+<h3 id="优点"><a class="markdownIt-Anchor" href="#优点"></a> 优点</h3>
+<ul>
+<li>存在页内碎片，但碎片相对较小，内存利用率高</li>
+<li>实现了离散分配</li>
+<li>无外部碎片</li>
+</ul>
+<h3 id="缺点"><a class="markdownIt-Anchor" href="#缺点"></a> 缺点</h3>
+<ul>
+<li>需要专门的硬件支持，尤其是块表</li>
+<li>不支持动态链接，不易实现共享</li>
+</ul>
+<h2 id="分段"><a class="markdownIt-Anchor" href="#分段"></a> 分段</h2>
+<ul>
+<li>一个程序可以划分成几个段
+<ul>
+<li>段长度可以不等</li>
+<li>每个段都从0开始编址，并占用一段连续的地址空间</li>
+<li>有最大段长限制</li>
+</ul>
+</li>
+<li>逻辑地址两部分组成：段号+段内偏移量</li>
+<li>分段类似动态分区
+<ul>
+<li>使一个程序可以占据多个分区，且不必连续</li>
+</ul>
+</li>
+<li>消除了内部碎片</li>
+<li>分页对用户透明，分段对用户可见</li>
+<li>给程序员提供了组织程序和数据更方便的手段</li>
+<li>程序员或编译器将程序和数据划分到不同的段</li>
+<li>为实现模块化程序设计，程序和数据可能会进一步被划分成多个段</li>
+<li>程序员或编译器需要清楚最大段长的限制</li>
+</ul>
+<h3 id="段表"><a class="markdownIt-Anchor" href="#段表"></a> 段表</h3>
+<p>记录逻辑段和物理段的对应情况</p>
+<h3 id="地址转换"><a class="markdownIt-Anchor" href="#地址转换"></a> 地址转换</h3>
+<ol>
+<li>提取段号，即逻辑地址最左侧的n位</li>
+<li>以段号为索引，查找进程段表中该段的起始物理地址</li>
+<li>最右侧m位表示偏移量，偏移量和段长度进行比较，若偏移量大于段长度，则该地址无效</li>
+<li>物理地址位该段的起始物理地址与偏移量之和</li>
+</ol>
+<h3 id="优缺点"><a class="markdownIt-Anchor" href="#优缺点"></a> 优缺点</h3>
+<ul>
+<li>优点
+<ul>
+<li>便于程序模块化设计</li>
+<li>便于动态链接</li>
+<li>便于保护和共享</li>
+<li>无内部碎片</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>地址转换需要硬件支持（段表寄存器）</li>
+<li>分段的最大尺寸受到主存可用空间的限制</li>
+<li>有外部碎片</li>
+</ul>
+</li>
+</ul>
+<h2 id="分页与分段比较"><a class="markdownIt-Anchor" href="#分页与分段比较"></a> 分页与分段比较</h2>
+<ul>
+<li>页是信息的物理单位，分页的目的是实现离散分配，减少内存的外部碎片，提高内存的利用率，分页仅仅是由于系统管理的需要而不是用户的需要；段则是信息的逻辑单位，它含有一组意义相对完整的信息，分段的目的是为了能更好地满足用户的需要</li>
+<li>页的大小固定且由系统决定，由系统把逻辑地址划分为页号和页内地址两部分，是由机器硬件实现的，因而在系统中只能有一种大小的页面；而段的长度不固定，决定于用户所编写的程序，通常由编译程序在对源程序进行编译时，根据信息的性质来划分</li>
+<li>分页的作业地址空间是一维的，即单一的线性地址空间，程序员只需利用一个记忆符，即可表示一个地址；而分段的作业地址空间则是二维的，程序员在标识一个地址时，既需给出段名，又需给出段内地址</li>
+<li>分页存储管理系统不易实现共享和运行时动态链接，而分段系统易于实现</li>
+</ul>
+<h2 id="段页式"><a class="markdownIt-Anchor" href="#段页式"></a> 段页式</h2>
+<ul>
+<li>页式存储管理的主要优点
+<ul>
+<li>内存利用率高</li>
+</ul>
+</li>
+<li>段式存储管理的主要优点
+<ul>
+<li>方便用户</li>
+<li>易于共享</li>
+<li>易于保护</li>
+<li>可动态链接</li>
+</ul>
+</li>
+<li>段页式存储管理的基本思想
+<ul>
+<li>采用分段方法组织用户和程序，采用分页方法分配和管理内存</li>
+<li>用户程序可以用模块化思想进行设计，一个用户程序由若干段组成</li>
+<li>系统将内存划分成固定大小的页框，并将程序的每一段分割成若干页后装入内存执行</li>
+</ul>
+</li>
+<li>优点
+<ul>
+<li>离散存储</li>
+<li>内存利用率高</li>
+<li>便于保护和共享，支持动态链接</li>
+<li>无外部碎片</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>地址转换复杂</li>
+<li>有内部碎片</li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/11/10/OS%E7%AC%AC%E4%B9%9D%E7%AB%A0%20%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/"
+      title="OS第九章 虚拟内存管理"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        OS第九章 虚拟内存管理
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/29/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80%EF%BC%88%E4%BA%8C%EF%BC%89/"
+      title="机器学习基础（二）"
+     >
+
+    <p class="title-text">
+      
+        机器学习基础（二）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

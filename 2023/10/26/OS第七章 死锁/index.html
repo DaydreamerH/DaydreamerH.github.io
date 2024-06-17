@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第七章 死锁 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="死锁原理与解决方案">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第七章 死锁">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="死锁原理与解决方案">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/banner.jpg">
+<meta property="article:published_time" content="2023-10-26T02:01:45.000Z">
+<meta property="article:modified_time" content="2023-12-10T02:27:19.263Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="进程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第七章 死锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6m00027gv10z60hmhy">
+        <img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第七章 死锁
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-26T02:01:45.000Z" itemprop="datePublished">2023-10-26</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            4.8k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="死锁原理"><a class="markdownIt-Anchor" href="#死锁原理"></a> 死锁原理</h1>
+<h2 id="死锁概念"><a class="markdownIt-Anchor" href="#死锁概念"></a> 死锁概念</h2>
+<ul>
+<li>定义：一组相互竞争系统资源或进行通信的进程间的永久阻塞</li>
+<li>当一组进程中的每一个进程都在等待某事件，而只有同组进程中阻塞的进程能够触发该事件时，死锁发生</li>
+<li>永久性</li>
+<li>无有效的通用解决方案</li>
+</ul>
+<h2 id="资源的分类"><a class="markdownIt-Anchor" href="#资源的分类"></a> 资源的分类</h2>
+<h3 id="可重用资源"><a class="markdownIt-Anchor" href="#可重用资源"></a> 可重用资源</h3>
+<ul>
+<li>一次仅供一个进程安全使用且不因使用而耗尽的资源
+<ul>
+<li>处理器，I/O通道，内存外存，设备，文件，数据库，信号量</li>
+</ul>
+</li>
+<li>竞争可重用资源可能引起死锁</li>
+</ul>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E5%8F%AF%E9%87%8D%E7%94%A8%E8%B5%84%E6%BA%90%E6%AD%BB%E9%94%81.png" alt="可重用资源死锁"></p>
+<h3 id="可消耗资源"><a class="markdownIt-Anchor" href="#可消耗资源"></a> 可消耗资源</h3>
+<ul>
+<li>可消耗资源是指被创建（生产）和销毁（消耗）的资源
+<ul>
+<li>中断，信号，消息和I/O缓冲中的信息</li>
+</ul>
+</li>
+<li>竞争可消耗资源可能引起死锁</li>
+</ul>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E5%8F%AF%E6%B6%88%E8%80%97%E8%B5%84%E6%BA%90%E6%AD%BB%E9%94%81.png" alt="可消耗资源死锁"></p>
+<h2 id="资源分配图"><a class="markdownIt-Anchor" href="#资源分配图"></a> 资源分配图</h2>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E8%B5%84%E6%BA%90%E5%88%86%E9%85%8D%E5%9B%BE.png" alt="资源分配图"><br>
+存在进程和资源的环导致死锁</p>
+<h3 id="死锁的条件"><a class="markdownIt-Anchor" href="#死锁的条件"></a> 死锁的条件</h3>
+<ul>
+<li>必要条件
+<ul>
+<li>互斥：一次只有一个进程可以使用一个资源</li>
+<li>占有且等待：当进程等待其他资源时，继续占有已经分配的资源</li>
+<li>不可抢占：不能强行抢占进程已经占有的资源</li>
+</ul>
+</li>
+<li>充分条件
+<ul>
+<li>循环等待：存在一个闭合的进程链，每个进程至少占有此链中下一个进程所需的资源</li>
+</ul>
+</li>
+</ul>
+<h3 id="死锁的解决"><a class="markdownIt-Anchor" href="#死锁的解决"></a> 死锁的解决</h3>
+<ul>
+<li>死锁预防：防止死锁产生条件的发生</li>
+<li>死锁避免：允许三个必要条件，根据当时资源分配状态来做出资源分配决策，保证不产生死锁</li>
+<li>死锁检测与解除：不限制资源访问或约束进程行为，而是检测死锁的存在并尝试解除</li>
+</ul>
+<h1 id="死锁预防"><a class="markdownIt-Anchor" href="#死锁预防"></a> 死锁预防</h1>
+<p>设计一个系统来排除系统发生死锁的可能性</p>
+<ul>
+<li>间接方法：防止三个必要条件中的任意一个条件发生</li>
+<li>直接方法：防止循环等待的发生</li>
+</ul>
+<h2 id="互斥"><a class="markdownIt-Anchor" href="#互斥"></a> 互斥</h2>
+<p>如果需要对资源互斥访问，那么操作系统必须支持</p>
+<p>即互斥不能禁止</p>
+<h2 id="防止占有且等待"><a class="markdownIt-Anchor" href="#防止占有且等待"></a> 防止占有且等待</h2>
+<p>要求进程一次性请求所有资源，并阻塞这个进程直到所有资源请求能够满足</p>
+<ul>
+<li>低效：进程可能会阻塞很长时间，分配给进程的资源很长时间内不会被使用</li>
+<li>事先不知进程所需的全部资源</li>
+</ul>
+<h2 id="防止不可抢占"><a class="markdownIt-Anchor" href="#防止不可抢占"></a> 防止不可抢占</h2>
+<p>一个占有某些资源的进程进一步申请资源时若被拒绝，则释放最初占有的资源；或操作系统要求另一个进程释放资源。</p>
+<p>只有在资源状态容易保存和恢复情况下，这种方法才实用。</p>
+<h2 id="防止循环等待"><a class="markdownIt-Anchor" href="#防止循环等待"></a> 防止循环等待</h2>
+<p>定义一个请求资源的顺序；系统把所有资源按类型进行线性排队，所有进程对资源的请求必须严格按资源序号递增的顺序提出。</p>
+<h1 id="死锁避免"><a class="markdownIt-Anchor" href="#死锁避免"></a> 死锁避免</h1>
+<ul>
+<li>允许三个必要条件</li>
+<li>动态检查：在系统运行时检查进程资源申请，根据检查结果决定是否分配资源
+<ul>
+<li>若分配后系统可能发生死锁，则不予分配</li>
+<li>否则予以分配</li>
+</ul>
+</li>
+<li>需要预知资源的请求</li>
+</ul>
+<h2 id="资源分配拒绝"><a class="markdownIt-Anchor" href="#资源分配拒绝"></a> 资源分配拒绝</h2>
+<ul>
+<li>若一个进程增加的资源请求可能会导致死锁，则不允许这一资源的分配</li>
+<li>设计思想：当用户申请一组资源时，系统必须做出判断：如果把这些资源分出去，系统是否还处于安全状态
+<ul>
+<li>是则可以分配这些资源</li>
+<li>不是则暂时不分配，阻塞进程</li>
+</ul>
+</li>
+<li>系统的状态反映出当前给进程分配资源的情况
+<ul>
+<li>安全状态：至少有一个资源分配序列（安全序列）不会导致死锁，所有进程都能够运行结束</li>
+<li>不安全状态：不存在安全序列</li>
+</ul>
+</li>
+</ul>
+<h2 id="安全状态的确定"><a class="markdownIt-Anchor" href="#安全状态的确定"></a> 安全状态的确定</h2>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E5%AE%89%E5%85%A8%E7%8A%B6%E6%80%81.png" alt="安全状态"></p>
+<ul>
+<li>当前状态存在一个可以运行到结束的进程P2</li>
+</ul>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E5%AE%89%E5%85%A8%E7%8A%B6%E6%80%812.png" alt="安全状态"></p>
+<ul>
+<li>P2运行结束，资源释放</li>
+<li>P1可以运行到结束</li>
+</ul>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E5%AE%89%E5%85%A8%E7%8A%B6%E6%80%813.png" alt="安全状态"></p>
+<ul>
+<li>P1运行结束，资源释放</li>
+</ul>
+<p>直至运行至所有进程结束</p>
+<ul>
+<li>安全序列并不唯一</li>
+<li>若系统处于安全状态且按照某个安全序列分配资源则不会出现死锁</li>
+<li>并非所有不安全状态都是死锁状态</li>
+<li>当系统进入不安全状态以后便可能进入死锁</li>
+<li>避免死锁的实质在于如何避免不安全状态</li>
+</ul>
+<h2 id="死锁避免的代码"><a class="markdownIt-Anchor" href="#死锁避免的代码"></a> 死锁避免的代码</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">/* 全局数据结构 */<br>struct state&#123;<br>  int resource[m];<br>  int available[m];<br>  int claim[m];<br>  int alloc[n][m];<br>&#125;<br><br>/* 资源分配算法 */<br>if(alloc[i,*]+request[i] &gt; claim[i,*])<br>  &lt;error&gt;;<br>else if(request[*] &gt; available[*])<br>  &lt;suspend process&gt;<br>else &#123;<br>  &lt;define new state by :<br>  alloc[i,*] = alloc[i,*] + request[*];<br>  avaliable[*] = available[*] - request[*]&gt;<br>&#125;<br>if(safe(newstate))<br>  &lt;carry out allocation&gt;;<br>else &#123;<br>  &lt;restore original state&gt;;<br>  &lt;suspend process&gt;;<br>&#125;<br><br>/* 测试安全性算法 */<br>boolean safe (state S)&#123;<br>  int currentavail(m);<br>  process rest[&lt;number of process&gt;];<br>  currentavail = available;<br>  rest = &#123;all process&#125;;<br>  possible = true;<br>  while(possible)&#123;<br>    &lt;find a process Pk in rest such that <br>    claim[k,*] - alloc[k,*]&lt;=currentavailable&gt;;&gt;<br>    if(found)&#123;<br>      currentavail = currentavail + alloc[k,*];<br>      rest = rest - &#123;Pk&#125;;<br>    &#125;<br>    else possible = false;<br>  &#125;<br>  return rest == null;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="死锁避免的优点"><a class="markdownIt-Anchor" href="#死锁避免的优点"></a> 死锁避免的优点</h2>
+<ul>
+<li>无需死锁预防中的抢占和回滚进程</li>
+<li>比起死锁预防，限制少</li>
+</ul>
+<h2 id="死锁避免的使用限制"><a class="markdownIt-Anchor" href="#死锁避免的使用限制"></a> 死锁避免的使用限制</h2>
+<ul>
+<li>必须事先声明每个进程请求的最大资源</li>
+<li>进程必须是独立的，它们之间没有同步的请求</li>
+<li>分配资源的数量必须是固定的</li>
+<li>占有资源时，进程不能退出</li>
+</ul>
+<h1 id="死锁检测与解除"><a class="markdownIt-Anchor" href="#死锁检测与解除"></a> 死锁检测与解除</h1>
+<ul>
+<li>死锁预防策略很保守：通过在进程上强加约束限制访问资源来预防死锁</li>
+<li>死锁检测则相反：只要有可能，就给进程分配其所请求的资源</li>
+<li>对死锁检测可以频繁的发生在每次资源请求时；也可以少检测，如定时检测，或系统资源利用率下降时检测，具体取决于死锁发生的可能性</li>
+<li>死锁检测优点
+<ul>
+<li>可尽早检测死锁</li>
+<li>算法相对简单</li>
+</ul>
+</li>
+<li>死锁检测缺点
+<ul>
+<li>频繁的检测会耗费处理器相当多的时间</li>
+</ul>
+</li>
+</ul>
+<h2 id="死锁检测算法步骤"><a class="markdownIt-Anchor" href="#死锁检测算法步骤"></a> 死锁检测算法步骤</h2>
+<ol>
+<li>标记Allocation矩阵中一行全为0的进程</li>
+<li>初始化一个临时向量W，令W等于Available向量</li>
+<li>查找下标i，进程i当前未标记且满足Q（Q表示进程请求资源）的第i行小于等于W，即对所有的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mo>≤</mo><mi>k</mi><mo>≤</mo><mi>m</mi><mo separator="true">,</mo><msub><mi>Q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>≤</mo><msub><mi>W</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">1\leq k\leq m,Q_{ik}\leq W_k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.78041em;vertical-align:-0.13597em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83041em;vertical-align:-0.13597em;"></span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">m</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault">Q</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，若找不到这样的行，终止算法</li>
+<li>若找到这样的行，标记进程i，并把Allocation矩阵中的相应行加到W中，即对所有<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mo>≤</mo><mi>k</mi><mo>≤</mo><mi>m</mi></mrow><annotation encoding="application/x-tex">1\leq k\leq m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.78041em;vertical-align:-0.13597em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83041em;vertical-align:-0.13597em;"></span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">m</span></span></span></span>，令<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>W</mi><mi>k</mi></msub><mo>=</mo><msub><mi>W</mi><mi>k</mi></msub><mo>+</mo><msub><mi>A</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">W_k = W_k + A_{ik}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">A</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></li>
+<li>返回3</li>
+</ol>
+<p>当且仅当最终有未标记进程时，才存在死锁，未标记的进程都是死锁相关进程</p>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E6%AD%BB%E9%94%81%E6%A3%80%E6%B5%8B.png" alt="死锁检测"></p>
+<h2 id="死锁检测资源分配图"><a class="markdownIt-Anchor" href="#死锁检测资源分配图"></a> 死锁检测：资源分配图</h2>
+<ol>
+<li>在资源分配图中，找出其全部请求都能满足的进程节点Pi,消去Pi所有的请求边和分配边，使之成为孤立的结点</li>
+<li>重复步骤1直至无法化简为止</li>
+</ol>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E8%B5%84%E6%BA%90%E5%88%86%E9%85%8D%E5%9B%BE.png" alt="资源分配图"></p>
+<ul>
+<li>能消去图中所有的边，使所有进程结点都能成为孤立结点的资源分配图</li>
+<li>当资源分配图不可完全化简时，存在死锁</li>
+</ul>
+<h2 id="死锁解除"><a class="markdownIt-Anchor" href="#死锁解除"></a> 死锁解除</h2>
+<ul>
+<li>撤销进程
+<ul>
+<li>撤销所有死锁进程</li>
+<li>连续撤销死锁进程直到不再存在死锁</li>
+</ul>
+</li>
+<li>回退
+<ul>
+<li>把进程回退到前面定义的某些检查点，并重新启动所有进程</li>
+</ul>
+</li>
+<li>抢占
+<ul>
+<li>连续抢占资源直到不再存在死锁</li>
+</ul>
+</li>
+<li>取消哪些进程、抢占哪些进程的资源，选择原则：
+<ul>
+<li>目前为止消耗处理器时间少，或输出少，或分配资源少，或剩余时间长，或优先级最低的进程</li>
+</ul>
+</li>
+</ul>
+<h1 id="死锁预防-避免和检测方案小结"><a class="markdownIt-Anchor" href="#死锁预防-避免和检测方案小结"></a> 死锁预防、避免和检测方案小结</h1>
+<p><img src="/2023/10/26/OS%E7%AC%AC%E4%B8%83%E7%AB%A0%20%E6%AD%BB%E9%94%81/%E6%AD%BB%E9%94%81%E6%96%B9%E6%A1%88%E6%80%BB%E7%BB%93.png" alt="死锁方案"></p>
+<h1 id="哲学家就餐问题"><a class="markdownIt-Anchor" href="#哲学家就餐问题"></a> 哲学家就餐问题</h1>
+<h2 id="死锁"><a class="markdownIt-Anchor" href="#死锁"></a> 死锁</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">semaphore fork[5] = &#123;1,1,1,1,1&#125;;<br>void main()&#123;<br>  cobegin&#123;philosopher(0);philosopher(1);philosopher(2);...philosopher(4);&#125;coend;<br>&#125;<br><br>void philosopher(int i)&#123;<br>  while(true)&#123;<br>    think;<br>    wait(fork[i]);<br>    wait(fork[(i+1)%5]);<br>    eat;<br>    signal(fork[i]);<br>    signal(fork[(i+1)%5]);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="活锁"><a class="markdownIt-Anchor" href="#活锁"></a> 活锁</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">semaphore fork[5] = &#123;1,1,1,1,1&#125;;<br><br>void main()&#123;<br>  cobegin&#123;philosopher(0);philosopher(1);...philosopher(4);&#125;<br>  coend;<br>&#125;<br><br>void philosopher(int i)&#123;<br>  while(true)&#123;<br>    think;<br>    wait(fork[i]);<br>    timeout(wait(fork[(i+1)%5],[0,T]));<br>    eat;<br>    signal(fork[i]);<br>    signal(fork[(i+1)%5]);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="资源分级"><a class="markdownIt-Anchor" href="#资源分级"></a> 资源分级</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">semaphore fork[5] = &#123;1,1,1,1,1&#125;;<br>void main()&#123;<br>  cobegin&#123;philosopher(0);philosopher(1);...philosopher(4);&#125;<br>  coend;<br>&#125;<br><br>void philosopher(int i)&#123;<br>  while(true)&#123;<br>    think;<br>    if(i!=4)&#123;<br>      wait(fork[i]);<br>      wait(fork[(i+1)%5]);<br>    &#125;<br>    else &#123;<br>      wait(fork[(i+1)%5]);<br>      wait(fork[i]);<br>    &#125;<br>    eat;<br>    if (i!=4) &#123;<br>      signal(fork[(i+1)%5]); signal(fork[i]);&#125; <br>    else &#123;<br>      signal(fork[i]); signal(fork[(i+1)%5]);&#125; <br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">semaphore fork[5] = &#123;1, 1, 1, 1, 1&#125;;<br>void main()<br>&#123;<br>  cobegin &#123;philosopher(0); philosopher(1); philosopher(2); philosopher(3);philosopher(4);&#125;<br>  coend;<br>&#125;<br>void philosopher(int i)<br>&#123;<br>  while(true) &#123;<br>    think();  <br>    if (i % 2 != 0) &#123;<br>      wait(fork[i]); wait(fork[(i+1)%5]);&#125; <br>    else &#123;<br>      wait(fork[(i+1)%5]); wait(fork[i]);<br>    &#125;<br>      eat(); <br>    signal(fork[(i+1)%5]);                         <br>    signal(fork[i]);   <br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="服务生方法"><a class="markdownIt-Anchor" href="#服务生方法"></a> 服务生方法</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">semaphore fork[5] = &#123;1, 1, 1, 1, 1&#125;, room = 4;<br>void main()<br>&#123;<br>  cobegin &#123;philosopher(0); philosopher(1); philosopher(2); philosopher(3); philosopher(4);&#125;coend;<br>&#125;<br>void philosopher(int i)<br>&#123;<br>  while(true) &#123;<br>    think;                                        <br>    wait(room);                             <br>    wait(fork[i]);                          <br>    wait(fork[(i+1)%5]);               <br>    signal(fork[i]);                   <br>    signal(fork[(i+1)%5]);           <br>    signal(room);                          <br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/29/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80%EF%BC%88%E4%BA%8C%EF%BC%89/"
+      title="机器学习基础（二）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        机器学习基础（二）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/19/OS%E7%AC%AC%E5%85%AD%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E4%B8%8E%E5%90%8C%E6%AD%A5/"
+      title="OS第六章 进程互斥与同步"
+     >
+
+    <p class="title-text">
+      
+        OS第六章 进程互斥与同步
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>OS第五章 进程调度 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="进程调度总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS第五章 进程调度">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="进程调度总结">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/banner.png">
+<meta property="article:published_time" content="2023-10-15T07:58:37.000Z">
+<meta property="article:modified_time" content="2023-12-24T14:01:46.223Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="进程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/banner.png">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-OS第五章 进程调度" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6q00087gv1ajw7hqu4">
+        <img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/banner.png" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        OS第五章 进程调度
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-15T07:58:37.000Z" itemprop="datePublished">2023-10-15</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            4.6k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OS/" rel="tag">OS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="为什么需要进程调度"><a class="markdownIt-Anchor" href="#为什么需要进程调度"></a> 为什么需要进程调度</h1>
+<p>如果有多个进程（线程）竞争CPU，需要选择下一个运行的进程（线程）</p>
+<h2 id="调度程序"><a class="markdownIt-Anchor" href="#调度程序"></a> 调度程序</h2>
+<p>OS中在面临多个进程（线程）竞争CPU的情况下，完成选择运行的进程（线程）的工作的程序叫做调度程序。</p>
+<p>调度程序使用的算法称为调度算法。</p>
+<h1 id="处理器调度"><a class="markdownIt-Anchor" href="#处理器调度"></a> 处理器调度</h1>
+<h2 id="目的"><a class="markdownIt-Anchor" href="#目的"></a> 目的</h2>
+<p>满足系统目标（响应时间、吞吐量、处理器效率）的方式，把进程分配到一个或多个处理器上执行。</p>
+<h2 id="分类"><a class="markdownIt-Anchor" href="#分类"></a> 分类</h2>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%871.png" alt="调度类别"></p>
+<h3 id="长程调度"><a class="markdownIt-Anchor" href="#长程调度"></a> 长程调度</h3>
+<ul>
+<li>决定哪个程序可以进入系统中等待处理</li>
+<li>控制系统中并发的度
+<ul>
+<li>创建的进程越多，每个进程执行的时间比例越少</li>
+<li>可能限制并发的度，给当前进程集提供满意的服务</li>
+</ul>
+</li>
+<li>从作业队列中选择并创建进程
+<ol>
+<li>何时操作系统接纳一个或多个进程</li>
+<li>接纳哪个作业并为之创造进程
+<ul>
+<li>先来先服务</li>
+<li>优先级、期望执行时间、I/O</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="中程调度"><a class="markdownIt-Anchor" href="#中程调度"></a> 中程调度</h3>
+<ul>
+<li>交换功能的一部分</li>
+<li>换入决定取决于系统并发度的需求</li>
+<li>在不使用虚存的进程中，换入决策还需考虑换出进程的存储需求</li>
+</ul>
+<h3 id="短程调度"><a class="markdownIt-Anchor" href="#短程调度"></a> 短程调度</h3>
+<ul>
+<li>目标：按照优化系统某些方面的方式，分配处理器时间</li>
+<li>称为分派程序</li>
+<li>执行最为频繁</li>
+<li>精确决定下次执行哪个进程</li>
+<li>导致当前进程阻塞或抢占当前运行进程的事件发生时，调用短程调度程序
+<ul>
+<li>时钟中断</li>
+<li>I/O中断</li>
+<li>系统调用</li>
+<li>信号</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%872.jpg" alt="调度层次"></p>
+<h1 id="调度规则"><a class="markdownIt-Anchor" href="#调度规则"></a> 调度规则</h1>
+<h2 id="调度相关概念"><a class="markdownIt-Anchor" href="#调度相关概念"></a> 调度相关概念</h2>
+<ul>
+<li>响应时间：从用户提交请求开始，到接收响应之间的时间间隔</li>
+<li>截止时间：某任务必须开始执行或必须完成的最迟时间</li>
+<li>处理器利用率：处理器处于忙状态时间的百分比</li>
+<li>周转时间（驻留时间）：一个进程从被提交到完成之间的时间间隔
+<ul>
+<li>驻外存等待调用的时间+驻内存等待调用的时间+执行时间+阻塞时间</li>
+</ul>
+</li>
+<li>平均周转时间：多个进程周转时间的平均值</li>
+<li>带权周转时间（归一化周转时间）：进程的周转时间与系统为它提供服务的时间之比</li>
+<li>平均带权周转时间：多个进程带权周转时间的平均值</li>
+</ul>
+<h2 id="分类-2"><a class="markdownIt-Anchor" href="#分类-2"></a> 分类</h2>
+<h3 id="用户与系统"><a class="markdownIt-Anchor" href="#用户与系统"></a> 用户与系统</h3>
+<ul>
+<li>面向用户的调度规则
+<ul>
+<li>与单个用户或进程感知到的进程行为有关，如交互系统的响应时间</li>
+<li>在所有系统中都很重要</li>
+</ul>
+</li>
+<li>面向系统的调度规则
+<ul>
+<li>关注处理器的利用率</li>
+<li>在单用户系统里重要性要低一些</li>
+</ul>
+</li>
+</ul>
+<h3 id="性能相关与否"><a class="markdownIt-Anchor" href="#性能相关与否"></a> 性能相关与否</h3>
+<ul>
+<li>性能相关
+<ul>
+<li>可量化</li>
+<li>易预测</li>
+</ul>
+</li>
+<li>性能无关
+<ul>
+<li>公平性</li>
+<li>不易测量</li>
+</ul>
+</li>
+</ul>
+<h3 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h3>
+<ul>
+<li>面向用户 性能相关
+<ul>
+<li>周转时间</li>
+<li>响应时间</li>
+<li>截止时间</li>
+</ul>
+</li>
+<li>面向用户 性能无关
+<ul>
+<li>可预测</li>
+</ul>
+</li>
+<li>面向系统 性能相关
+<ul>
+<li>吞吐量</li>
+<li>处理器利用率</li>
+</ul>
+</li>
+<li>面向系统 性能无关
+<ul>
+<li>公平性</li>
+<li>强制优先级</li>
+<li>平衡资源</li>
+</ul>
+</li>
+</ul>
+<h1 id="调度的决策模式"><a class="markdownIt-Anchor" href="#调度的决策模式"></a> 调度的决策模式</h1>
+<h2 id="分类-3"><a class="markdownIt-Anchor" href="#分类-3"></a> 分类</h2>
+<h3 id="非抢占非剥夺"><a class="markdownIt-Anchor" href="#非抢占非剥夺"></a> 非抢占（非剥夺）</h3>
+<p>执行进程只在执行完毕，或因申请I/O或请求某些操作系统服务而阻塞自己，才释放处理器。</p>
+<h3 id="抢占剥夺"><a class="markdownIt-Anchor" href="#抢占剥夺"></a> 抢占（剥夺）</h3>
+<ul>
+<li>执行进程可能被操作系统中断，并转换为就绪态</li>
+<li>抢占时机
+<ul>
+<li>新进程到达</li>
+<li>时钟中断</li>
+<li>中断发生后把一个阻塞进程置为就绪态</li>
+</ul>
+</li>
+</ul>
+<h2 id="选择函数"><a class="markdownIt-Anchor" href="#选择函数"></a> 选择函数</h2>
+<ul>
+<li>决定下次选择哪个就绪进程执行</li>
+<li>可以基于优先级、资源需求或进程的执行特性</li>
+<li>基于执行特性时的关键参数
+<ul>
+<li>w=目前为止在系统等待的时间</li>
+<li>e=目前为止花费的执行时间</li>
+<li>s=进程所需的总服务时间</li>
+</ul>
+</li>
+</ul>
+<h1 id="调度算法"><a class="markdownIt-Anchor" href="#调度算法"></a> 调度算法</h1>
+<p>根据系统的资源分配策略所规定的资源分配算法</p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%873.png" alt="调度算法"></p>
+<h2 id="先来先服务fcfs-or-fifo"><a class="markdownIt-Anchor" href="#先来先服务fcfs-or-fifo"></a> 先来先服务(FCFS or FIFO)</h2>
+<p>选择就绪队列中存在时间最长的进程执行，即按请求CPU的顺序使用CPU</p>
+<h3 id="示例"><a class="markdownIt-Anchor" href="#示例"></a> 示例</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%875.jpg" alt="FCFS"></p>
+<ul>
+<li>平均周转时间：8.6</li>
+<li>平均带权周转时间：2.56</li>
+</ul>
+<h3 id="评价"><a class="markdownIt-Anchor" href="#评价"></a> 评价</h3>
+<ul>
+<li>属于非抢占调度方式</li>
+<li>有利于CPU繁忙型的进程，不利于I/O繁忙型的进程</li>
+<li>不适合直接用于单处理器系统，通常与其他调度算法混合使用</li>
+<li>平均周转时间长</li>
+<li>对长进程有利，不利于短进程</li>
+</ul>
+<h2 id="时间片轮转调度算法rr"><a class="markdownIt-Anchor" href="#时间片轮转调度算法rr"></a> 时间片轮转调度算法(RR)</h2>
+<ul>
+<li>每个进程分配一个时间片，周期性产生时间中断，中断时当前进程进入就绪队列末尾，基于FCFS选择下一个运行的进程</li>
+<li>如果进程在时间片内阻塞或结束，则立即切换CPU</li>
+</ul>
+<h3 id="示例-2"><a class="markdownIt-Anchor" href="#示例-2"></a> 示例</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%876.png" alt="RR"></p>
+<ul>
+<li>平均周转时间：10.8</li>
+<li>平均带权周转时间：2.71</li>
+</ul>
+<h3 id="评价-2"><a class="markdownIt-Anchor" href="#评价-2"></a> 评价</h3>
+<ul>
+<li>属于抢占调度方式</li>
+<li>常用于分时系统或事务处理系统</li>
+<li>时间片的设置与系统性能、响应时间密切相关
+<ul>
+<li>时间片太短，进程切换频繁，降低CPU效率</li>
+<li>时间片太长，对短的交互请求的响应时间变长</li>
+<li>时间片最好略大于一次典型交互的时间</li>
+</ul>
+</li>
+<li>对CPU密集型进程有利，对I/O密集型进程不利
+<ul>
+<li>CPU密集型进程可充分利用时间片</li>
+<li>I/O密集型进程每次短时间使用CPU，之后I/O阻塞，I/O操作完成后加入就绪队列，若有CPU密集型进程占用CPU，或就绪队列中已经有CPU密集型进程，则需要长时间等待</li>
+<li>CPU密集型进程不公平地使用了大量CPU时间，导致I/O密集型进程性能下降</li>
+</ul>
+</li>
+</ul>
+<h3 id="vrr算法"><a class="markdownIt-Anchor" href="#vrr算法"></a> VRR算法</h3>
+<p>是RR算法的改进，增加一个辅助队列，接收I/O阻塞完成的进程，调度优先于就绪队列，但占用处理器的时间略小于就绪队列的时间片。</p>
+<h2 id="短进程作业优先spfsjf"><a class="markdownIt-Anchor" href="#短进程作业优先spfsjf"></a> 短进程（作业）优先(SPF/SJF)</h2>
+<p>短进程或作业优先调度</p>
+<h3 id="示例-3"><a class="markdownIt-Anchor" href="#示例-3"></a> 示例</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%877.png" alt="SPN"></p>
+<h3 id="评价-3"><a class="markdownIt-Anchor" href="#评价-3"></a> 评价</h3>
+<ul>
+<li>非抢占调度方式</li>
+<li>短进程跳到队列头，可能导致长进程饥饿</li>
+<li>有利于短进程，减小了平均周转时间</li>
+<li>缺少了剥夺机制，不适用于分时系统或事务处理环境</li>
+<li>进程的长短由用户所提供的估计执行时间而定，用户估计不准时，导致该算法不一定能做到短作业优先</li>
+</ul>
+<h2 id="剩余时间最短者优先算法srt"><a class="markdownIt-Anchor" href="#剩余时间最短者优先算法srt"></a> 剩余时间最短者优先算法(SRT)</h2>
+<p>调度程序总是选择预期剩余时间最短的进程，在SJF的基础上增加了剥夺机制</p>
+<h3 id="示例-4"><a class="markdownIt-Anchor" href="#示例-4"></a> 示例</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%878.png" alt="example"></p>
+<h3 id="评价-4"><a class="markdownIt-Anchor" href="#评价-4"></a> 评价</h3>
+<ul>
+<li>优点
+<ul>
+<li>既不像FCFS那样偏向长进程，也不像RR算法那样会产生很多额外的中断，减小了开销</li>
+<li>周转时间方面。SRT比SJF性能好，只要就绪，短作业可以立即被选择执行</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>需要估计预期的服务时间</li>
+<li>存在长进程饥饿现象</li>
+<li>必须记录进程的已服务时间</li>
+</ul>
+</li>
+</ul>
+<h2 id="响应比高者优先hrrn"><a class="markdownIt-Anchor" href="#响应比高者优先hrrn"></a> 响应比高者优先(HRRN)</h2>
+<p>当前进程执行完毕或需要阻塞时，选择就绪队列中响应比最高的进程投入执行。</p>
+<p>响应比：<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>R</mi><mi>q</mi></msub><mo>=</mo><mfrac><mtext>等待时间+要求服务时间</mtext><mrow><mi mathvariant="normal">要</mi><mi mathvariant="normal">求</mi><mi mathvariant="normal">服</mi><mi mathvariant="normal">务</mi><mi mathvariant="normal">时</mi><mi mathvariant="normal">间</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>w</mi><mo>+</mo><mi>s</mi></mrow><mi>s</mi></mfrac></mrow><annotation encoding="application/x-tex">R_q = \frac{\text{等待时间+要求服务时间}}{要求服务时间}=\frac{w+s}{s}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.00773em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.15139200000000003em;"><span style="top:-2.5500000000000003em;margin-left:-0.00773em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">q</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.217331em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.872331em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord cjk_fallback mtight">要</span><span class="mord cjk_fallback mtight">求</span><span class="mord cjk_fallback mtight">服</span><span class="mord cjk_fallback mtight">务</span><span class="mord cjk_fallback mtight">时</span><span class="mord cjk_fallback mtight">间</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord cjk_fallback mtight">等待时间</span><span class="mord mtight">+</span><span class="mord cjk_fallback mtight">要求服务时间</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.1473309999999999em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.802331em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">s</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.02691em;">w</span><span class="mbin mtight">+</span><span class="mord mathdefault mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+<h3 id="示例-5"><a class="markdownIt-Anchor" href="#示例-5"></a> 示例</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%879.png" alt="HRRN"></p>
+<h3 id="评价-5"><a class="markdownIt-Anchor" href="#评价-5"></a> 评价</h3>
+<ul>
+<li>实质上是一种动态优先权调度算法</li>
+<li>说明了进程的年龄，有吸引力</li>
+<li>是FCFS和SJF的结合，既照顾了短进程，又考虑了作业到达的先后顺序，不会使长期进程长期得不到服务</li>
+<li>每次调度之前都需要计算响应比，增加系统开销，且难以准确计算</li>
+</ul>
+<h2 id="反馈调度算法fb"><a class="markdownIt-Anchor" href="#反馈调度算法fb"></a> 反馈调度算法(FB)</h2>
+<ul>
+<li>多个独立的优先级不同的就绪队列</li>
+<li>各队列区别对待，即优先调度优先级高的队列</li>
+<li>执行过程中可降级，即在整个生命周期内可位于不同队列</li>
+<li>有多个变种，区别在于抢占机制不同</li>
+</ul>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%8710.jpg" alt="FB_show"></p>
+<h3 id="基于时间片轮转的反馈调度算法"><a class="markdownIt-Anchor" href="#基于时间片轮转的反馈调度算法"></a> 基于时间片轮转的反馈调度算法</h3>
+<ol>
+<li>设置多个就绪队列，每个队列赋予不同的优先级
+<ul>
+<li>第一个队列优先级最高，依次递减</li>
+<li>各队列进程执行的时间片不相同，优先级越高的队列，时间片越小</li>
+</ul>
+</li>
+<li>新进程进入，首先放入第一个队列尾，按FCFS排队</li>
+<li>如果进程在当前规定的时间片内完成则退出；一般而言，从队列<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.65952em;vertical-align:0em;"></span><span class="mord mathdefault">i</span></span></span></span>中调度的进程允许执行<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.824664em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.824664em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span></span></span></span></span></span></span></span>的时间才被抢占，降级到下一个优先级队列（如果没有被抢占，则当前进程不降级）</li>
+<li>到达最低优先级队列后，不再降级</li>
+<li>仅当高优先级队列空闲时才调用低优先级队列</li>
+</ol>
+<h3 id="示例基于时间片轮转的反馈调度算法"><a class="markdownIt-Anchor" href="#示例基于时间片轮转的反馈调度算法"></a> 示例（基于时间片轮转的反馈调度算法）</h3>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%874.png" alt="example"></p>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%8711.jpg" alt="FB"></p>
+<h3 id="评价-6"><a class="markdownIt-Anchor" href="#评价-6"></a> 评价</h3>
+<p>多级反馈队列调度算法具有较好的性能，能够满足各类型用户的需求</p>
+<ul>
+<li>有利于终端型作业用户：常为短作业，能在第一队列所规定的时间片内完成</li>
+<li>对短作业用户有利：能够在前几个队列所规定的时间片内完成</li>
+<li>长进程：随着优先级下降，分配的时间片增多，减少了被抢占的次数
+<blockquote>
+<p>当不断有新进程到来时，长进程仍可能饥饿</p>
+</blockquote>
+</li>
+</ul>
+<h1 id="实时系统与实时调度"><a class="markdownIt-Anchor" href="#实时系统与实时调度"></a> 实时系统与实时调度</h1>
+<ul>
+<li>实时系统：系统能够及时（即时）响应外部事件的请求，在规定的时间内完成对该事件的处理，并控制所有实时任务协调一致地运行
+<blockquote>
+<p>对于实时系统而言，系统的正确性不仅取决于计算的逻辑结果，还取决于结果产生的时间</p>
+</blockquote>
+</li>
+<li>实时任务：具有及时性要求的，常常被重复执行的特定进程，在实时系统中习惯称为任务</li>
+<li>截止时间
+<ul>
+<li>开始截止时间：任务在某时间前必须开始执行</li>
+<li>完成截止时间：任务在某时间前必须完成</li>
+</ul>
+</li>
+</ul>
+<h2 id="实时任务分类"><a class="markdownIt-Anchor" href="#实时任务分类"></a> 实时任务分类</h2>
+<ul>
+<li>截止时间
+<ul>
+<li>硬实时任务</li>
+<li>软实时任务</li>
+</ul>
+</li>
+<li>周期性
+<ul>
+<li>周期性实时任务</li>
+<li>非周期性实时任务</li>
+</ul>
+</li>
+</ul>
+<h2 id="实时操作系统的特点"><a class="markdownIt-Anchor" href="#实时操作系统的特点"></a> 实时操作系统的特点</h2>
+<ul>
+<li>可确定性：任务按照固定的或预先确定的时间或时间间隔执行</li>
+<li>可响应性：关注系统在指导中断后为中断提供服务的时间</li>
+<li>用户控制：用户能够控制软、硬实时任务，并控制任务的优先级</li>
+<li>可靠性：实时响应和控制事件，保证性能</li>
+<li>失效弱化：系统具有稳定性，当不能满足所有任务的实时性时，首先要满足的重要的、优先级高的任务的期限，减少系统故障</li>
+</ul>
+<h2 id="实时调度的调度方式"><a class="markdownIt-Anchor" href="#实时调度的调度方式"></a> 实时调度的调度方式</h2>
+<h3 id="基于时间片的轮转调度"><a class="markdownIt-Anchor" href="#基于时间片的轮转调度"></a> 基于时间片的轮转调度</h3>
+<ul>
+<li>实时进程按时间片轮转的方式进行，到达的实时进程放在就绪队列尾</li>
+<li>新到进程的时间片到时调度</li>
+<li>响应时间一般为秒级</li>
+<li>广泛用于分时系统及一般实时处理系统</li>
+</ul>
+<h3 id="基于优先级的非抢占调度"><a class="markdownIt-Anchor" href="#基于优先级的非抢占调度"></a> 基于优先级的非抢占调度</h3>
+<ul>
+<li>实时进程按优先级、非抢占方式执行，新到的实时进程放在就绪队列首部</li>
+<li>当前进程阻塞或完成时，立即调度新到进程</li>
+<li>响应时间一般在数百毫秒到数秒之间</li>
+<li>多用于多道批处理系统或不太严格的实时处理系统</li>
+</ul>
+<h3 id="基于优先级的抢占点抢占调度"><a class="markdownIt-Anchor" href="#基于优先级的抢占点抢占调度"></a> 基于优先级的抢占点抢占调度</h3>
+<ul>
+<li>实时进程按优先级、抢占方式执行</li>
+<li>当下一个剥夺点（时钟中断）到来时，立即占用CPU</li>
+<li>响应时间一般在几毫秒至几十毫秒之间</li>
+<li>用于一般实时系统</li>
+</ul>
+<h3 id="立即抢占调度"><a class="markdownIt-Anchor" href="#立即抢占调度"></a> 立即抢占调度</h3>
+<ul>
+<li>实时级调度按优先级、抢占方式执行</li>
+<li>响应时间为微秒至毫秒级</li>
+<li>可用于苛刻的实时系统</li>
+</ul>
+<h2 id="实时调度的方法分类"><a class="markdownIt-Anchor" href="#实时调度的方法分类"></a> 实时调度的方法分类</h2>
+<h3 id="静态表驱动调度法"><a class="markdownIt-Anchor" href="#静态表驱动调度法"></a> 静态表驱动调度法</h3>
+<ul>
+<li>用于调度周期性实时任务</li>
+<li>按照任务周期到达的时间、执行时间、完成的截止时间以及任务的优先级，指定调度表，调度实时任务</li>
+<li>最早截止时间优先</li>
+<li>不灵活，任何任务的调度申请改动都会引起调度表的修改</li>
+</ul>
+<h3 id="静态优先级抢占调度法"><a class="markdownIt-Anchor" href="#静态优先级抢占调度法"></a> 静态优先级抢占调度法</h3>
+<ul>
+<li>此算法多用于非实时多道程序系统</li>
+<li>优先级的确定方法很多</li>
+<li>实时系统一般根据对任务的限制时间赋予优先级</li>
+</ul>
+<h3 id="基于动态规划的调度法"><a class="markdownIt-Anchor" href="#基于动态规划的调度法"></a> 基于动态规划的调度法</h3>
+<ul>
+<li>当实时任务到达以后，系统为新到达的任务与正在执行的任务动态创建一张调度表</li>
+<li>在当前执行任务不会错过其截止时间的情况下，如果也能使新到达的任务在截止时间内完成，则立即调度执行新任务</li>
+</ul>
+<h3 id="动态尽力调度法"><a class="markdownIt-Anchor" href="#动态尽力调度法"></a> 动态尽力调度法</h3>
+<ul>
+<li>实现简单，广泛用于非周期实时任务调度</li>
+<li>当任务到达时，系统根据其属性赋予优先级，优先级高的先调度</li>
+<li>缺点在于，当任务完成时，或截止时间到达时，很难知道任务是否满足其约束时间</li>
+</ul>
+<h1 id="限期调度"><a class="markdownIt-Anchor" href="#限期调度"></a> 限期调度</h1>
+<ul>
+<li>限期：即任务开始或结束的时间</li>
+<li>调度所需信息
+<ul>
+<li>就绪时间</li>
+<li>启动的期限</li>
+<li>完成的期限</li>
+<li>处理的事件</li>
+<li>资源需求</li>
+<li>优先级</li>
+<li>子任务结构：一个任务可分解为一个必须执行的子任务和一个可选执行子任务，前者有硬截止时间</li>
+</ul>
+</li>
+<li>调度考虑
+<ul>
+<li>调度哪个任务：根据任务的deadline，选择deadline最早的任务调度，这样可使超过deadline的任务最少</li>
+<li>抢占方式
+<ul>
+<li>对于启动限期明确的任务，采用非抢占方式；当前实时任务在满足必须部分或关键部分后，阻塞自己，使其它实时任务得以启动，满足启动期限</li>
+<li>具有完成限期的实时系统，采用抢占方式</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="具有完成限期的周期性实时任务"><a class="markdownIt-Anchor" href="#具有完成限期的周期性实时任务"></a> 具有完成限期的周期性实时任务</h2>
+<ul>
+<li>采用最早截止时间优先调度法(EDF)</li>
+<li>根据任务的截止时间来确定优先级</li>
+</ul>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%8712.png" alt="EDF"></p>
+<h2 id="具有开始限期的非周期性实时任务"><a class="markdownIt-Anchor" href="#具有开始限期的非周期性实时任务"></a> 具有开始限期的非周期性实时任务</h2>
+<p>若预先知道任务的开始截止事件，则采用允许CPU空闲的EDF算法</p>
+<ul>
+<li>优先调度截止时间最早的合格任务，并让该任务运行完毕</li>
+<li>合格任务可以是还未就绪但事先知道其开始截止时间的任务</li>
+<li>CPU利用率不高，但能保证任务按要求完成</li>
+</ul>
+<p><img src="/2023/10/15/OS%E7%AC%AC%E4%BA%94%E7%AB%A0%20%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/%E5%9B%BE%E7%89%8713.png" alt="e_EDF"></p>
+<h2 id="速率单调调度算法rms"><a class="markdownIt-Anchor" href="#速率单调调度算法rms"></a> 速率单调调度算法(RMS)</h2>
+<ul>
+<li>周期性任务</li>
+<li>任务速率：任务周期的倒数，以赫兹为单位</li>
+<li>优先级的确定
+<ul>
+<li>任务周期越短，优先级越高</li>
+<li>优先级函数是速度的单调递增函数</li>
+</ul>
+</li>
+<li>系统按任务优先级的高低进行调度</li>
+</ul>
+<h2 id="实时系统处理能力的限制"><a class="markdownIt-Anchor" href="#实时系统处理能力的限制"></a> 实时系统处理能力的限制</h2>
+<p>假定系统中有<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>m</mi></mrow><annotation encoding="application/x-tex">m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">m</span></span></span></span>个周期性的硬实时任务，任务<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.65952em;vertical-align:0em;"></span><span class="mord mathdefault">i</span></span></span></span>的处理时间为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>C</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">C_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:-0.07153em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，周期为<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>P</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">P_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，则在单处理机情况下，必须满足下面的限制条件：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>m</mi></munderover><mfrac><msub><mi>C</mi><mi>i</mi></msub><msub><mi>P</mi><mi>i</mi></msub></mfrac><mo>⩽</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sum^m_{i=1}\frac{C_i}{P_i} \leqslant 1
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.929066em;vertical-align:-1.277669em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6513970000000002em;"><span style="top:-1.872331em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">i</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.050005em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3000050000000005em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">m</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.277669em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.36033em;"><span style="top:-2.3139999999999996em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31166399999999994em;"><span style="top:-2.5500000000000003em;margin-left:-0.07153em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8360000000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel amsrm">⩽</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span></span></span></span></span></p>
+<h2 id="优先级反转优先级倒置-优先级逆转-优先级翻转"><a class="markdownIt-Anchor" href="#优先级反转优先级倒置-优先级逆转-优先级翻转"></a> 优先级反转（优先级倒置、优先级逆转、优先级翻转）</h2>
+<ul>
+<li>一个高优先级任务间接被一个低优先级任务所抢先，使得两个任务的相对优先级被倒置</li>
+<li>解决方案
+<ul>
+<li>优先级低的任务继承任何与其共享统一资源的较高优先级的任务的优先级</li>
+<li>优先级与每一个资源相关联，资源的优先级被设定为，比使用该资源的最高优先级的任务的优先级高一级；调度程序动态地将该优先级分配给任何访问资源的任务，一旦任务使用完资源，优先级就返回到以前的值</li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/15/%E7%89%9B%E9%A1%BF%E5%8A%9B%E5%AD%A6/"
+      title="牛顿力学"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        牛顿力学
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/14/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80%EF%BC%88%E4%B8%80%EF%BC%89/"
+      title="机器学习基础（一）"
+     >
+
+    <p class="title-text">
+      
+        机器学习基础（一）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

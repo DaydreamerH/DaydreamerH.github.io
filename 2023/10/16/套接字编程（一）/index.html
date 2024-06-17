@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>套接字编程（一） | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="协议的程序接口与套接字API">
+<meta property="og:type" content="article">
+<meta property="og:title" content="套接字编程（一）">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="协议的程序接口与套接字API">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg">
+<meta property="article:published_time" content="2023-10-16T02:16:43.000Z">
+<meta property="article:modified_time" content="2023-10-19T06:23:01.236Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="socket">
+<meta property="article:tag" content="c">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-套接字编程（一）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_clxiqgm6y00167gv19hz7fr9u">
+        <img src="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        套接字编程（一）
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-16T02:16:43.000Z" itemprop="datePublished">2023-10-16</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">套接字编程</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            5.5k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/c/" rel="tag">c</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/socket/" rel="tag">socket</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="协议的程序接口"><a class="markdownIt-Anchor" href="#协议的程序接口"></a> 协议的程序接口</h1>
+<h2 id="不精确指明的协议软件接口"><a class="markdownIt-Anchor" href="#不精确指明的协议软件接口"></a> 不精确指明的协议软件接口</h2>
+<p>TCP/IP标准没有规定应用软件与TCP/IP协议软件如何接口的细节；这些标准只建议了所需的功能集，并允许系统设计者选择有关API的具体是实现细节。</p>
+<h3 id="优点与缺点"><a class="markdownIt-Anchor" href="#优点与缺点"></a> 优点与缺点</h3>
+<ul>
+<li>优点：提供了灵活性和容错能力；意味着设计者既可以使用过程的接口方式，也可以使用消息传递的接口方式。</li>
+<li>缺点：设计者可以使得不同操作系统的接口的实现细节有所不同，应用程序在不同机器间的移植性更差。</li>
+</ul>
+<h2 id="接口功能"><a class="markdownIt-Anchor" href="#接口功能"></a> 接口功能</h2>
+<ul>
+<li>分配用于通信的本地资源</li>
+<li>指定本地和远程通信端点</li>
+<li>（客户端）启动连接</li>
+<li>（客户端）发送数据报</li>
+<li>（服务器端）等待连接到来</li>
+<li>发送或接收数据</li>
+<li>判断数据何时到达</li>
+<li>产生紧急数据</li>
+<li>处理到来的紧急数据</li>
+<li>从容终止连接</li>
+<li>处理来自远程端点的连接终止</li>
+<li>异常终止通信</li>
+<li>处理错误条件或连接异常终止</li>
+<li>连接结束后释放本地资源</li>
+</ul>
+<h2 id="概念性接口"><a class="markdownIt-Anchor" href="#概念性接口"></a> 概念性接口</h2>
+<p>TCP/IP标准为TCP/IP指明了一个概念性接口，其作用是提供示例。</p>
+<ul>
+<li>概念性接口定义为一组过程和函数</li>
+<li>提出了每个过程或函数所要求的参数以及他们所执行操作的语义</li>
+</ul>
+<p>TCP/IP标准定义的概念性接口并不指明数据的表示或编程的细节；它仅仅提供了一种可能的API的例子，操作系统可将此API提供给使用TCP/IP的应用程序</p>
+<h2 id="网络通信的两种基本方法"><a class="markdownIt-Anchor" href="#网络通信的两种基本方法"></a> 网络通信的两种基本方法</h2>
+<ul>
+<li>设计者发明一组新的系统调用，应用程序用它们来访问TCP/IP</li>
+<li>设计者使用一般的I/O调用访问TCP/IP</li>
+</ul>
+<h2 id="linux系统提供的基本io功能"><a class="markdownIt-Anchor" href="#linux系统提供的基本io功能"></a> Linux系统提供的基本I/O功能</h2>
+<ul>
+<li>open：为输入或输出操作准备了一个设备或文件</li>
+<li>close：终止使用以前已打开的设备或文件</li>
+<li>read：从输入设备或文件中获得数据，将数据放到应用程序的存储器中</li>
+<li>write：将数据从应用程序的存储器传到输出设备或文件中</li>
+<li>lseek：转到文件或设备中的某个指定的位置</li>
+<li>ioctl：控制设备或用于访问该设备软件</li>
+</ul>
+<h2 id="将linux-io用于tcpip"><a class="markdownIt-Anchor" href="#将linux-io用于tcpip"></a> 将Linux I/O用于TCP/IP</h2>
+<ul>
+<li>拓展了文件描述符集，使应用进程可以创建能被网络通信所使用的描述符</li>
+<li>拓展了read和write这两个系统调用，使其既可以同网络标识符一起使用，又可以同普通的文件标识符一起使用</li>
+</ul>
+<h1 id="套接字api"><a class="markdownIt-Anchor" href="#套接字api"></a> 套接字API</h1>
+<h2 id="套接字的抽象"><a class="markdownIt-Anchor" href="#套接字的抽象"></a> 套接字的抽象</h2>
+<p>套接字接口为网络通信增加了一个新的抽象，即套接字</p>
+<ul>
+<li>每个活动的套接字由一个小整数标识，称为套接字描述符</li>
+<li>操作系统在与文件描述符相同的描述符表中分配套接字描述符</li>
+</ul>
+<blockquote>
+<p>一个应用进程不能拥有具有相同值的文件描述符和套接字描述符</p>
+</blockquote>
+<h2 id="针对套接字的系统数据结构"><a class="markdownIt-Anchor" href="#针对套接字的系统数据结构"></a> 针对套接字的系统数据结构</h2>
+<p><img src="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/socket_data_struct.png" alt="套接字数据结构"></p>
+<ul>
+<li>当应用进程调用socket后，操作系统分配新的数据结构保存通信所需信息，并在文件描述符表中填入一个新的条目，含有指向这个数据结构的指针</li>
+<li>在套接字能够被使用前，创建该套接字的应用程序必须用其他系统调用把套接字数据结构中的这些信息填上</li>
+</ul>
+<h2 id="主动套接字与被动套接字"><a class="markdownIt-Anchor" href="#主动套接字与被动套接字"></a> 主动套接字与被动套接字</h2>
+<ul>
+<li>被动套接字：服务器将套接字配置为等待传入连接</li>
+<li>主动套接字：客户端用来发起连接的套接字</li>
+</ul>
+<p>主动套接字与被动套接字唯一不同在于应用使用它们的方式；两种套接字最初的创建方式是相同的</p>
+<h2 id="指明端点地址"><a class="markdownIt-Anchor" href="#指明端点地址"></a> 指明端点地址</h2>
+<blockquote>
+<p>创建套接字时，并没有包含如何使用套接字</p>
+</blockquote>
+<ul>
+<li>TCP/IP协议定义了通信端点，包括IP地址和协议端口号</li>
+<li>TCP/IP各协议都使用一种单一的地址表示方式，其地址族用符号常量AF_INET表示</li>
+</ul>
+<blockquote>
+<p>TCP/IP协议族：PF_INET</p>
+</blockquote>
+<h2 id="类属地址结构"><a class="markdownIt-Anchor" href="#类属地址结构"></a> 类属地址结构</h2>
+<ul>
+<li>套接字定义了一个一般化结构，可为所有端点地址使用(地址族，该族中的端点地址)
+<ul>
+<li>地址族：包含一个常量，表示预定义的地址类型</li>
+<li>端点地址字段包含端点地址，使用地址族所指明的那种地址类型的标准表示方式</li>
+</ul>
+</li>
+</ul>
+<h3 id="sockaddr结构"><a class="markdownIt-Anchor" href="#sockaddr结构"></a> sockaddr结构</h3>
+<p>包含：</p>
+<ul>
+<li>一个占2字节的地址族标识符</li>
+<li>一个占14字节的数组存储地址</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">struct sockaddr&#123; /* struct to hold an address*/<br>    u_char sa_len;  /* total length */<br>    u_short sa_family;  /* typr of address*/<br>    char sa_data[14];  /*value of addres*/<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>sockaddr适用于AF_INET族中的地址</p>
+<h3 id="sockaddr_in结构"><a class="markdownIt-Anchor" href="#sockaddr_in结构"></a> sockaddr_in结构</h3>
+<p>包含：</p>
+<ul>
+<li>一个用来识别地址类型的2字节字段</li>
+<li>一个2字节的端口号</li>
+<li>一个4字节的IP地址字段</li>
+<li>一个还未使用的8字节字段</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">struct in_addr&#123;<br>  u_long s_addr;<br>&#125;<br>struct sockaddr_in &#123;<br>    u_char sin_len;<br>    u_short sin_family;<br>    u_short sin_port; /*protocol port number*/<br>    struct in_addr sin_addr;<br>    char sin_zero[8];  /*unused (set to zero)*/<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>只使用TCP/IP协议的应用程序可以只使用sockaddr_in结构</p>
+<h2 id="api中的主要系统调用套接字"><a class="markdownIt-Anchor" href="#api中的主要系统调用套接字"></a> API中的主要系统调用套接字</h2>
+<p>套接字调用分为两种</p>
+<ul>
+<li>主调用：提供对下层功能的访问</li>
+<li>实用例程：为程序员提供帮助</li>
+</ul>
+<h3 id="socket调用"><a class="markdownIt-Anchor" href="#socket调用"></a> socket调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int socket(int domain, int type, int protocol)<br>/* <br>  domain:域类型，指明使用的协议栈；TCP/IP使用PF_INET<br>  type:指明需要的服务类型<br>      SOCK_STREAM:TCP协议，流服务<br>      SOCK_DGRAM:数据报服务，UDP协议<br>  protocol:一般都取0<br>  eg:s=socket(PF_INET,SOCK_STREAM,0);<br>*/<br><br></code></pre></td></tr></table></figure>
+<p>应用程序用socket函数创建一个新的套接字，这个新的套接字可以用于网络通信。</p>
+<ul>
+<li>指明应用程序将使用的协议族（TCP/IP使用PF_INET）</li>
+<li>使用的协议</li>
+<li>所需要的服务类型</li>
+</ul>
+<h3 id="connect调用"><a class="markdownIt-Anchor" href="#connect调用"></a> connect调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int connect(int sockfd,struct sockaddr* server_addr,int sockaddr_len)<br>/*<br>  sockfd:套接字描述符，指明创建连接的套接字<br>  server_addr:指明远程端点：IP地址和端口号<br>  sockaddr_len:地址长度<br>  eg:connect(s,remaddr,remaddrlen);<br>*/<br></code></pre></td></tr></table></figure>
+<p>在创建了一个套接字后，客户程序调用connect以便同远程服务器建立主动连接。</p>
+<ul>
+<li>指明远程端点，包括远程机器IP地址以及协议端口号</li>
+</ul>
+<p>具体演示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;string.h&gt;<br>#inclue&lt;sys/types.h&gt;<br>#include&lt;sys/socket.h&gt;<br>#define DEST_IP &quot;166.11.69.52&quot;<br>#define DEST_PORT 23<br><br>int main()&#123;<br>  int sockfd;<br>  struct sockaddr_in dest_addr;<br>  <br>  sockfd = socket(PF_INET,SOCKET_STREAM,0);<br><br>  dest_addr.sin_family = AF_INET;<br>  dest_addr.sin_port = htons(DEST_PORT);<br>  dest_addr.sin_addr.s_addr = inet_addr(DEST_IP);<br>  bzero(&amp;(dest_addr.sin_zero),8);<br><br>  connet(sockfd,(struct sockaddr*)&amp;dest_addr,sizeof(dest_addr));<br>  <br>  ······<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="send调用"><a class="markdownIt-Anchor" href="#send调用"></a> send调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int send(int sockfd,const void* data,int data_len,unsigned int flags)<br>/*<br>  sockfd:套接字描述符<br>  data:指向发送数据的指针<br>  data_len:数据长度<br>  flags:一般为0<br>  eg:send(sockfd,req,strlen(req),0);<br>*/<br></code></pre></td></tr></table></figure>
+<p>功能：</p>
+<ul>
+<li>在TCP连接上发送数据，返回成功传送数据的长度，出错时返回-1</li>
+<li>send会将外发数据复制到OS内核中，也可以使用send发送“面向连接”的UDP报文</li>
+</ul>
+<p>客户和服务器都使用send在TCP连接上发送数据。客户使用send传输请求，而服务器使用send传输应答。</p>
+<ul>
+<li>数据将要发往的套接字描述符</li>
+<li>数据要发往的地址</li>
+<li>数据的长度</li>
+</ul>
+<p>send往往要将外发数据复制到操作系统内核的缓存里，并允许应用程序在通过网络传输数据的同时继续执行下去。</p>
+<h3 id="sendto调用"><a class="markdownIt-Anchor" href="#sendto调用"></a> sendto调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int sendto(int sockfd,const void*data,int data_len,unsigned int flags,struct sockaddr* remaddr,int remaddr_len)<br>/*<br>  sockfd:套接字描述符<br>  data:指向发送数据的指针<br>  data_len:数据长度<br>  flags:一般为0<br>  remaddr:远端地址：IP地址和端口号<br>  remaddr_len:地址长度<br>  eg:sendto(sockfd,buf,sizeof(buf),(struct sockaddr*)&amp;address,sizeof(adress));<br>*/<br></code></pre></td></tr></table></figure>
+<p>基于UDP发送数据报，返回实际发送的数据长度，出错时返回-1</p>
+<h3 id="recv调用"><a class="markdownIt-Anchor" href="#recv调用"></a> recv调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int recv(int sockfd,viod *buf,int buf_len,unsigned int flags)<br>/*<br>  sockfd:套接字描述符<br>  buf:指向内存块的指针<br>  buf_len:内存块大小，以字节为单位<br>  flags:一般为0<br>*/<br></code></pre></td></tr></table></figure>
+<p>功能：</p>
+<ul>
+<li>从TCP接收数据，返回实际接收的数据长度，出错时返回-1</li>
+<li>客户和服务器都使用recv从TCP接收数据</li>
+</ul>
+<h3 id="recvfrom调用"><a class="markdownIt-Anchor" href="#recvfrom调用"></a> recvfrom调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int recvfrom(int sockfd,void *buf,int buf_len,unsigned int flags,struct sockaddr*from,int fromlen)<br>/*<br>  sockfd:套接字描述符<br>  buf:指向内存块的指针<br>  buf_len:内存块大小，以字节为单位<br>  flags:一般为0<br>  from:远端的地址，IP地址和端口号<br>  fromlen:远端地址长度<br>*/<br></code></pre></td></tr></table></figure>
+<h3 id="close调用"><a class="markdownIt-Anchor" href="#close调用"></a> close调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">close(int sockfd)<br></code></pre></td></tr></table></figure>
+<p>客户或服务器一旦结束使用某个套接字，便调用close将该套接字撤销。</p>
+<ul>
+<li>若只有一个进程使用此套接字，close立即终止连接并撤销该套接字</li>
+<li>若有多个进程共享某个套接字，close就把套接字的引用数减一，当此引用数降为0时，撤销该套接字</li>
+</ul>
+<h3 id="bind调用"><a class="markdownIt-Anchor" href="#bind调用"></a> bind调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int bind(int sockfd,struct sockaddr* my_addr,int addrlen)<br>/*<br>  sockfd:套接字描述符<br>  my_addr:本地地址，IP地址和端口号<br>  addrlen:地址长度<br>*/<br></code></pre></td></tr></table></figure>
+<p>当套接字被创建时，它还没有任何关于端点地址的概念。应用程序调用bind以便为一个套接字指明本地端点地址。</p>
+<ul>
+<li>
+<p>对于TCP/IP协议，端点地址使用sockaddr_in结构，它包含了IP地址和协议端口号。</p>
+</li>
+<li>
+<p>服务器主要使用bind来指明熟知端口号，它将在此熟知端口等待连接。</p>
+</li>
+</ul>
+<h3 id="listen调用"><a class="markdownIt-Anchor" href="#listen调用"></a> listen调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int listen(int sockfd,int input_queue_size)<br></code></pre></td></tr></table></figure>
+<p>套接字被创建后，直到应用程序采取进一步行动前，它既不是主动的也不是被动的。</p>
+<p>面向连接的服务器用listen将一个套接字置为被动模式，并使其准备接收传入连接。</p>
+<ul>
+<li>一个参数指明某个套接字处于被动模式</li>
+<li>一个参数指明套接字所使用的队列长度</li>
+</ul>
+<h3 id="accept调用"><a class="markdownIt-Anchor" href="#accept调用"></a> accept调用</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int accept(int sockfd,void *addr,int *addrlen)<br><br>/*<br>  sockfd:套接字描述符<br>  addr:提出连接请求的主机地址<br>  addrlen:地址长度<br>  eg:new_sockfd = accept(sockfd,(struct sockaddr*)&amp;address,sizeof(address));<br>*/<br></code></pre></td></tr></table></figure>
+<p>对于TCP的套接字，服务器：</p>
+<ol>
+<li>调用socket函数创建一个套接字</li>
+<li>调用bind指明本地端口地址</li>
+<li>调用listen将其置于被动模式</li>
+<li>调用accept以获取接下去的传入连接请求</li>
+</ol>
+<ul>
+<li>一个参数指明套接字，将从该套接字接收连接</li>
+</ul>
+<ol>
+<li>accept为每个新的连接请求创建了一个新的套接字，并将这个新套接字的描述符返回给调用者。</li>
+<li>服务器只对这个新的连接使用该套接字，而用原来的套接字接收其他连接请求</li>
+<li>服务器一旦接收一个连接后，就可以在这个新的套接字上传送数据</li>
+<li>使用完该套接字后，服务器关闭套接字</li>
+</ol>
+<h3 id="在套接字中使用read和write"><a class="markdownIt-Anchor" href="#在套接字中使用read和write"></a> 在套接字中使用read和write</h3>
+<p>Linux中，程序员可以使用read代替recv，write代替send。</p>
+<p>对TCP和UDP套接字而言，(read,recv)(write,send)语义一致。</p>
+<h3 id="api集合"><a class="markdownIt-Anchor" href="#api集合"></a> api集合</h3>
+<p><img src="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/socket_api.png" alt="socket api"></p>
+<h2 id="用于整数转换的实用例程"><a class="markdownIt-Anchor" href="#用于整数转换的实用例程"></a> 用于整数转换的实用例程</h2>
+<p>套接字例程含有一些在网络字节顺序和本地主机字节顺序间进行转换的函数</p>
+<ul>
+<li>短转换例程（处理16位整数）
+<ul>
+<li>htons(host to netword short)将一个短整数从主机的本地字节顺序转换为网络字节顺序</li>
+<li>ntohs(network to host short)将一个短网络字节顺序转换为一个本地字节顺序</li>
+</ul>
+</li>
+<li>长转换例程（处理32位整数）
+<ul>
+<li>htonl</li>
+<li>ntohl</li>
+</ul>
+</li>
+</ul>
+<p>这样做可以使代码移植到任何机器上，而不管这台机器的本地字节顺序是什么</p>
+<h2 id="在程序中使用套接字调用"><a class="markdownIt-Anchor" href="#在程序中使用套接字调用"></a> 在程序中使用套接字调用</h2>
+<p><img src="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%B8%80%EF%BC%89/socket_progress.png" alt="socket progress"></p>
+<ul>
+<li>使用何种服务
+<ul>
+<li>SOCK_DGRAM:数据报服务，UDP协议</li>
+<li>SOCK_STREAM:流服务，TCP协议</li>
+<li>PF_INET:使用TCP/IP协议族</li>
+<li>AF_INET:使用TCP/IP地址结构</li>
+</ul>
+</li>
+<li>在程序中需要引用<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;sys/types.h&gt;<br>#include&lt;sys/socket.h&gt;<br></code></pre></td></tr></table></figure></li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/16/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B%EF%BC%88%E4%BA%8C%EF%BC%89/"
+      title="套接字编程（二）"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        套接字编程（二）
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/"
+      title="白日梦AI绘画app开发碎碎念"
+     >
+
+    <p class="title-text">
+      
+        白日梦AI绘画app开发碎碎念
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>

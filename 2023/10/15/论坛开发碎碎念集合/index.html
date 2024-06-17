@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>论坛开发碎碎念集合 | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="10天尝试完成JavaWeb技术的论坛功能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论坛开发碎碎念集合">
+<meta property="og:url" content="https://daydreamerh.github.io/2023/10/15/%E8%AE%BA%E5%9D%9B%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5%E9%9B%86%E5%90%88/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="10天尝试完成JavaWeb技术的论坛功能">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-10-15T13:41:33.000Z">
+<meta property="article:modified_time" content="2023-10-16T05:35:07.577Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="Vue">
+<meta property="article:tag" content="JavaWeb">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">5</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-论坛开发碎碎念集合" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        论坛开发碎碎念集合
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-10-15T13:41:33.000Z" itemprop="datePublished">2023-10-15</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">项目开发</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            2.6k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaWeb/" rel="tag">JavaWeb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/" rel="tag">java</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <blockquote>
+<p>写于2023暑假雅安实习10天，尝试做全栈的论坛，代码很捞，还是学了点东西</p>
+</blockquote>
+<h1 id="点赞714"><a class="markdownIt-Anchor" href="#点赞714"></a> 点赞(7.14)</h1>
+<h2 id="点赞在数据库中以表格形式存在"><a class="markdownIt-Anchor" href="#点赞在数据库中以表格形式存在"></a> 点赞在数据库中以表格形式存在</h2>
+<ul>
+<li>bid：博客id</li>
+<li>uid：账户id<br>
+二者组成表的主键，且各自作为外键</li>
+</ul>
+<h2 id="点赞相关数据库操作"><a class="markdownIt-Anchor" href="#点赞相关数据库操作"></a> 点赞相关数据库操作</h2>
+<ul>
+<li>查询指定bid的点赞数目</li>
+<li>添加新的点赞</li>
+<li>取消之前的点赞</li>
+</ul>
+<h2 id="点赞的前端展示"><a class="markdownIt-Anchor" href="#点赞的前端展示"></a> 点赞的前端展示</h2>
+<ul>
+<li>点赞数目将控制文字点赞人数的显示</li>
+<li>用户是否点赞将决定文末点赞按钮（来源于查询附带的结果）
+<ul>
+<li>图标样式将改变</li>
+<li>button的函数不同</li>
+</ul>
+</li>
+</ul>
+<h1 id="等级成长714"><a class="markdownIt-Anchor" href="#等级成长714"></a> 等级成长(7.14)</h1>
+<h2 id="用户含有两个属性经验与等级"><a class="markdownIt-Anchor" href="#用户含有两个属性经验与等级"></a> 用户含有两个属性，经验与等级</h2>
+<ul>
+<li>每发一次博客即经验+2</li>
+<li>每次经验改变，将可能使得等级发生改变</li>
+</ul>
+<h2 id="实现方式-触发器"><a class="markdownIt-Anchor" href="#实现方式-触发器"></a> 实现方式 触发器</h2>
+<ul>
+<li>触发器1
+<ul>
+<li>触发条件：after insert blog（发表博客时）</li>
+<li>触发行为：对每一个row，更新user表的exper，使其+2</li>
+</ul>
+</li>
+<li>触发器2
+<ul>
+<li>触发条件：after update user</li>
+<li>触发行为：对每一个row，更新NEW.grade = user/10</li>
+<li>曾出现的报错，见博客 触发器</li>
+</ul>
+</li>
+</ul>
+<h2 id="触发器出现的问题"><a class="markdownIt-Anchor" href="#触发器出现的问题"></a> 触发器出现的问题</h2>
+<p>Can’t update table ‘user’ in stored function/trigger because it is already used by statement which invoked this stored function/trigger.</p>
+<ul>
+<li>根本原因在于触发自己的是user表，操作的时候update user表，导致错误</li>
+<li>采用NEW代替update操作即可</li>
+</ul>
+<h2 id="触发器基础写法"><a class="markdownIt-Anchor" href="#触发器基础写法"></a> 触发器基础写法</h2>
+<ul>
+<li>首先改变DELIMMTER</li>
+<li>创建trigger</li>
+<li>指定触发条件，after/before,操作,表格</li>
+<li>Begin书写触发内容End</li>
+<li>改回DELIMMTER</li>
+</ul>
+<h1 id="上午715"><a class="markdownIt-Anchor" href="#上午715"></a> 上午(7.15)</h1>
+<h2 id="修改背景图片"><a class="markdownIt-Anchor" href="#修改背景图片"></a> 修改背景图片</h2>
+<h3 id="利用视频mp4将背景修改为动态背景"><a class="markdownIt-Anchor" href="#利用视频mp4将背景修改为动态背景"></a> 利用视频(.mp4)将背景修改为动态背景</h3>
+<ul>
+<li>对于有overflow的页面，将height设置为auto</li>
+<li>对于没有overflow的页面，将height设为100vh</li>
+</ul>
+<h2 id="添加修改模块"><a class="markdownIt-Anchor" href="#添加修改模块"></a> 添加修改模块</h2>
+<ul>
+<li>使用路由传参，从特定博客转至创作中心</li>
+</ul>
+<h1 id="下午715"><a class="markdownIt-Anchor" href="#下午715"></a> 下午(7.15)</h1>
+<h2 id="将保持登陆的方法更改"><a class="markdownIt-Anchor" href="#将保持登陆的方法更改"></a> 将保持登陆的方法更改</h2>
+<ul>
+<li>之前使用的是Vue.prototype挂属性</li>
+<li>为保证会话持续期间一直保持登录，改用sessionSetItem记录数据，实现刷新不掉线</li>
+</ul>
+<h2 id="修改后端所有更改数据的sql语句"><a class="markdownIt-Anchor" href="#修改后端所有更改数据的sql语句"></a> 修改后端所有更改数据的sql语句</h2>
+<ul>
+<li>insert：由于insert没有where用法，使用select作条件，并判断修改的行数作为是否成功的依据</li>
+<li>delete：添加条件判断密码是否正确</li>
+<li>update：添加条件判断密码是否正确</li>
+</ul>
+<h2 id="被分页查询的分页条干碎了"><a class="markdownIt-Anchor" href="#被分页查询的分页条干碎了"></a> 被分页查询的分页条干碎了</h2>
+<h1 id="上午716"><a class="markdownIt-Anchor" href="#上午716"></a> 上午(7.16)</h1>
+<h2 id="删除触发器"><a class="markdownIt-Anchor" href="#删除触发器"></a> 删除触发器</h2>
+<p>由于昨日insert改为select辅助判断条件，使用了user表导致触发器无法正常工作（更新user对应的exper+2），所以删除了这个触发器，并将该任务交给了事务，当修改成功一行时，将更新经验</p>
+<h2 id="分页查询"><a class="markdownIt-Anchor" href="#分页查询"></a> 分页查询</h2>
+<ul>
+<li>对于博客浏览页，设置了两种分页查询
+<ul>
+<li>条件分页查询</li>
+<li>无条件分页查询</li>
+</ul>
+</li>
+<li>主要麻烦在于两种查询相互转换的时候，选择接口（无条件查询选择全部查询的接口，条件不为空时选择条件查询）
+<ul>
+<li>为此设置了状态量constate，用以判断使用何种接口</li>
+</ul>
+</li>
+<li>对于个人空间，也同样设置了一个无条件分页查询</li>
+<li>这次尝试的主要难点在于调整el-pagination激活的页码</li>
+</ul>
+<h1 id="下午及晚上716"><a class="markdownIt-Anchor" href="#下午及晚上716"></a> 下午及晚上(7.16)</h1>
+<h2 id="完善评论功能"><a class="markdownIt-Anchor" href="#完善评论功能"></a> 完善评论功能</h2>
+<ul>
+<li>添加删除键，可删除自己的评论</li>
+<li>添加评论回复功能，为这个功能做了很多工作
+<ul>
+<li>修改查询方式，将其改为两表左连接，有父级评论的评论将附带父级信息传递</li>
+<li>修改前端渲染方式，有父级评论的评论将在其div内部展现灰色div，含有父级评论信息</li>
+</ul>
+</li>
+</ul>
+<h1 id="上午717"><a class="markdownIt-Anchor" href="#上午717"></a> 上午(7.17)</h1>
+<h2 id="完善个人空间页面"><a class="markdownIt-Anchor" href="#完善个人空间页面"></a> 完善个人空间页面</h2>
+<ul>
+<li>添加博客发表数</li>
+<li>添加获得点赞数</li>
+<li>添加点赞数</li>
+</ul>
+<h2 id="完善评论展示"><a class="markdownIt-Anchor" href="#完善评论展示"></a> 完善评论展示</h2>
+<ul>
+<li>调整按钮布局，并将删除按钮有条件的隐藏起来</li>
+<li>自定义左右移动页，进行了简单的分页查询自定义
+<ul>
+<li>之前分页查询使用了el-pagination，较为容易</li>
+<li>当自定义分页时，各种属性需要靠自己去计算，所以调整了很久</li>
+</ul>
+</li>
+</ul>
+<h2 id="在服务器上完成部署"><a class="markdownIt-Anchor" href="#在服务器上完成部署"></a> 在服务器上完成部署</h2>
+<h1 id="中午717"><a class="markdownIt-Anchor" href="#中午717"></a> 中午(7.17)</h1>
+<h2 id="完善加载界面引入loading动画"><a class="markdownIt-Anchor" href="#完善加载界面引入loading动画"></a> 完善加载界面，引入loading动画</h2>
+<h2 id="修改了部分健壮性逻辑"><a class="markdownIt-Anchor" href="#修改了部分健壮性逻辑"></a> 修改了部分健壮性逻辑</h2>
+<h2 id="将父级评论删除后评论的处理"><a class="markdownIt-Anchor" href="#将父级评论删除后评论的处理"></a> 将父级评论删除后，评论的处理</h2>
+<p>修改了sql语句与前端渲染的方式，使得评论a回复评论b时，若b被删除，则将表示在网页上</p>
+<h2 id="修改早上写的bug比如限制字数却成功发表"><a class="markdownIt-Anchor" href="#修改早上写的bug比如限制字数却成功发表"></a> 修改早上写的bug，比如限制字数却成功发表</h2>
+<h1 id="上午718"><a class="markdownIt-Anchor" href="#上午718"></a> 上午(7.18)</h1>
+<h2 id="完成了图片上传的功能"><a class="markdownIt-Anchor" href="#完成了图片上传的功能"></a> 完成了图片上传的功能</h2>
+<ul>
+<li>创建了新的接口负责上传的对象的存储</li>
+<li>修改了配套的sql语句
+<ul>
+<li>存储将指定文件夹的路径存储在数据库中</li>
+<li>获取用户相关信息时，将该路径返回给用户</li>
+</ul>
+</li>
+<li>但是头像全写成avater了），不想改了</li>
+</ul>
+<h1 id="下午718"><a class="markdownIt-Anchor" href="#下午718"></a> 下午(7.18)</h1>
+<p>头像排版问题</p>
+<h1 id="上午719"><a class="markdownIt-Anchor" href="#上午719"></a> 上午(7.19)</h1>
+<p>在熟悉md插件的基础上，尝试处理文件</p>
+<ul>
+<li>利用java语言为每个图片建立路径，并将上传的图片保存</li>
+<li>利用md的图片url，将指定路径的图片渲染出来</li>
+</ul>
+<h1 id="下午晚上719"><a class="markdownIt-Anchor" href="#下午晚上719"></a> 下午晚上(7.19)</h1>
+<p>基础的评论消息会被临时存储在一张表上，相关用户登录时会得到消息提示</p>
+<h1 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h1>
+<h2 id="学会在利用element-ui的基础上调整css实现简单动态的页面布局"><a class="markdownIt-Anchor" href="#学会在利用element-ui的基础上调整css实现简单动态的页面布局"></a> 学会在利用element-ui的基础上，调整css，实现简单动态的页面布局</h2>
+<h2 id="学会分页查询的基本思路及原理"><a class="markdownIt-Anchor" href="#学会分页查询的基本思路及原理"></a> 学会分页查询的基本思路及原理</h2>
+<p>集中表现为：limit，offset，current_page和maxpage直接的计算关系与请求、渲染方式</p>
+<h2 id="逐渐理解数据库理论课上各连接的出现意义及应用场景"><a class="markdownIt-Anchor" href="#逐渐理解数据库理论课上各连接的出现意义及应用场景"></a> 逐渐理解数据库理论课上各连接的出现意义及应用场景：</h2>
+<ul>
+<li>我以前一直不理解左右连接到底是干啥的</li>
+<li>在评论分页中，由于回复评论必须跨页显示出来，所以此处我用了左连接<br>
+左侧是评论主体，右侧是可能出现的评论，连接条件是左侧的fpid（父级评论id）等于右侧的pid，如果能够匹配说明存在父级评论且未父级评论未被删除，如果不存在父级评论或评论被删除将不存在相应父级信息列（不存在与曾经存在但被删除的区别是fpid是否为0）</li>
+</ul>
+<h2 id="利用java处理文件构建基本的文件服务器能够实现头像-博客中图片的上传与渲染"><a class="markdownIt-Anchor" href="#利用java处理文件构建基本的文件服务器能够实现头像-博客中图片的上传与渲染"></a> 利用java处理文件，构建基本的文件服务器，能够实现头像、博客中图片的上传与渲染</h2>
+<h2 id="接口设计更安全每一个设计数据库更新的操作都需要uid和密码进行验证"><a class="markdownIt-Anchor" href="#接口设计更安全每一个设计数据库更新的操作都需要uid和密码进行验证"></a> 接口设计更安全，每一个设计数据库更新的操作都需要uid和密码进行验证</h2>
+<h2 id="数据库设计更丰富实现功能更多元"><a class="markdownIt-Anchor" href="#数据库设计更丰富实现功能更多元"></a> 数据库设计更丰富，实现功能更多元</h2>
+<h2 id="前端函数学习"><a class="markdownIt-Anchor" href="#前端函数学习"></a> 前端函数学习</h2>
+<ul>
+<li>例如标签tag的设计，需要对得到的字符串进行分隔</li>
+<li>例如涉及文件上传的内容，对相关检查函数的编写更了解</li>
+</ul>
+<h2 id="在数据库操作上对各类情况更熟练"><a class="markdownIt-Anchor" href="#在数据库操作上对各类情况更熟练"></a> 在数据库操作上对各类情况更熟练</h2>
+<ul>
+<li>多表联合查询</li>
+<li>insert 利用select进行条件判断</li>
+<li>触发器的使用（用户经验更新时，等级自动判断更新）</li>
+</ul>
+<h1 id="消息提示遗留问题"><a class="markdownIt-Anchor" href="#消息提示遗留问题"></a> 消息提示（遗留问题）</h1>
+<h2 id="问题"><a class="markdownIt-Anchor" href="#问题"></a> 问题</h2>
+<ul>
+<li>当作者A写了博客blog，并在blog下评论c1</li>
+<li>用户B进入blog，并回复c1</li>
+<li>此时原有代码将产生两次插入操作，将消息重复插入alert</li>
+<li>alert设置了主键保证一个用户对同一个博客只能收到一次提示</li>
+<li>插入失败，同时死锁</li>
+<li>其他涉及数据库更新操作均无法完成</li>
+</ul>
+<h2 id="修改"><a class="markdownIt-Anchor" href="#修改"></a> 修改</h2>
+<ul>
+<li>在每次使用insert插入前，先判断是否已有该消息</li>
+</ul>
+<h2 id="结果"><a class="markdownIt-Anchor" href="#结果"></a> 结果</h2>
+<ul>
+<li>忘记图像目录和后端代码放在同一个文件夹内，更新代码时将原文件夹覆盖时，忘记了备份图像</li>
+<li>原来的图像全丢了！！！！</li>
+</ul>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2023/10/15/%E7%99%BD%E6%97%A5%E6%A2%A6AI%E7%BB%98%E7%94%BBapp%E5%BC%80%E5%8F%91%E7%A2%8E%E7%A2%8E%E5%BF%B5/"
+      title="白日梦AI绘画app开发碎碎念"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        白日梦AI绘画app开发碎碎念
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/10/15/%E7%89%9B%E9%A1%BF%E5%8A%9B%E5%AD%A6/"
+      title="牛顿力学"
+     >
+
+    <p class="title-text">
+      
+        牛顿力学
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>
