@@ -5,7 +5,7 @@
   --neut-L30: rgba(255,255,255,0.3);
   --neut-L10: rgba(255,255,255,0.1);
   --banner-dim: rgba(0,0,0,0.2);
-  --primary-hue: 185;
+  --primary-hue: 220;
   --main-title: rgba(255,255,255,0.9);
   --btn-content: var(--neut-L75);
   --btn-content-hover: var(--btn-content);
@@ -73,37 +73,37 @@
 }
 @supports not (color: oklch(0 0 0)) {
   :root {
-    --primary: #00cab9;
-    --nav-dropdown-bg: #0b1917;
-    --page-background: #070f0e;
-    --card-background: #172523;
-    --btn-bg: #284945;
-    --btn-hover: #375e58;
-    --btn-active: #416d67;
-    --card-btn-hover: #1c3330;
-    --card-btn-active: #24413d;
-    --btn-text-hover: #0b1917;
-    --btn-text-active: #071210;
-    --timeline-dim-dot: #416d67;
-    --title-active: #00a699;
-    --tag-dot: #172523;
-    --highlight-selection: #24413d;
-    --article-code-bg: #2d4f4a;
-    --article-block: #0b1917;
-    --link-hover-bg: #00554d;
-    --link-active-bg: #00463f;
-    --blockquote-bg: #0b1917;
-    --color-picker-range: #2d4f4a;
-    --badge-bg: #36c6b8;
-    --text-on-light: #172523;
-    --pagenav-curr-text: #172523;
-    --input-field: #0b1917;
-    --primary-btn-text: #172523;
-    --enter-btn-bg: #0b1917;
-    --enter-btn-hover: #1c3330;
-    --enter-btn-active: #24413d;
-    --selection-bg: #00554d;
-    --code-block-selection-bg: #00554d;
+    --primary: #00c1eb;
+    --nav-dropdown-bg: #0b181c;
+    --page-background: #070f11;
+    --card-background: #172428;
+    --btn-bg: #294751;
+    --btn-hover: #385b67;
+    --btn-active: #416a77;
+    --card-btn-hover: #1c3138;
+    --card-btn-active: #253f47;
+    --btn-text-hover: #0b181c;
+    --btn-text-active: #071115;
+    --timeline-dim-dot: #416a77;
+    --title-active: #009fc1;
+    --tag-dot: #172428;
+    --highlight-selection: #253f47;
+    --article-code-bg: #2e4d57;
+    --article-block: #0b181c;
+    --link-hover-bg: #005165;
+    --link-active-bg: #004254;
+    --blockquote-bg: #0b181c;
+    --color-picker-range: #2e4d57;
+    --badge-bg: #3dbfe2;
+    --text-on-light: #172428;
+    --pagenav-curr-text: #172428;
+    --input-field: #0b181c;
+    --primary-btn-text: #172428;
+    --enter-btn-bg: #0b181c;
+    --enter-btn-hover: #1c3138;
+    --enter-btn-active: #253f47;
+    --selection-bg: #005165;
+    --code-block-selection-bg: #005165;
   }
 }
 :root[theme='light'] {
@@ -158,31 +158,31 @@
 }
 @supports not (color: oklch(0 0 0)) {
   :root[theme='light'] {
-    --primary: #00baaa;
-    --page-background: #e8f1ef;
-    --nav-dropdown-bg: #f5faf9;
-    --btn-bg: #ddf4f1;
-    --btn-content: #00867a;
-    --btn-hover: #bae9e2;
-    --btn-active: #90dfd4;
-    --btn-text-hover: #ddf4f1;
-    --btn-text-active: #f1fbf9;
-    --btn-text-content: #00baaa;
-    --card-btn-hover: #f5faf9;
-    --card-btn-active: #c9e5e0;
-    --title-active: #00978a;
-    --link-hover-bg: #ddf4f1;
-    --link-active-bg: #bae9e2;
-    --article-code-bg: #e1f3f0;
-    --blockquote-bg: #f5faf9;
-    --badge-bg: #e1f3f0;
-    --text-on-light: #00867a;
-    --color-picker-range: #e1f3f0;
-    --input-field: #f5faf9;
-    --enter-btn-bg: #f5faf9;
-    --enter-btn-hover: #e7f5f3;
-    --enter-btn-active: #c9e5e0;
-    --selection-bg: #bae9e2;
+    --primary: #00b1da;
+    --page-background: #e8f0f3;
+    --nav-dropdown-bg: #f5f9fb;
+    --btn-bg: #ddf3fa;
+    --btn-content: #0080a0;
+    --btn-hover: #bae7f5;
+    --btn-active: #91dbf2;
+    --btn-text-hover: #ddf3fa;
+    --btn-text-active: #f2fafd;
+    --btn-text-content: #00b1da;
+    --card-btn-hover: #f5f9fb;
+    --card-btn-active: #c9e3ec;
+    --title-active: #0090b1;
+    --link-hover-bg: #ddf3fa;
+    --link-active-bg: #bae7f5;
+    --article-code-bg: #e1f2f8;
+    --blockquote-bg: #f5f9fb;
+    --badge-bg: #e1f2f8;
+    --text-on-light: #0080a0;
+    --color-picker-range: #e1f2f8;
+    --input-field: #f5f9fb;
+    --enter-btn-bg: #f5f9fb;
+    --enter-btn-hover: #e7f4f9;
+    --enter-btn-active: #c9e3ec;
+    --selection-bg: #bae7f5;
   }
 }
 body {
@@ -739,7 +739,7 @@ navbar,
   height: 100%;
   width: 100%;
   object-fit: cover;
-  object-position: bottom;
+  object-position: center;
 }
 #banner #banner-dim {
   height: 100%;
