@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://daydreamerh.github.io/2024/10/15/%E5%87%BD%E6%95%B0%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg">
 <meta property="article:published_time" content="2024-10-15T06:24:39.000Z">
-<meta property="article:modified_time" content="2024-10-22T12:44:08.869Z">
+<meta property="article:modified_time" content="2024-10-22T12:53:33.692Z">
 <meta property="article:author" content="DayDreamer">
 <meta property="article:tag" content="C++">
 <meta name="twitter:card" content="summary">
@@ -279,7 +279,7 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using namespace std;<br>void swap1(int&amp;, int&amp;);<br>void swap2(int*, int*);<br>void show(int, int);<br>int main()<br>&#123;<br>	int wallet1 = 300;<br>	int wallet2 = 350;<br>	show(wallet1, wallet2);<br>	swap1(wallet1, wallet2);<br>	show(wallet1, wallet2);<br>	swap2(&amp;wallet1, &amp;wallet2);<br>	show(wallet1, wallet2);<br>&#125;<br><br>void swap1(int&amp; w1, int&amp; w2)<br>&#123;<br>	int temp;<br>	temp = w1;<br>	w1 = w2;<br>	w2 = temp;<br>&#125;<br><br>void swap2(int* w1, int* w2)<br>&#123;<br>	int temp = *w1;<br>	*w1 = *w2;<br>	*w2 = temp;<br>&#125;<br><br>void show(int w1, int w2)<br>&#123;<br>	cout &lt;&lt; w1 &lt;&lt; &#x27; &#x27; &lt;&lt; w2 &lt;&lt; endl;<br>&#125;<br></code></pre></td></tr></table></figure>
 <h3 id="临时变量-引用参数和const"><a class="markdownIt-Anchor" href="#临时变量-引用参数和const"></a> 临时变量、引用参数和const</h3>
 <p>如果实参与引用参数不匹配，C++将生成临时变量。当且仅当参数为const引用时，C++才允许这样做。</p>
-<p>乳沟引用参数是const，则编译器将在下面两种情况下生成临时变量：</p>
+<p>如果引用参数是const，则编译器将在下面两种情况下生成临时变量：</p>
 <ul>
 <li>实参的类型正确，但不是左值；</li>
 <li>实参的类型不正确，但可以转换为正确的类型。</li>
