@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="false" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.10.2/katex.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>函数（二） | DayDreamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="内联函数、引用变量、默认参数、函数重载、函数模板的介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="函数（二）">
+<meta property="og:url" content="https://daydreamerh.github.io/2024/10/15/%E5%87%BD%E6%95%B0%EF%BC%88%E4%BA%8C%EF%BC%89/index.html">
+<meta property="og:site_name" content="DayDreamer">
+<meta property="og:description" content="内联函数、引用变量、默认参数、函数重载、函数模板的介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://daydreamerh.github.io/2024/10/15/%E5%87%BD%E6%95%B0%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg">
+<meta property="article:published_time" content="2024-10-15T06:24:39.000Z">
+<meta property="article:modified_time" content="2024-10-22T12:44:08.869Z">
+<meta property="article:author" content="DayDreamer">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://daydreamerh.github.io/2024/10/15/%E5%87%BD%E6%95%B0%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="DayDreamer" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>DayDreamer </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/avatar.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">PY H </div>
+      <div class="dot"></div>
+      <div class="subtitle"> </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/DaydreamerH" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+                计算机操作系统
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">
+                杂七杂八
+                <div class="category-count">7</div>
+            </a>
+        
+            <a class="category-link" href="/categories/PyTorch%E5%AD%A6%E4%B9%A0/">
+                PyTorch学习
+                <div class="category-count">10</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/">
+                套接字编程
+                <div class="category-count">4</div>
+            </a>
+        
+            <a class="category-link" href="/categories/C-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">
+                C++快速入门
+                <div class="category-count">8</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E6%94%BF%E6%B2%BB%E8%AF%BE%E5%A4%8D%E4%B9%A0/">
+                政治课复习
+                <div class="category-count">8</div>
+            </a>
+        
+            <a class="category-link" href="/categories/%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/">
+                项目开发
+                <div class="category-count">3</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-函数（二）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+<div class="article-gallery">
+  <div class="article-gallery-photos">
+    
+      
+      
+      
+      
+      
+      
+      <a class="article-gallery-img" rel="gallery_cm2iwqyi400009kveczlbbih9">
+        <img src="/2024/10/15/%E5%87%BD%E6%95%B0%EF%BC%88%E4%BA%8C%EF%BC%89/banner.jpg" itemprop="image">
+      </a>
+    
+  </div>
+</div>
+
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        函数（二）
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2024-10-15T06:24:39.000Z" itemprop="datePublished">2024-10-15</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/C-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/">C++快速入门</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            12k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h1 id="c内联函数"><a class="markdownIt-Anchor" href="#c内联函数"></a> C++内联函数</h1>
+<p>内联函数是C++为提高程序运行速度所做的一项改进。</p>
+<p>常规函数与内联函数之间的主要区别不在于编写方式，而在于C++编译器如何将它们组合到程序中。</p>
+<p>编译过程的最终产品是可执行程序，由一组机器语言指令组成。运行程序时，操作系统将这些指令载入到计算机内存中，因此每条指令都有特定的内存地址。计算机将逐步执行这些指令。</p>
+<p>常规函数调用会使得程序跳到另一个地址，并在函数结束时返回。C++内联函数提供了另一种选择：内联函数的编译代码与其他程序代码内联在一起，编译器将使用相应的函数代码直接替换函数调用。对于内联代码，程序无需跳到另一个位置处执行代码，再跳回来。因此内联函数的运行速度比馋常规函数更快，但占用内存更多。</p>
+<p>要使用这项特性，必须采取下述措施之一：</p>
+<ul>
+<li>在函数声明前加上关键字inline.</li>
+<li>在函数定义前加上关键字inline.</li>
+</ul>
+<p>通常的做法是省略原型，将整个定义放在本应提供原型的地方。然而，如果函数定义占用多行，则将其作为了内联函数有些不合适。</p>
+<p>程序员请求将函数作为内联函数时，编译器不一定会满足这个要求，它可能认为该函数过大或注意到函数调用了自己，因此不将其作为内联函数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using namespace std;<br><br>inline double square(double x) &#123; return x * x; &#125;;<br><br>int main()<br>&#123;<br>	double x = 1.4;<br>	cout &lt;&lt; square(x);<br>	return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h1 id="引用变量"><a class="markdownIt-Anchor" href="#引用变量"></a> 引用变量</h1>
+<p>引用是已定义的变量的别名。引用变量的主要用途是作用函数的形参，通过将引用变量用作参数，函数将使用原始数据而不是副本。这样除指针意外，引用也为函数处理大型结构提供了一种非常方便的途径，同时，对于设计类而言，引用也是必不可少的。</p>
+<h2 id="创建引用变量"><a class="markdownIt-Anchor" href="#创建引用变量"></a> 创建引用变量</h2>
+<p>C++给&amp;符号赋予了另一个含义，将其用来声明引用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using namespace std;<br><br>int main()<br>&#123;<br>	int rats = 10;<br>	int&amp; rodents = rats;<br>	cout &lt;&lt; rats &lt;&lt; &#x27; &#x27; &lt;&lt; rodents &lt;&lt; endl;<br>	rodents = 20;<br>	cout &lt;&lt; rats &lt;&lt; &#x27; &#x27; &lt;&lt; rodents &lt;&lt; endl;<br>	return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在声明引用时必须将其初始化，而不像指针那样，可以先声明再赋值。</p>
+<p>引用更接近const指针，一旦与某个变量关联起来，就将一直效忠于它。</p>
+<h2 id="将引用用作函数参数"><a class="markdownIt-Anchor" href="#将引用用作函数参数"></a> 将引用用作函数参数</h2>
+<p>引用经常被用作函数参数，使得函数中的变量名成为调用程序中的变量的变名。按引用传递允许被调用的函数能够访问调用函数中的变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using namespace std;<br>void swap1(int&amp;, int&amp;);<br>void swap2(int*, int*);<br>void show(int, int);<br>int main()<br>&#123;<br>	int wallet1 = 300;<br>	int wallet2 = 350;<br>	show(wallet1, wallet2);<br>	swap1(wallet1, wallet2);<br>	show(wallet1, wallet2);<br>	swap2(&amp;wallet1, &amp;wallet2);<br>	show(wallet1, wallet2);<br>&#125;<br><br>void swap1(int&amp; w1, int&amp; w2)<br>&#123;<br>	int temp;<br>	temp = w1;<br>	w1 = w2;<br>	w2 = temp;<br>&#125;<br><br>void swap2(int* w1, int* w2)<br>&#123;<br>	int temp = *w1;<br>	*w1 = *w2;<br>	*w2 = temp;<br>&#125;<br><br>void show(int w1, int w2)<br>&#123;<br>	cout &lt;&lt; w1 &lt;&lt; &#x27; &#x27; &lt;&lt; w2 &lt;&lt; endl;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="临时变量-引用参数和const"><a class="markdownIt-Anchor" href="#临时变量-引用参数和const"></a> 临时变量、引用参数和const</h3>
+<p>如果实参与引用参数不匹配，C++将生成临时变量。当且仅当参数为const引用时，C++才允许这样做。</p>
+<p>乳沟引用参数是const，则编译器将在下面两种情况下生成临时变量：</p>
+<ul>
+<li>实参的类型正确，但不是左值；</li>
+<li>实参的类型不正确，但可以转换为正确的类型。</li>
+</ul>
+<p>常规变量和const变量都是左值，因为可以通过地址访问它们。但常规变量属于可修改的左值，const变量属于不可修改的左值。</p>
+<h3 id="应尽可能使用const"><a class="markdownIt-Anchor" href="#应尽可能使用const"></a> 应尽可能使用const</h3>
+<ul>
+<li>可以避免无意中修改数据的编程错误</li>
+<li>使用const函数能够引用const和非const实参，否则只能接受const数据</li>
+<li>使用const引用使函数能够正确生成并使用临时变量</li>
+</ul>
+<h2 id="将引用用于结构"><a class="markdownIt-Anchor" href="#将引用用于结构"></a> 将引用用于结构</h2>
+<p>引用非常适合用于结构和类，这也是引用诞生的目的之一。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using namespace std;<br>struct free_throws<br>&#123;<br>	string name;<br>	int made;<br>	int attempts;<br>	float percent;<br>&#125;;<br><br>void display(const free_throws&amp; ft);<br>void set_pc(free_throws&amp; ft);<br>free_throws&amp; accumulate(free_throws&amp; target, const free_throws&amp; source);<br><br>int main()<br>&#123;<br>	free_throws one = &#123; &quot;Ifelsa Branch&quot;,13,14 &#125;;<br>	free_throws two = &#123; &quot;Andor Knott&quot;,10,16 &#125;;<br>	free_throws three = &#123; &quot;Minnie Max&quot;,7,9 &#125;;<br><br>	free_thorws four;<br><br>	set_pc(one);<br>	display(one);<br><br>	set_pc(two);<br>	set_pc(three);<br>	<br>	four = accumulate(three, two);<br>	display(four);<br>	display(three);<br><br>	return 0;<br>&#125;<br><br>void display(const free_throws&amp; ft)<br>&#123;<br>	cout&lt;&lt;ft.name&lt;&lt;&#x27; &#x27;&lt;&lt;ft.made&lt;&lt;&#x27; &#x27;&lt;&lt;ft.attempts&lt;&lt;&#x27; &#x27;&lt;&lt;ft.percent&lt;&lt;endl;<br>&#125;<br><br>void set_pc(free_throws&amp; ft)<br>&#123;<br>	if(ft.attempts)<br>	&#123;<br>		ft.percent = 100f*float(ft.made)/float(ft.attempts);<br>	&#125;<br>	else ft.percent = 0;<br>&#125;<br><br>free_throws&amp; accumulate(free_throws&amp; target, const free_throws&amp; source)<br>&#123;<br>	target.attempts += source.attempts;<br>	target.made += source.made;<br>	set_pc(target);<br>	return target;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="为何返回引用而不是结构"><a class="markdownIt-Anchor" href="#为何返回引用而不是结构"></a> 为何返回引用而不是结构</h3>
+<p>传统返回机制与按值传递函数类似，计算关键字return后的表达式，将结果返回给调用函数。这意味着这个值被复制到一个临时变量，而调用程序将继续使用这个值。</p>
+<p>如果<code>accumulate()</code>返回的是结构，而不是指向结构的引用，则将把整个结构复制到一个临时位置，再把它拷贝给<code>four</code>，但在返回值为引用时，直接把<code>three</code>复制到<code>four</code>.</p>
+<h3 id="返回引用需要注意的问题"><a class="markdownIt-Anchor" href="#返回引用需要注意的问题"></a> 返回引用需要注意的问题</h3>
+<p>返回引用最重要的一点是避免返回函数终止时不存在的单元引用。</p>
+<p>为了避免这个问题：</p>
+<ul>
+<li>返回一个作为参数的引用，在上述代码中正是这样做的。</li>
+<li>用new来分配新的存储空间  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">const free_throws&amp; clone(const free_throws&amp; ft)<br>&#123;<br>	free_throws&amp; *pt;<br>	*pt = ft;<br><br>	return *pt<br>&#125;<br></code></pre></td></tr></table></figure>
+第一条语句创建一个无名的<code>free_throws</code>结构，并创建指针指向该结构。最后返回的是*pt，似乎返回了结构，但根据函数声明返回了引用。  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">free_throws &amp; jolly = clone(one);<br></code></pre></td></tr></table></figure>
+这使得<code>jolly</code>成为了新的结构引用。但这种方法存在问题，由于该方法隐藏了new的调用，容易遗忘使用delete释放内存。</li>
+</ul>
+<h3 id="返回时使用const"><a class="markdownIt-Anchor" href="#返回时使用const"></a> 返回时使用const</h3>
+<p>在返回引用时，如果我们不需要修改引用的内容，那么使用const能够有效地避免模糊性。</p>
+<p>这使得它不可被赋值或修改，但可以赋值给其他变量。</p>
+<h2 id="将引用用于对象"><a class="markdownIt-Anchor" href="#将引用用于对象"></a> 将引用用于对象</h2>
+<p>将类对象传递给函数时，C++通常的做法是使用引用。</p>
+<p>下面我们演示字符串拼接，将一个字符串拼接在另一个字符串的首尾。</p>
+<p>其中一种方法会导致程序崩溃。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>#include&lt;string&gt;<br><br>using std::cout;<br>using std::endl;<br><br>string version1(const string&amp; str1, const string&amp; str2);<br>const string&amp; version2(const string&amp; str1, const string&amp; str2);<br>const string&amp; version3(const string&amp; str1, const string&amp; str2);<br><br>int main()<br>&#123;<br>	string str1 = &quot;aa&quot;;<br>	string str2 = &quot;bb&quot;;<br>	string result;<br><br>	result = version1(str1, str2);<br>	cout &lt;&lt; result &lt;&lt; endl;<br><br>	result = version2(str1, str2);<br>	cout &lt;&lt; result &lt;&lt; endl;<br><br>	result = version3(str1, str2);<br>	cout &lt;&lt; result &lt;&lt; endl;<br><br>	return 0;<br>&#125;<br><br>string&amp; version1(const string&amp; str1, const string&amp; str2)<br>&#123;<br>	string tmp;<br>	tmp = str1 + str2 + st1;<br>	return tmp;<br>&#125;<br><br>const string&amp; version2(const string&amp; str1, const string&amp; str2)<br>&#123;<br>	str1 = str1 + str2 + str1;<br>	return str1;<br>&#125;<br><br>const string&amp; version3(const string&amp; str1, const string&amp; str2)<br>&#123;<br>	string tmp = str1 + str2 + str1;<br>	return tmp;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在<code>version3()</code>中，试图返回已经被释放的变量。</p>
+<h3 id="对象-继承和引用"><a class="markdownIt-Anchor" href="#对象-继承和引用"></a> 对象、继承和引用</h3>
+<p>继承是一种语言特性，它能够使一个类的特性传递给另一个类的特性。</p>
+<p>被继承的类称为基类，继承其他类的类称为派生类。</p>
+<p>派生类继承了基类的方法，这意味着派生类可以使用基类的部分特性。</p>
+<p>而继承的另一个作用就是引用，基类的引用可以指向派生类对象，而无需进行强制类型转换。这意味着，我们可以定义一个接受基类引用作为参数的函数，调用函数时，既可以将基类对象作为参数，也可以将该基类的派生类对象作为参数。</p>
+<h2 id="何时使用引用参数"><a class="markdownIt-Anchor" href="#何时使用引用参数"></a> 何时使用引用参数</h2>
+<p>使用引用参数的主要原因有两个：</p>
+<ul>
+<li>程序员能够修改调用函数中的数据对象。</li>
+<li>通过传递引用而不是整个数据对象，可以提高程序的运行速度。</li>
+</ul>
+<p>那什么时候使用指针，什么时候使用引用，什么时候使用值呢？</p>
+<ul>
+<li>对于使用传递的值而不加修改的函数：
+<ul>
+<li>如果数据对象很小，则按值传递。</li>
+<li>如果数据对象时数组，则使用指针，并声明为指向const的指针。</li>
+<li>如果数据对象是较大的结构，则使用const指针或const引用。</li>
+<li>如果数据对象是类对象，则使用const引用。类设计的语义常常要求使用引用，这是C++增加这一特性的原因。</li>
+</ul>
+</li>
+<li>对于修改调用函数中数据的函数：
+<ul>
+<li>如果数据类型是内置数据类型，则使用指针。</li>
+<li>如果数据对象是数组，则只能使用指针。</li>
+<li>如果数据对象是结构，指针、结构均可。</li>
+<li>如果数据对象是类对象，则使用引用。</li>
+</ul>
+</li>
+</ul>
+<h1 id="默认参数"><a class="markdownIt-Anchor" href="#默认参数"></a> 默认参数</h1>
+<p>默认参数指的是当函数调用中省略了实参时，自动使用的一个值，这极大地提高了函数的灵活性。</p>
+<p>我们通过函数原型来设置默认值，方法是将值赋给原型的参数。</p>
+<p>对于带参数列表的函数，必须从右向左添加默认值，这意味着，设置默认值的参数之间不能有未设置默认值的参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">int h1(int a = 1, int b = 1, int c = 1); // valid<br>int h2(int a, int b = 1, int c = 1); // valid<br>int h3(int a, int b = 1, int c); // invalid<br></code></pre></td></tr></table></figure>
+<h1 id="函数重载"><a class="markdownIt-Anchor" href="#函数重载"></a> 函数重载</h1>
+<p>函数动态是C++在C语言基础上新增的功能，函数重载（函数多态）能够让我们使用多个重名的函数。</p>
+<p>函数重载的关键是函数参数列表，也被称为函数特征标。</p>
+<p>C++允许定义名称相同的函数，条件是它们的特征标不同。如果参数数目、参数类型不同，则特征标也不同。</p>
+<p>例如，我们可以定义多个<code>print()</code>函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">void print(string s);<br>void print(double d, int width);<br>void print(char* s, int width);<br></code></pre></td></tr></table></figure>
+<p>使用重载的函数时，需要在函数调用中使用正确的参数类型。没有匹配的原型并不会自动停止使用其中的某个函数，因为C++将尝试使用标准类型转换强制进行匹配。但是如果进行可以通过类型转换与多个原型匹配，C++将拒绝这种函数调用，并将其视为错误。</p>
+<p>此外，为了避免参数与多个原型匹配，编译器在检查函数特征标时，将把类型引用和类型本身视为同一个特征标。</p>
+<p>匹配函数时，还要区分const和非const变量。</p>
+<p>在重载时，一定要满足特征标不同，而返回类型不做限制。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>#include&lt;cstring&gt;<br><br>using std::cout;<br>using std::endl;<br><br>unsigned long left(unsigned long num, const unsigned length);<br>char* left(char* s, const unsigned length);<br><br><br>int main()<br>&#123;<br>	char s[] = &quot;Hello world.&quot;;<br>	unsigned long num = 12345678;<br>	const int width = 10;<br><br>	for (int i = 1; i &lt;= width; i++)<br>	&#123;<br>		char* result = left(s, i);<br>		cout &lt;&lt; result &lt;&lt; endl;<br>		cout &lt;&lt; left(num, i) &lt;&lt; endl;<br>		delete result;<br>	&#125;<br>	return 0;<br>&#125;<br><br>unsigned long left(unsigned long num, const unsigned length)<br>&#123;<br>	unsigned long tool = 10;<br><br>	while (num / tool &gt; 10)<br>		tool *= 10;<br>	<br>	unsigned long result = 0;<br>	unsigned count = 0;<br><br>	while (tool &gt; 0 &amp;&amp; count &lt; length)<br>	&#123;<br>		result *= 10;<br>		result += num / tool;<br>		num %= tool;<br>		tool /= 10;<br>		count++;<br>	&#125;<br><br>	return result;<br>&#125;<br><br>char* left(char* s, unsigned length)<br>&#123;<br>	char* result = new char[length + 1];<br><br>	if (strlen(s) &lt; length)<br>	&#123;<br>		strcpy_s(result, strlen(s), s);<br>		return result;<br>	&#125;<br><br>	for (unsigned i = 0; i &lt; length; i++)<br>	&#123;<br>		result[i] = s[i];<br>	&#125;<br>	result[length] = &#x27;\0&#x27;;<br><br>	return result;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h1 id="函数模板"><a class="markdownIt-Anchor" href="#函数模板"></a> 函数模板</h1>
+<p>函数模板是通用的函数描述，它们使用泛型来定义函数。</p>
+<p>通过将类型作为参数传递给模板，可使编译器生成该类型的函数。</p>
+<p>由于模板允许以泛型的方式编写程序，因此有时也被称为通用编程，由于类型使用参数表示的，因此模板特性有时也被称为参数化类型。</p>
+<p>当我们自定义一个数值交换函数时，如果参数类型可能为多种数据类型，那么我们需要反复重载函数，它们之间的区别仅仅在于数据类型的不同。</p>
+<p>而利用函数模板，则可以自动化完成这一过程，而且更可靠。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">template &lt;typename AnyType&gt;<br>void Swap(AnyType &amp;a, AnyType &amp;b)<br>&#123;<br>	AnyType temp;<br>	temp = a;<br>	a = b ;<br>	b = temp;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第一行指出，要建立一个模板，并将类型命名为AnyType. 关键字<code>template</code>和<code>typename</code>是必须的，你也可以使用<code>class</code>代替<code>typename</code>.</p>
+<p>除此外，必须使用简括。类型名可以任意选择，只要遵守C++命名规则即可。</p>
+<p>模板并不创建任何函数，而只是告诉编译器如何定义函数，需要交换double的函数时，编译器将按模板模式创建这样的函数，并用double代替AnyType.</p>
+<h2 id="重载的模板"><a class="markdownIt-Anchor" href="#重载的模板"></a> 重载的模板</h2>
+<p>需要多个对不同类型使用同一种算法的函数时，可使用模板，然而并非所有的类型都使用相同的算法，为满足这种需求，可以像重载常规函数定义那样重载模板定义。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br><br>using std::cout;<br>using std::endl;<br><br>template &lt;typename T&gt;<br>void Swap(T&amp; a, T&amp; b);<br>template &lt;typename T&gt;<br>void Swap(T *a, T *b, int n);<br>template &lt;typename T&gt;<br>void Show(T *a, int size);<br><br>int main()<br>&#123;<br>	int a = 1, b = 0;<br>	int c[]&#123; 1, 2,3,4,5 &#125;;<br>	int d[]&#123; 6,7,8,9,10 &#125;;<br><br>	Swap(a, b);<br>	cout &lt;&lt; a &lt;&lt; &#x27; &#x27; &lt;&lt; b &lt;&lt; endl;<br>	Swap(c, d, 4);<br>	Show(c, sizeof(c)/sizeof(c[0]));<br>	Show(d, sizeof(d)/sizeof(d[0]));<br><br>	return 0;<br>&#125;<br><br>template &lt;typename T&gt;<br>void Swap(T&amp; a, T&amp; b)<br>&#123;<br>	T temp = a;<br>	a = b;<br>	b = temp;<br>&#125;<br><br>template &lt;typename T&gt;<br>void Swap(T *a, T *b, int n)<br>&#123;<br>	for (int i = 0; i &lt; n; i++)<br>	&#123;<br>		T temp = a[i];<br>		a[i] = b[i];<br>		b[i] = temp;<br>	&#125;<br>&#125;<br><br>template &lt;typename T&gt;<br>void Show(T *a, int size)<br>&#123;<br>	for (int i = 0; i &lt; size; i++)cout &lt;&lt; a[i] &lt;&lt; &#x27; &#x27;;<br>	cout &lt;&lt; endl;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="显式具体化"><a class="markdownIt-Anchor" href="#显式具体化"></a> 显式具体化</h2>
+<p>编写的函数模板可能无法处理某些类型，这时候需要为特定类型提供具体化的模板定义。</p>
+<p>当编译器找到与函数调用匹配的具体化定义时，将使用该定义，而不再寻找模板。</p>
+<h3 id="第三代具体化isoansi-c标准"><a class="markdownIt-Anchor" href="#第三代具体化isoansi-c标准"></a> 第三代具体化（ISO/ANSI C++标准）</h3>
+<ul>
+<li>对于给定的函数名，可以有非模板函数、模板函数和显式具体化模板函数以及它们的重载版本。</li>
+<li>显式具体化的原型和定义应以<code>template&lt;&gt;</code>打头，并通过名称来指出类型。</li>
+<li>具体化由于常规模板，而非模板函数优先于具体化和常规模板。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>#include&lt;string&gt;<br>using std::cout;<br>using std::endl;<br>using std::string;<br><br>struct job <br>&#123;<br>	string name;<br>	double money;<br>&#125;;<br><br>template&lt;typename T&gt;<br>void Swap(T&amp; a, T&amp; b);<br><br>template&lt;&gt;<br>void Swap&lt;job&gt;(job&amp; a, job&amp; b);<br><br>int main()<br>&#123;<br>	int a = 0, b = 1;<br>	job c&#123; &quot;Cook&quot;, 10 &#125;, d&#123; &quot;programer&quot;, 1 &#125;;<br>	Swap(a, b);<br>	cout &lt;&lt; a &lt;&lt; &#x27; &#x27; &lt;&lt; b &lt;&lt; endl;<br>	Swap(c, d);<br>	cout &lt;&lt; c.name &lt;&lt; &#x27; &#x27; &lt;&lt; c.money &lt;&lt; endl &lt;&lt; d.name &lt;&lt; &#x27; &#x27; &lt;&lt; d.money &lt;&lt; endl;<br>	return 0;<br>&#125;<br><br>template&lt;typename T&gt;<br>void Swap(T&amp; a, T&amp; b)<br>&#123;<br>	T temp = a;<br>	a = b;<br>	b = temp;<br>&#125;<br><br>template&lt;&gt;<br>void Swap&lt;job&gt;(job&amp; a, job&amp; b)<br>&#123;<br>	job temp;<br>	temp.money = a.money;<br>	temp.name = a.name;<br><br>	a.money = b.money;<br>	a.name = b.name;<br><br>	b.money = temp.money;<br>	b.name = temp.name;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="实例化和具体化"><a class="markdownIt-Anchor" href="#实例化和具体化"></a> 实例化和具体化</h3>
+<p>在代码中包含函数模板本身并会生成函数定义，它只是一个用于生成函数定义的方案。</p>
+<p>编译器使用模板为特定类型生成函数定义时，得到的是模板实例，这种实例化方式被称为隐式实例化。</p>
+<p>显式实例化的本质是命令编译器创建特定的实例，其语法是声明所需的种类，并在声明前加上关键字template.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">template void Swap&lt;int&gt;(int, int);<br></code></pre></td></tr></table></figure>
+<p>上述代码将命令编译器使用<code>Swap()</code>模板生成一个使用int类型的实例。</p>
+<p>与显式实例化不同的是，显式具体化使用下面两个等价的声明：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">template&lt;&gt; void Swap&lt;int&gt;(int&amp;, int&amp;);<br>template&lt;&gt; void Swap(int&amp;, int&amp;);<br></code></pre></td></tr></table></figure>
+<p>区别在于这些代码要求不能使用<code>Swap()</code>模板生成函数定义，而应使用转为int类型显式定义的函数定义。</p>
+<p>试图在同一个文件中使用同一种类型的显式实例和显式具体化将出错。</p>
+<p>隐式实例化、显式实例化和显式具体化统称为具体化。它们的相同之处在于它们表现的都是使用具体类型的函数定义，而不是通用描述。引入显式实例化后，必须使用新的语法——在声明中使用前缀template和template&lt;&gt;，区分显式实例化和显式具体化。</p>
+<h2 id="编译器选择使用哪个函数模板"><a class="markdownIt-Anchor" href="#编译器选择使用哪个函数模板"></a> 编译器选择使用哪个函数模板</h2>
+<p>面对函数重载、函数模板和函数模板重载，C++需要一个定义良好的策略来决定为函数调用使用哪一个函数定义。这个过程称为重载解析，其步骤如下：</p>
+<ol>
+<li>创建候选函数列表，其中包括与被调用函数的名称相同的函数和模板函数</li>
+<li>使用候选函数列表创建可行函数列表，这些都是参数数目正确的函数，为此有一个隐式转换序列。</li>
+<li>确定是否有最佳的可行函数，如果有，则使用它，否则调用出错。</li>
+</ol>
+<p>编译器按照以下顺序确定哪个可行函数是最佳的：</p>
+<ol>
+<li>完全匹配，但常规函数优于模板。</li>
+<li>提升转换。</li>
+<li>标准转换。</li>
+<li>用户定义的转换。</li>
+</ol>
+<h3 id="完全匹配与最佳匹配"><a class="markdownIt-Anchor" href="#完全匹配与最佳匹配"></a> 完全匹配与最佳匹配</h3>
+<p>在进行完全匹配时，C++允许某些“无关紧要的转换”（在此不详细列出）。这意味着在实际操作中，可能存在多个匹配的原型，绝大部分时候编译器会报告包含ambigous的错误信息。</p>
+<p>但有时，即使两个函数都完全匹配，也可顺利完成重载解析：</p>
+<ul>
+<li>指向非const数据的指针和引用优先于非const指针和引用参数匹配。</li>
+<li>非模板函数优于模板函数（包括显式具体化）。</li>
+<li>如果两个完全匹配的函数都是模板函数，则较具体的模板函数优先。例如，显式具体化将优先于模板隐式生成的具体化。这里的具体是指编译器推断使用哪种类型时执行转换最少。</li>
+</ul>
+<h3 id="创建自定义选择"><a class="markdownIt-Anchor" href="#创建自定义选择"></a> 创建自定义选择</h3>
+<p>在一些情况下，可以通过编写合适的函数调用，引导编译器做出我们希望的选择。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">#include&lt;iostream&gt;<br>using std::endl;<br>using std::cout;<br><br>template&lt;class T&gt;<br>T lesser(const T a, const T b);<br><br>int lesser(const int a, const int b);<br><br>int main()<br>&#123;<br>	int a = 1, b = 2;<br>	double c = 2.3, d = 4.6;<br><br>	cout &lt;&lt; lesser(a, b) &lt;&lt; endl;<br>	cout &lt;&lt; lesser(c, d) &lt;&lt; endl;<br><br>	cout &lt;&lt; lesser&lt;&gt;(a, b) &lt;&lt; endl;<br>	cout &lt;&lt; lesser&lt;int&gt;(c, d) &lt;&lt; endl;<br>&#125;<br><br>template&lt;class T&gt;<br>T lesser(const T a, const T b)<br>&#123;<br>	return a &lt; b ? a : b;<br>&#125;<br><br>int lesser(const int a, const int b)<br>&#123;<br>	return a &lt; b ? a : b;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>cout &lt;&lt; lesser&lt;&gt;(a, b) &lt;&lt; endl;</code>指出必须使用模板函数实例化后的函数，在这里使用int代替T进行实例化；</p>
+<p><code>cout &lt;&lt; lesser&lt;int&gt;(c, d) &lt;&lt; endl;</code>指出使用显式实例化后得到的函数，在这里<code>a</code>和<code>b</code>将被强制类型转换为int类型。</p>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left  disabled "
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2024/10/11/%E5%87%BD%E6%95%B0%EF%BC%88%E4%B8%80%EF%BC%89/"
+      title="函数（一）"
+     >
+
+    <p class="title-text">
+      
+        函数（一）
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+  
+  <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+  <div id="comment-card" class="comment-card">
+    <div class="main-title-bar">
+      <div class="main-title-dot"></div>
+      <div class="main-title">留言 </div>
+    </div>
+    <div id="vcomments"></div>
+  </div>
+  <script>
+      new Valine({"enable":true,"appId":"cad9Un1DX7ZRoGqWGBbgsdvR-gzGzoHsz","appKey":"KdaYDEn7evWoAgBjACdAKPdK","placeholder":"(>_<)","pageSize":10,"highlight":true,"serverURLs":"https://cad9un1d.lc-cn-n1-shared.com","el":"#vcomments"});
+  </script>
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 PY H<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>
