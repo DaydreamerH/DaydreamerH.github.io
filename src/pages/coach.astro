@@ -104,32 +104,6 @@ const activeNode = knowledgeNodes[0];
         </a>
       </div>
 
-      <div class="panel-block">
-        <div class="panel-heading">
-          <span>AI API</span>
-          <strong>当前页面临时使用</strong>
-        </div>
-        <form class="api-config" data-api-config>
-          <label>
-            <span>Endpoint</span>
-            <input
-              data-api-endpoint
-              type="url"
-              placeholder="https://api.openai.com/v1/chat/completions"
-              autocomplete="off"
-            />
-          </label>
-          <label>
-            <span>API Key</span>
-            <input data-api-key type="password" placeholder="sk-..." autocomplete="off" />
-          </label>
-          <label>
-            <span>Model</span>
-            <input data-api-model type="text" placeholder="填写你的模型名" autocomplete="off" />
-          </label>
-        </form>
-        <p class="api-note">密钥只保存在当前页面内存中，刷新后清空。浏览器直连 API 需要服务商允许 CORS。</p>
-      </div>
     </aside>
 
     <section class="chat-panel">
@@ -164,11 +138,38 @@ const activeNode = knowledgeNodes[0];
           <span>反馈摘要</span>
           <strong data-feedback-title>等待回答</strong>
         </div>
-        <p class="feedback-source" data-feedback-source>未配置 API 时使用本地反馈。</p>
+        <p class="feedback-source" data-feedback-source>请先填写右侧 API 信息。</p>
         <ul class="feedback-list" data-feedback-list>
           <li>提交回答后，这里会显示针对当前知识点的反馈要点。</li>
           <li>不会保存到浏览器存储或任何持久化位置。</li>
         </ul>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>AI API</span>
+          <strong>当前页面临时使用</strong>
+        </div>
+        <form class="api-config" data-api-config>
+          <label>
+            <span>Endpoint</span>
+            <input
+              data-api-endpoint
+              type="url"
+              placeholder="https://api.openai.com/v1/chat/completions"
+              autocomplete="off"
+            />
+          </label>
+          <label>
+            <span>API Key</span>
+            <input data-api-key type="password" placeholder="sk-..." autocomplete="off" />
+          </label>
+          <label>
+            <span>Model</span>
+            <input data-api-model type="text" placeholder="填写你的模型名" autocomplete="off" />
+          </label>
+        </form>
+        <p class="api-note">密钥只保存在当前页面内存中，刷新后清空。浏览器直连 API 需要服务商允许 CORS。</p>
       </div>
     </aside>
   </section>
@@ -292,10 +293,10 @@ const activeNode = knowledgeNodes[0];
       renderContext();
       messageList.replaceChildren(createMessage("coach", "AI Coach", node.question));
       renderFeedback("等待回答", [
-        "提交回答后，这里会显示针对当前知识点的反馈要点。",
+        "填写右侧 API 信息后提交回答，这里会显示 AI 反馈摘要。",
         "不会保存到浏览器存储或任何持久化位置。"
       ]);
-      setFeedbackSource("未配置 API 时使用本地反馈。");
+      setFeedbackSource("请先填写右侧 API 信息。");
       answerInput.value = "";
       answerHint.textContent = "回答当前问题，反馈只保留在页面中。";
     }
@@ -373,18 +374,31 @@ const activeNode = knowledgeNodes[0];
 
       const node = nodes[state.node];
       messageList.append(createMessage("user", "DaydreamerH", answer));
+      if (!hasApiConfig()) {
+        messageList.append(createMessage(
+          "coach",
+          "AI Coach",
+          "请先在右侧填写 Endpoint、API Key 和 Model。填写完成后再次提交，我会用你的模型生成反馈摘要。"
+        ));
+        renderFeedback("需要 API 信息", [
+          "Endpoint、API Key 和 Model 都是必填项。",
+          "配置只在当前页面内存中使用，刷新后清空。",
+          "如果服务商不允许浏览器跨域请求，需要后续增加代理层。"
+        ]);
+        setFeedbackSource("尚未调用模型。", "error");
+        answerHint.textContent = "填写右侧 API 信息后再次提交。";
+        messageList.scrollTop = messageList.scrollHeight;
+        return;
+      }
+
       renderFeedback("生成中", ["正在请求 AI 生成反馈摘要..."]);
-      setFeedbackSource(hasApiConfig() ? "使用你填写的 API 生成反馈。" : "未配置完整 API，使用本地反馈。");
+      setFeedbackSource("使用你填写的 API 生成反馈。");
       answerForm.querySelector("button").disabled = true;
 
       try {
-        if (hasApiConfig()) {
-          const aiFeedback = await requestAiFeedback(node, answer);
-          renderFeedback("AI 反馈摘要", aiFeedback);
-          setFeedbackSource("来自当前页面填写的模型配置。", "success");
-        } else {
-          renderFeedback("反馈摘要", node.feedback);
-        }
+        const aiFeedback = await requestAiFeedback(node, answer);
+        renderFeedback("AI 反馈摘要", aiFeedback);
+        setFeedbackSource("来自当前页面填写的模型配置。", "success");
       } catch (error) {
         renderFeedback("API 调用失败", [
           error.message,
