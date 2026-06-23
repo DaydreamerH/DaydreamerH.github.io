@@ -1,0 +1,143 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const modes = ["概念测试", "深度追问", "代码阅读", "项目面试"];
+const contextTags = ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"];
+const relatedNodes = ["现代 C++ 与 RAII", "Gameplay Framework 基础", "Actor 生命周期"];
+const messages = [
+  {
+    role: "coach",
+    label: "AI Coach",
+    body: "我们先测 UE C++ 反射系统。请用自己的话解释：为什么 UObject 类型成员通常要用 UPROPERTY 标记？"
+  },
+  {
+    role: "user",
+    label: "DaydreamerH",
+    body: "因为 UE 需要通过反射系统知道这个成员，GC 才能追踪 UObject 引用，也能让它出现在编辑器和蓝图里。"
+  },
+  {
+    role: "coach",
+    label: "AI Coach",
+    body: "方向对。继续追问：如果一个 AActor 里保存了 UObject*，但没有 UPROPERTY，可能出现什么生命周期问题？"
+  }
+];
+const feedbackItems = [
+  "能指出 UPROPERTY 与 GC 追踪有关。",
+  "需要补充：反射、序列化、编辑器暴露和网络复制并不是同一个概念。",
+  "下一题建议追问 UObject 生命周期与普通 C++ 对象的区别。"
+];
+---
+
+<BaseLayout title="AI Coach" description="DaydreamerH 的 UE5 知识测试与 AI 追问工作区。">
+  <section class="coach-head">
+    <div>
+      <p class="eyebrow">AI Coach</p>
+      <h1>知识点测试工作区</h1>
+      <p>
+        通过对话、追问、评分和复盘，把知识库里的节点转化为可验证的掌握度。当前先用模拟会话固定学习流程，后续再接入真实 AI 能力。
+      </p>
+    </div>
+    <div class="coach-status">
+      <span class="pill">原型</span>
+      <strong>UE C++ 反射系统</strong>
+      <small>当前测试节点</small>
+    </div>
+  </section>
+
+  <section class="coach-layout" aria-label="AI Coach 原型工作区">
+    <aside class="coach-sidebar">
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>测试模式</span>
+          <strong>概念测试</strong>
+        </div>
+        <div class="mode-list">
+          {modes.map((mode, index) => (
+            <button class={index === 0 ? "is-active" : ""} type="button">{mode}</button>
+          ))}
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>上下文</span>
+          <strong>UE C++ 反射系统</strong>
+        </div>
+        <p class="muted-copy">
+          理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。
+        </p>
+        <div class="tag-row">
+          {contextTags.map((tag) => <span>{tag}</span>)}
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>关联节点</span>
+          <strong>追问范围</strong>
+        </div>
+        <div class="link-stack">
+          {relatedNodes.map((node) => <a href="/knowledge/">{node}</a>)}
+        </div>
+      </div>
+    </aside>
+
+    <section class="chat-panel">
+      <div class="chat-toolbar">
+        <div>
+          <span>Session</span>
+          <strong>Reflection Drill 01</strong>
+        </div>
+        <button type="button">重新开始</button>
+      </div>
+
+      <div class="message-list" aria-label="模拟对话">
+        {messages.map((message) => (
+          <article class={`message ${message.role === "user" ? "from-user" : "from-coach"}`}>
+            <span>{message.label}</span>
+            <p>{message.body}</p>
+          </article>
+        ))}
+      </div>
+
+      <form class="answer-box">
+        <label for="answer">你的回答</label>
+        <textarea id="answer" rows="4" placeholder="写下你的理解，后续这里会接入 AI 评分与追问。"></textarea>
+        <div>
+          <span>下一步：提交回答后生成评分、遗漏点和追问。</span>
+          <button type="button">提交回答</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="feedback-panel">
+      <div class="score-card">
+        <span>本轮掌握度</span>
+        <strong>72</strong>
+        <small>需要一次深度追问</small>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>反馈摘要</span>
+          <strong>待补齐点</strong>
+        </div>
+        <ul class="feedback-list">
+          {feedbackItems.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>推荐动作</span>
+          <strong>下一步</strong>
+        </div>
+        <div class="action-stack">
+          <button type="button">继续追问</button>
+          <button type="button">加入错题本</button>
+          <button type="button">复习关联节点</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+</BaseLayout>
