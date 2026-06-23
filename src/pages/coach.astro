@@ -49,11 +49,20 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         <label class="select-field compact-select">
           <span>分类</span>
           <select data-category-select>
+            <option value="all">全部分类</option>
             {categories.map((category) => (
               <option value={category} selected={category === activeNode.category}>{category}</option>
             ))}
           </select>
         </label>
+        <label class="search-field coach-search">
+          <span>搜索文章</span>
+          <input data-node-search type="search" placeholder="输入标题、标签或分类..." autocomplete="off" />
+        </label>
+        <div class="node-picker-head">
+          <span data-node-count></span>
+          <small>选择测试上下文</small>
+        </div>
         <div class="node-list" data-node-list>
           {knowledgeNodes
             .filter((node) => node.category === activeNode.category)
@@ -141,7 +150,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const initialNodeId = nodes[params.get("node")] ? params.get("node") : defaultNodeId;
     const state = {
       node: initialNodeId,
-      category: nodes[initialNodeId].category
+      category: nodes[initialNodeId].category,
+      query: ""
     };
 
     const layout = document.querySelector("[data-coach-layout]");
@@ -157,6 +167,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const startQuestionButton = document.querySelector("[data-start-question]");
     const categorySelect = document.querySelector("[data-category-select]");
     const nodeList = document.querySelector("[data-node-list]");
+    const nodeSearch = document.querySelector("[data-node-search]");
+    const nodeCount = document.querySelector("[data-node-count]");
 
     function escapeHtml(value) {
       return value
@@ -297,7 +309,15 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     }
 
     function renderNodeList() {
-      const entries = Object.entries(nodes).filter(([, node]) => node.category === state.category);
+      const query = state.query.trim().toLowerCase();
+      const entries = Object.entries(nodes).filter(([, node]) => {
+        const matchesCategory = state.category === "all" || node.category === state.category;
+        const searchable = `${node.title} ${node.description} ${node.category} ${node.tags.join(" ")}`.toLowerCase();
+        const matchesQuery = !query || searchable.includes(query);
+        return matchesCategory && matchesQuery;
+      });
+
+      nodeCount.textContent = `${entries.length} 篇可选`;
       nodeList.replaceChildren(...entries.map(([id, node]) => {
         const button = document.createElement("button");
         button.type = "button";
@@ -305,10 +325,17 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         button.classList.toggle("is-active", id === state.node);
         button.innerHTML = "<span></span><small></small>";
         button.querySelector("span").textContent = node.title;
-        button.querySelector("small").textContent = node.category;
+        button.querySelector("small").textContent = `${node.category} · ${node.level} · ${node.minutes} min`;
         button.addEventListener("click", () => selectNode(id));
         return button;
       }));
+
+      if (!entries.length) {
+        const empty = document.createElement("p");
+        empty.className = "node-empty";
+        empty.textContent = "没有匹配的文章";
+        nodeList.replaceChildren(empty);
+      }
     }
 
     function resetSession() {
@@ -527,16 +554,29 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     function selectNode(id) {
       state.node = id;
       state.category = nodes[id].category;
+      state.query = "";
+      nodeSearch.value = "";
       const url = new URL(window.location.href);
       url.searchParams.set("node", state.node);
       history.replaceState(null, "", url);
       resetSession();
     }
 
-    categorySelect.addEventListener("change", () => {
+    function updateCategoryFilter() {
       state.category = categorySelect.value;
-      const firstNode = Object.entries(nodes).find(([, node]) => node.category === state.category)?.[0];
-      if (firstNode) selectNode(firstNode);
+      renderNodeList();
+    }
+
+    categorySelect.addEventListener("change", updateCategoryFilter);
+    categorySelect.addEventListener("input", updateCategoryFilter);
+
+    nodeSearch.addEventListener("input", () => {
+      state.query = nodeSearch.value;
+      renderNodeList();
+    });
+    nodeSearch.addEventListener("change", () => {
+      state.query = nodeSearch.value;
+      renderNodeList();
     });
 
     document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {

@@ -35,12 +35,13 @@ const categories = [...new Set(docs.map((doc) => doc.data.category))]
   </section>
 
   <section class="knowledge-grid" id="knowledge-grid">
-    {docs.map((doc) => (
+    {docs.map((doc, index) => (
       <article
         class="knowledge-card"
         data-title={doc.data.title.toLowerCase()}
         data-tags={doc.data.tags.join(" ").toLowerCase()}
         data-category={doc.data.category}
+        data-index={index}
       >
         <div class="card-meta">
           <span class="pill">{getCategoryLabel(doc.data.category)}</span>
@@ -57,30 +58,80 @@ const categories = [...new Set(docs.map((doc) => doc.data.category))]
 
   <p class="empty-state" id="empty-state" hidden>没有匹配的知识点。</p>
 
+  <nav class="pagination" id="knowledge-pagination" aria-label="知识库分页">
+    <button type="button" data-page-prev>上一页</button>
+    <span data-page-summary></span>
+    <button type="button" data-page-next>下一页</button>
+  </nav>
+
   <script>
+    const pageSize = 12;
     const searchInput = document.querySelector("#knowledge-search");
     const categoryFilter = document.querySelector("#category-filter");
     const cards = Array.from(document.querySelectorAll(".knowledge-card"));
     const emptyState = document.querySelector("#empty-state");
+    const grid = document.querySelector("#knowledge-grid");
+    const pagination = document.querySelector("#knowledge-pagination");
+    const pagePrev = document.querySelector("[data-page-prev]");
+    const pageNext = document.querySelector("[data-page-next]");
+    const pageSummary = document.querySelector("[data-page-summary]");
+    let currentPage = 1;
+    let filteredCards = cards;
 
     function applyFilters() {
       const query = searchInput.value.trim().toLowerCase();
       const category = categoryFilter.value;
-      let visible = 0;
 
-      for (const card of cards) {
+      filteredCards = cards.filter((card) => {
         const text = `${card.dataset.title} ${card.dataset.tags}`;
         const matchesQuery = !query || text.includes(query);
         const matchesCategory = category === "all" || card.dataset.category === category;
-        const show = matchesQuery && matchesCategory;
-        card.hidden = !show;
-        if (show) visible += 1;
+        return matchesQuery && matchesCategory;
+      });
+
+      currentPage = 1;
+      renderPage(false);
+    }
+
+    function renderPage(shouldScroll = true) {
+      const total = filteredCards.length;
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
+      currentPage = Math.min(currentPage, pageCount);
+      const start = (currentPage - 1) * pageSize;
+      const visibleCards = new Set(filteredCards.slice(start, start + pageSize));
+
+      for (const card of cards) {
+        card.hidden = !visibleCards.has(card);
       }
 
-      emptyState.hidden = visible !== 0;
+      emptyState.hidden = total !== 0;
+      pagination.hidden = total <= pageSize;
+      pagePrev.disabled = currentPage <= 1;
+      pageNext.disabled = currentPage >= pageCount;
+      pageSummary.textContent = total
+        ? `第 ${currentPage} / ${pageCount} 页 · ${total} 篇`
+        : "0 篇";
+
+      if (shouldScroll && total) {
+        grid.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
     }
 
     searchInput.addEventListener("input", applyFilters);
     categoryFilter.addEventListener("change", applyFilters);
+    pagePrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderPage();
+      }
+    });
+    pageNext.addEventListener("click", () => {
+      const pageCount = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+      if (currentPage < pageCount) {
+        currentPage += 1;
+        renderPage();
+      }
+    });
+    applyFilters();
   </script>
 </BaseLayout>
