@@ -820,13 +820,14 @@ function initGraphicsLab(root: HTMLElement) {
 2. 不要一次性讲完整教程，不要输出长篇代码。
 3. 预设课程推进模式下，当前 checkpoint 有 patchId 且用户回答正确或基本正确时，返回该 patchId，让网页应用本地预设 patch。
 4. 预设课程推进模式下，当前 checkpoint 没有 patchId 且用户回答正确或基本正确时，不要返回 patches；只返回 nextCheckpointId 指向下一个 checkpoint。
-5. 预设课程推进模式下，用户回答不完整或错误时，只给简短反馈和一个提示，不要返回 patchId 或 nextCheckpointId。
-6. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
-7. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-8. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
-9. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
-10. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
-11. 只返回 JSON，不返回 Markdown。
+5. 预设课程推进模式下，用户只回答“不知道”或类似表达时，给一个更具体的递进提示，并重复当前 checkpoint.question；不要返回旧问题、patchId 或 nextCheckpointId。
+6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
+7. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
+8. 只允许修改 main.js、vertex.glsl、fragment.glsl。
+9. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
+10. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
+11. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
+12. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
@@ -955,9 +956,9 @@ ${getFilesSnapshot()}`;
       !checkpointMoved &&
       !changedFiles.length &&
       !directPatches.length &&
-      Boolean(currentCheckpoint()) &&
-      !parsed.question;
-    const parsedQuestion = lessonCompleted ? "" : parsed.question;
+      Boolean(currentCheckpoint());
+    const parsedQuestion =
+      lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode) ? "" : parsed.question;
     const displayedQuestion =
       parsedQuestion ||
       (mode === "start" && parsed.type === "question" ? currentCheckpoint()?.question : "") ||
