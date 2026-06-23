@@ -1,0 +1,22 @@
+{
+  "id": "03-vertex-colors",
+  "description": "加入颜色 attribute，并通过 varying 传入 fragment shader。",
+  "changes": [
+    {
+      "file": "main.js",
+      "operation": "replace",
+      "target": "const geometry = new THREE.BufferGeometry();\ngeometry.setAttribute(\"position\", new THREE.BufferAttribute(positions, 3));",
+      "content": "const colors = new Float32Array([\n  1.0, 0.2, 0.1,\n  0.0, 0.68, 0.71,\n  0.13, 0.16, 0.19\n]);\n\nconst geometry = new THREE.BufferGeometry();\ngeometry.setAttribute(\"position\", new THREE.BufferAttribute(positions, 3));\ngeometry.setAttribute(\"color\", new THREE.BufferAttribute(colors, 3));"
+    },
+    {
+      "file": "vertex.glsl",
+      "operation": "replace_all",
+      "content": "attribute vec3 color;\nvarying vec3 vColor;\n\nvoid main() {\n  vColor = color;\n  gl_Position = vec4(position, 1.0);\n}"
+    },
+    {
+      "file": "fragment.glsl",
+      "operation": "replace_all",
+      "content": "varying vec3 vColor;\n\nvoid main() {\n  gl_FragColor = vec4(vColor, 1.0);\n}"
+    }
+  ]
+}

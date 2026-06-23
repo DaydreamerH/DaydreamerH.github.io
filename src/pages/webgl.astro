@@ -1,11 +1,77 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { graphicsLessonSummaries } from "../data/graphicsLessons";
+
+const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.category))].sort((a, b) =>
+  a.localeCompare(b, "zh-Hans-CN")
+);
 ---
 
-<BaseLayout title="WebGL 实验" description="WebGL 与图形编程练习页面。">
-  <section class="empty-module">
-    <p class="eyebrow">WebGL Lab</p>
-    <h1>WebGL 实验</h1>
-    <p>用于整理 WebGL、Shader、渲染管线和图形编程练习。</p>
+<BaseLayout title="WebGL 实验" description="图形学实验课程列表。">
+  <section class="toolbar" aria-label="WebGL 实验筛选">
+    <label class="search-field">
+      <span>搜索</span>
+      <input id="lesson-search" type="search" placeholder="输入 shader、triangle、插值..." />
+    </label>
+    <label class="select-field">
+      <span>分类</span>
+      <select id="lesson-category-filter">
+        <option value="all">全部分类</option>
+        {categories.map((category) => (
+          <option value={category}>{category}</option>
+        ))}
+      </select>
+    </label>
   </section>
+
+  <section class="lesson-grid" id="lesson-grid" aria-label="WebGL 实验课程">
+    {graphicsLessonSummaries.map((lesson, index) => (
+      <article
+        class="lesson-library-card"
+        data-title={`${lesson.title} ${lesson.description}`.toLowerCase()}
+        data-category={lesson.category}
+        data-index={index}
+      >
+        <div class="card-meta">
+          <span class="pill">{lesson.category}</span>
+          <span>{lesson.createdAt}</span>
+        </div>
+        <h2><a href={`/webgl/${lesson.id}/`}>{lesson.title}</a></h2>
+        <p>{lesson.description}</p>
+        <div class="tag-row">
+          <span>{lesson.level}</span>
+          <span>{lesson.checkpointCount} checkpoints</span>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <p class="empty-state" id="lesson-empty-state" hidden>没有匹配的实验课程。</p>
+
+  <script>
+    const searchInput = document.querySelector("#lesson-search");
+    const categoryFilter = document.querySelector("#lesson-category-filter");
+    const cards = Array.from(document.querySelectorAll(".lesson-library-card"));
+    const emptyState = document.querySelector("#lesson-empty-state");
+
+    function applyFilters() {
+      const query = searchInput.value.trim().toLowerCase();
+      const category = categoryFilter.value;
+      let visibleCount = 0;
+
+      for (const card of cards) {
+        const matchesQuery = !query || card.dataset.title.includes(query);
+        const matchesCategory = category === "all" || card.dataset.category === category;
+        const isVisible = matchesQuery && matchesCategory;
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      }
+
+      emptyState.hidden = visibleCount !== 0;
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+    categoryFilter.addEventListener("change", applyFilters);
+    applyFilters();
+  </script>
 </BaseLayout>
