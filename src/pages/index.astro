@@ -2,16 +2,40 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getCategoryLabel } from "../data/navigation";
+import { graphicsLessonSummaries } from "../data/graphicsLessons";
 
-const recentDocs = (await getCollection("knowledge"))
+const docs = (await getCollection("knowledge"))
   .filter((item) => item.data.status === "ready" && item.data.published !== false)
+
+function parseDate(value = "") {
+  const normalized = value.replaceAll(".", "-");
+  const timestamp = Date.parse(normalized);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+const recentUpdates = [
+  ...docs.map((doc) => ({
+    type: "博客",
+    title: doc.data.title,
+    href: `/knowledge/${doc.slug}/`,
+    date: doc.data.date ? doc.data.date.slice(0, 10) : "未标注日期",
+    timestamp: parseDate(doc.data.date ?? ""),
+    meta: getCategoryLabel(doc.data.category)
+  })),
+  ...graphicsLessonSummaries.map((lesson) => ({
+    type: "实验",
+    title: lesson.title,
+    href: `/webgl/${lesson.id}/`,
+    date: lesson.createdAt,
+    timestamp: parseDate(lesson.createdAt),
+    meta: lesson.category
+  }))
+]
   .sort((a, b) => {
-    const dateA = a.data.date ? Date.parse(a.data.date) : 0;
-    const dateB = b.data.date ? Date.parse(b.data.date) : 0;
-    if (dateA !== dateB) return dateB - dateA;
-    return a.data.title.localeCompare(b.data.title, "zh-Hans-CN");
+    if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
+    return a.title.localeCompare(b.title, "zh-Hans-CN");
   })
-  .slice(0, 5);
+  .slice(0, 6);
 
 const modules = [
   {
@@ -40,17 +64,17 @@ const modules = [
     <div class="identity-panel recent-post-panel">
       <div class="inline-heading">
         <div>
-          <p class="eyebrow">Recent Posts</p>
-          <h1>近日博客</h1>
+          <p class="eyebrow">Recent Updates</p>
+          <h1>近日更新</h1>
         </div>
-        <a class="button" href="/knowledge/">全部文章</a>
       </div>
       <div class="recent-post-list">
-        {recentDocs.map((doc) => (
-          <a class="recent-post-item" href={`/knowledge/${doc.slug}/`}>
-            <span>{doc.data.date ? doc.data.date.slice(0, 10) : "未标注日期"}</span>
-            <strong>{doc.data.title}</strong>
-            <small>{getCategoryLabel(doc.data.category)}</small>
+        {recentUpdates.map((item) => (
+          <a class="recent-post-item" href={item.href}>
+            <span>{item.date}</span>
+            <b class="recent-update-type" data-type={item.type}>{item.type}</b>
+            <strong>{item.title}</strong>
+            <small>{item.meta}</small>
           </a>
         ))}
       </div>

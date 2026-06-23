@@ -247,7 +247,7 @@ textarea {
 
 .recent-post-item {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr) auto;
+  grid-template-columns: 104px auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border-top: 1px solid var(--line);
@@ -263,6 +263,26 @@ textarea {
 .recent-post-item small {
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.recent-update-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, #ffffff);
+  color: var(--accent-strong);
+  padding: 3px 9px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.recent-update-type[data-type="实验"] {
+  background: var(--accent);
+  color: #ffffff;
 }
 
 .recent-post-item strong {
@@ -2201,6 +2221,19 @@ h3 {
   .button {
     flex: 1;
     text-align: center;
+  }
+
+  .recent-post-item {
+    grid-template-columns: auto 1fr;
+    gap: 7px 10px;
+  }
+
+  .recent-post-item span {
+    grid-column: 1 / -1;
+  }
+
+  .recent-post-item small {
+    grid-column: 1 / -1;
   }
 
   .workspace-hero {
