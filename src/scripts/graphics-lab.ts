@@ -936,17 +936,30 @@ ${getFilesSnapshot()}`;
       checkpointMoved &&
       Boolean(currentCheckpoint()) &&
       !parsed.question;
+    const shouldRepeatCurrentQuestion =
+      mode === "answer" &&
+      !lessonCompleted &&
+      !checkpointMoved &&
+      !changedFiles.length &&
+      !directPatches.length &&
+      Boolean(currentCheckpoint()) &&
+      !parsed.question;
     const parsedQuestion = lessonCompleted ? "" : parsed.question;
     const displayedQuestion =
       parsedQuestion ||
       (mode === "start" && parsed.type === "question" ? currentCheckpoint()?.question : "") ||
-      (shouldAskNextQuestion ? currentCheckpoint()?.question : "");
+      (shouldAskNextQuestion ? currentCheckpoint()?.question : "") ||
+      (shouldRepeatCurrentQuestion ? currentCheckpoint()?.question : "");
     const displayedMessage = removeQuestionSentences(parsed.message ?? "", displayedQuestion ?? "");
+    const retryMessage =
+      shouldRepeatCurrentQuestion && !displayedMessage
+        ? "再想一下这个关键点。可以结合提示重新回答。"
+        : "";
     const completionMessage =
       lessonCompleted && !displayedQuestion
         ? "预设实验已完成。你可以继续让 AI 解释当前代码，也可以直接要求它修改代码、shader 或画面效果。"
         : "";
-    const aiText = [displayedMessage, displayedQuestion ?? "", completionMessage]
+    const aiText = [displayedMessage, retryMessage, displayedQuestion ?? "", completionMessage]
       .filter(Boolean)
       .join("\n\n");
     if (aiText) appendGuideEntry("assistant", "AI Guide", aiText);

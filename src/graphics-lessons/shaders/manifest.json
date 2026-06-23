@@ -11,11 +11,12 @@
   "runtime": "three-shader-material",
   "previewTitle": "Shader Attributes",
   "draft": false,
-  "aiBrief": "围绕 shader stage、attribute、varying、uniform 组织提问。不要要求用户编译 OpenGL。",
+  "aiBrief": "围绕 shader stage、attribute、varying、uniform 和 GPU 并行执行组织提问。",
   "referenceBrief": [
-    "顶点属性可以携带位置、颜色等每顶点数据。",
+    "顶点属性是每个顶点一份的数据输入。",
     "varying 会在光栅化阶段插值后传入 fragment shader。",
-    "uniform 适合表达一次 draw call 内保持一致的参数。"
+    "uniform 适合表达一次 draw call 内保持一致的参数。",
+    "shader 的关键不只是语法，而是数据在哪个阶段、以什么频率变化。"
   ],
   "referenceFiles": [
     {
@@ -35,67 +36,71 @@
     "每轮只提出一个问题。",
     "先判断用户回答，再决定是否应用 patch。",
     "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "回答不完整时给一个提示，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
     "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
       "id": "shader-stage-role",
       "title": "区分 shader 阶段",
-      "concept": "vertex shader 处理顶点位置，fragment shader 处理片元颜色。",
-      "question": "顶点着色器和片元着色器分别主要负责什么？",
+      "concept": "vertex shader 以顶点为执行频率，fragment shader 以片元为执行频率。",
+      "question": "为什么顶点位置通常在 vertex shader 中处理，而最终颜色通常在 fragment shader 中处理？",
       "expectedKeywords": [
         "顶点",
-        "位置",
         "片元",
+        "执行频率",
+        "位置",
         "颜色"
       ],
-      "hint": "先按管线顺序想：顶点先被处理，然后才产生片元。",
+      "hint": "思考这两个阶段分别会为多少个元素运行一次。",
       "patchId": "01-stage-role",
       "expectedObservation": "画面显示基础三角形。"
     },
     {
       "id": "vertex-attribute-color",
       "title": "传递顶点颜色",
-      "concept": "颜色可以像位置一样作为每顶点 attribute 进入 shader。",
-      "question": "为什么顶点颜色适合作为 attribute，而不是只写死在 fragment shader 里？",
+      "concept": "attribute 表示随顶点变化的数据，适合携带位置、颜色、法线、UV 等顶点属性。",
+      "question": "如果颜色需要每个顶点不同，为什么它应作为 attribute 输入，而不是写死在 fragment shader 中？",
       "expectedKeywords": [
         "每顶点",
         "attribute",
+        "插值",
         "颜色",
-        "插值"
+        "变化"
       ],
-      "hint": "attribute 是每个顶点一份的数据。",
+      "hint": "写死在 fragment shader 的值对所有片元基本相同。",
       "patchId": "02-attribute-color",
       "expectedObservation": "三角形出现顶点颜色渐变。"
     },
     {
       "id": "uniform-color",
       "title": "使用 uniform 控制颜色",
-      "concept": "uniform 在一次绘制中保持一致，适合控制整体参数。",
-      "question": "uniform 和 attribute 的关键区别是什么？",
+      "concept": "uniform 表示一次绘制中共享的参数，改变它通常不需要修改顶点缓冲。",
+      "question": "uniform 和 attribute 的本质区别为什么可以理解为“变化频率”不同？",
       "expectedKeywords": [
-        "一致",
+        "变化频率",
+        "draw call",
         "每顶点",
-        "uniform",
-        "attribute"
+        "共享",
+        "uniform"
       ],
-      "hint": "思考数据是每个顶点不同，还是整次绘制共享。",
+      "hint": "attribute 随顶点取值，uniform 在一次绘制中保持一致。",
       "patchId": "03-uniform-color",
       "expectedObservation": "三角形变为统一的蓝绿色。"
     },
     {
       "id": "varying-interpolation",
       "title": "观察 varying 插值",
-      "concept": "varying 会在三角形内部被插值，fragment shader 收到的是插值后的值。",
-      "question": "为什么 varying 传入 fragment shader 后，三角形内部会出现平滑过渡？",
+      "concept": "varying 在图元内部按屏幕空间插值，fragment shader 收到的是片元位置对应的插值结果。",
+      "question": "为什么 varying 从 vertex shader 传到 fragment shader 后，会在三角形内部形成连续渐变？",
       "expectedKeywords": [
         "插值",
         "光栅化",
-        "顶点",
-        "片元"
+        "片元",
+        "重心",
+        "顶点"
       ],
-      "hint": "片元位于顶点之间，所以会收到顶点值混合后的结果。",
+      "hint": "片元位于三个顶点之间，GPU 会根据它的位置混合顶点输出。",
       "patchId": "04-varying-interpolation",
       "expectedObservation": "画面恢复为明显的颜色插值效果。"
     }

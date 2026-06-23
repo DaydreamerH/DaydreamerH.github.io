@@ -7,13 +7,14 @@
   "order": 6,
   "level": "foundation",
   "createdAt": "2026-06-24",
-  "description": "从二维图形过渡到三维立方体，观察模型、视图和投影的分工。",
+  "description": "从局部空间到裁剪空间，观察模型、视图和投影的分工。",
   "previewTitle": "Coordinate Systems",
   "lesson": "拆分局部空间、世界空间、观察空间和裁剪空间在画面中的作用。",
-  "aiBrief": "重点讲局部空间、世界空间、观察空间、裁剪空间。",
+  "aiBrief": "重点讲局部空间、世界空间、观察空间、裁剪空间和透视除法。",
   "referenceBrief": [
-    "MVP 变换描述顶点从局部空间到屏幕的过程。",
-    "视图和投影共同决定 3D 物体如何被观察。"
+    "MVP 变换描述顶点从局部空间到裁剪空间的过程。",
+    "model 矩阵把物体放入世界，view 矩阵把世界放到相机坐标系，projection 矩阵定义裁剪和透视。",
+    "透视投影依赖齐次坐标和透视除法，让深度影响屏幕空间尺度。"
   ],
   "starterState": {
     "shape": "quad",
@@ -23,12 +24,12 @@
     {
       "id": "local-world",
       "title": "局部空间到世界空间",
-      "concept": "物体顶点最初位于局部空间，模型变换决定它在场景中的位置。",
-      "question": "局部空间中的顶点为什么还需要模型变换？",
-      "expectedKeywords": ["局部", "世界", "模型", "位置"],
-      "hint": "同一个模型可以被摆放到不同位置。",
+      "concept": "局部顶点只描述模型自身形状，model matrix 负责把它放入世界。",
+      "question": "为什么不能把模型顶点都直接写成世界坐标，而要保留局部空间再用 model matrix 变换？",
+      "expectedKeywords": ["局部", "复用", "模型矩阵", "实例", "世界"],
+      "hint": "同一个 mesh 可以被多个 model matrix 放到不同位置。",
       "patchId": "01-local-world",
-      "expectedObservation": "画面显示带纹理的基础平面。",
+      "expectedObservation": "画面显示带低对比纹理的基础平面。",
       "state": {
         "shape": "quad",
         "mode": "checker"
@@ -36,13 +37,13 @@
     },
     {
       "id": "enter-3d",
-      "title": "进入三维物体",
-      "concept": "立方体比平面更容易观察不同空间变换带来的方向变化。",
-      "question": "为什么三维物体比二维平面更适合观察空间变换？",
-      "expectedKeywords": ["三维", "深度", "方向", "空间"],
-      "hint": "立方体有多个面，可以体现深度和遮挡。",
+      "title": "三维方向与深度",
+      "concept": "三维物体可以暴露深度、遮挡和不同面的法线方向。",
+      "question": "从二维平面换成三维立方体后，为什么更容易判断空间变换是否正确？",
+      "expectedKeywords": ["深度", "遮挡", "方向", "法线", "三维"],
+      "hint": "平面缺少多个方向的面，很多旋转或深度错误不容易被看出来。",
       "patchId": "02-enter-3d",
-      "expectedObservation": "画面出现一个立方体。",
+      "expectedObservation": "画面出现一个低对比纹理立方体。",
       "state": {
         "shape": "cube",
         "mode": "checker",
@@ -52,11 +53,11 @@
     },
     {
       "id": "view-transform",
-      "title": "理解视图变换",
-      "concept": "视图变换描述相机如何观察场景。",
-      "question": "移动相机位置时，为什么物体在屏幕上的样子会改变？",
-      "expectedKeywords": ["相机", "视图", "观察", "位置"],
-      "hint": "屏幕显示的是物体相对于相机的结果。",
+      "title": "世界空间到观察空间",
+      "concept": "view matrix 相当于把整个世界变换到以相机为原点的坐标系。",
+      "question": "为什么移动相机可以理解为对世界应用一个相反方向的 view 变换？",
+      "expectedKeywords": ["相反", "视图矩阵", "观察空间", "相机", "世界"],
+      "hint": "渲染时常把相机固定在观察空间原点，再把世界变换过去。",
       "patchId": "03-view-transform",
       "expectedObservation": "立方体从更明显的斜上方被观察。",
       "state": {
@@ -68,11 +69,11 @@
     },
     {
       "id": "projection",
-      "title": "观察投影",
-      "concept": "透视投影决定可视范围和近大远小的感觉。",
-      "question": "透视投影为什么会让远处物体看起来更小？",
-      "expectedKeywords": ["透视", "距离", "投影", "近大远小"],
-      "hint": "投影会把三维空间压到二维屏幕上。",
+      "title": "裁剪空间与透视除法",
+      "concept": "projection matrix 输出裁剪空间坐标，随后透视除法把 xyz 除以 w 得到 NDC。",
+      "question": "透视投影中为什么需要齐次坐标的 w，并在之后执行透视除法？",
+      "expectedKeywords": ["w", "透视除法", "NDC", "近大远小", "裁剪空间"],
+      "hint": "让屏幕坐标和深度产生关系，是透视效果的关键。",
       "patchId": "04-projection",
       "expectedObservation": "多个立方体进入视野，空间层次更明显。",
       "state": {

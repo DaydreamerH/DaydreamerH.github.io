@@ -8,71 +8,77 @@
   "level": "foundation",
   "createdAt": "2026-06-24",
   "description": "观察物体颜色和光源颜色如何共同决定最终显示结果。",
-  "previewTitle": "Light Color",
-  "lesson": "用颜色乘法表达物体颜色和光源颜色的关系。",
-  "aiBrief": "讲解 objectColor、lightColor 以及二者相乘形成最终颜色。",
+  "previewTitle": "Object Color",
+  "lesson": "从最简单的颜色相乘开始，理解物体颜色、光源颜色和光源位置的关系。",
+  "aiBrief": "围绕 object color、light color、逐通道相乘和光源位置组织提问。",
   "referenceBrief": [
     "物体颜色描述表面对不同颜色光的保留比例。",
-    "光源颜色会限制或改变最终可见颜色。"
+    "光源颜色描述入射光包含哪些颜色通道。",
+    "基础模型中可用 objectColor * lightColor 表达逐通道能量筛选。",
+    "光源位置会进一步影响光照方向和强度分布。"
   ],
   "starterState": {
     "shape": "cube",
     "mode": "color-multiply",
     "camera": "perspective",
+    "cameraPosition": [2.4, 1.8, 4.2],
     "objectColor": [0.95, 0.48, 0.2],
-    "showLight": true
+    "lightColor": [1, 1, 1]
   },
   "checkpoints": [
     {
       "id": "object-color",
       "title": "物体颜色",
-      "concept": "物体颜色不是最终颜色，而是和光照共同作用。",
-      "question": "为什么物体颜色不等同于最终显示颜色？",
-      "expectedKeywords": ["光源", "材质", "最终", "影响"],
-      "hint": "没有光照或光源颜色不同时，最终显示会不同。",
+      "concept": "物体颜色可以理解为表面对不同颜色通道的反射比例。",
+      "question": "为什么物体本身的颜色不能单独决定最终显示颜色，还要考虑光源颜色？",
+      "expectedKeywords": ["光源", "反射", "通道", "相乘", "最终颜色"],
+      "hint": "如果入射光缺少某个颜色通道，物体通常无法反射出这个通道。",
       "patchId": "01-object-color",
-      "expectedObservation": "画面显示一个橙色立方体。",
+      "expectedObservation": "立方体显示物体基础颜色。",
       "state": {
         "shape": "cube",
         "mode": "color-multiply",
         "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
         "objectColor": [0.95, 0.48, 0.2],
-        "showLight": true
+        "lightColor": [1, 1, 1]
       }
     },
     {
       "id": "light-color",
       "title": "光源颜色",
-      "concept": "光源颜色会影响照到物体上的颜色成分。",
-      "question": "如果白色物体被蓝色光照亮，最终颜色为什么会偏蓝？",
-      "expectedKeywords": ["光源", "颜色", "相乘", "蓝"],
-      "hint": "最终颜色常由物体颜色和光照颜色共同决定。",
+      "concept": "光源颜色会和物体反射颜色逐通道组合，限制最终可见颜色。",
+      "question": "如果橙色物体被偏蓝的光照亮，为什么最终颜色可能变暗或偏冷？",
+      "expectedKeywords": ["逐通道", "相乘", "蓝光", "缺少", "反射"],
+      "hint": "橙色依赖较强红绿通道，蓝色光源可能不提供足够红绿能量。",
       "patchId": "02-light-color",
-      "expectedObservation": "立方体颜色变为受蓝绿色光影响的结果。",
+      "expectedObservation": "立方体颜色受光源颜色影响而变化。",
       "state": {
         "shape": "cube",
         "mode": "color-multiply",
         "camera": "perspective",
-        "objectColor": [1, 1, 1],
-        "lightColor": [0.0, 0.68, 0.71],
-        "showLight": true
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightColor": [0.35, 0.65, 1.0]
       }
     },
     {
-      "id": "separate-light-marker",
-      "title": "区分物体与光源",
-      "concept": "光源可以用单独对象标记位置，但它不是被照亮物体本身。",
-      "question": "为什么示例中常用一个小立方体或小球表示光源位置？",
-      "expectedKeywords": ["位置", "光源", "标记", "观察"],
-      "hint": "这样更容易理解光从哪里来。",
+      "id": "light-position",
+      "title": "光源位置",
+      "concept": "光源位置为后续方向光照提供 lightDir，是从颜色模型进入光照模型的桥梁。",
+      "question": "为什么在进入漫反射计算前，需要知道光源位置或光照方向？",
+      "expectedKeywords": ["方向", "lightDir", "法线", "夹角", "漫反射"],
+      "hint": "有了光照方向，才可以比较表面朝向是否面向光源。",
       "patchId": "03-light-marker",
-      "expectedObservation": "画面中出现表示光源位置的小球。",
+      "expectedObservation": "画面中出现表示光源位置的小标记。",
       "state": {
         "shape": "cube",
         "mode": "color-multiply",
         "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
         "objectColor": [0.95, 0.48, 0.2],
-        "lightColor": [1, 1, 1],
+        "lightColor": [0.35, 0.65, 1.0],
+        "lightPos": [1.5, 1.8, 2.2],
         "showLight": true
       }
     }

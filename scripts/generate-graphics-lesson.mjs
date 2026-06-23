@@ -20,7 +20,7 @@ const defaultTeachingRules = [
   "每轮只提出一个问题。",
   "先判断用户回答，再决定是否应用 patch。",
   "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-  "回答不完整时给一个提示，不要应用 patch。",
+  "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
   "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
 ];
 
@@ -140,7 +140,7 @@ geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
 function buildUniforms(state) {
   return `const uniforms = {
   uColor: { value: ${colorLiteral(state.color, [0.13, 0.16, 0.19])} },
-  uAccentColor: { value: ${colorLiteral(state.accentColor, [0.0, 0.68, 0.71])} },
+  uAccentColor: { value: ${colorLiteral(state.accentColor, [0.42, 0.48, 0.52])} },
   uObjectColor: { value: ${colorLiteral(state.objectColor, [0.95, 0.48, 0.2])} },
   uLightColor: { value: ${colorLiteral(state.lightColor, [1, 1, 1])} },
   uLightPos: { value: ${vectorLiteral(state.lightPos, [1.5, 1.8, 2.2])} },
@@ -293,9 +293,11 @@ uniform vec3 uColor;
 uniform vec3 uAccentColor;
 
 void main() {
-  vec2 grid = floor(vUv * 8.0);
+  vec2 grid = floor(vUv * 4.0);
   float mask = mod(grid.x + grid.y, 2.0);
-  gl_FragColor = vec4(mix(uColor, uAccentColor, mask), 1.0);
+  vec3 calmBase = mix(uColor, vec3(0.88), 0.18);
+  vec3 calmAccent = mix(uColor, uAccentColor, 0.32);
+  gl_FragColor = vec4(mix(calmBase, calmAccent, mask), 1.0);
 }`;
   }
   if (mode === "texture-mix") {

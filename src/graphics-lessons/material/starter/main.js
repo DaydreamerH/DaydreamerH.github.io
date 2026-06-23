@@ -14,15 +14,15 @@ const geometry = new THREE.BoxGeometry(1, 1, 1);
 
 const uniforms = {
   uColor: { value: new THREE.Color(0.130, 0.160, 0.190) },
-  uAccentColor: { value: new THREE.Color(0.000, 0.680, 0.710) },
+  uAccentColor: { value: new THREE.Color(0.420, 0.480, 0.520) },
   uObjectColor: { value: new THREE.Color(0.950, 0.480, 0.200) },
   uLightColor: { value: new THREE.Color(1.000, 1.000, 1.000) },
   uLightPos: { value: new THREE.Vector3(1.500, 1.800, 2.200) },
   uViewPos: { value: camera.position },
   uMixAmount: { value: 0.35 },
-  uAmbientStrength: { value: 0.15 },
-  uSpecularStrength: { value: 0.20 },
-  uShininess: { value: 8.0 }
+  uAmbientStrength: { value: 0.18 },
+  uSpecularStrength: { value: 0.45 },
+  uShininess: { value: 32.0 }
 };
 
 const material = new THREE.ShaderMaterial({
@@ -43,12 +43,7 @@ for (let index = 0; index < 1; index += 1) {
   meshes.push(mesh);
 }
 
-const lightMarker = new THREE.Mesh(
-  new THREE.SphereGeometry(0.08, 16, 16),
-  new THREE.MeshBasicMaterial({ color: uniforms.uLightColor.value })
-);
-lightMarker.position.copy(uniforms.uLightPos.value);
-scene.add(lightMarker);
+
 
 let animationFrame = 0;
 
@@ -68,7 +63,7 @@ function render(time = 0) {
   const seconds = time * 0.001;
   
   renderer.render(scene, camera);
-  report({ shape: "cube", mode: "diffuse", objects: meshes.length });
+  report({ shape: "cube", mode: "ambient", objects: meshes.length });
   
 }
 

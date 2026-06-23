@@ -7,13 +7,15 @@
   "order": 7,
   "level": "foundation",
   "createdAt": "2026-06-24",
-  "description": "观察相机位置、朝向和视野范围对画面的影响。",
+  "description": "观察相机位置、观察方向和视锥参数对画面的影响。",
   "previewTitle": "Camera",
-  "lesson": "把相机控制中的位置、观察方向和 delta time 转写成浏览器中的可观察实验。",
-  "aiBrief": "围绕 camera position、lookAt、FOV、delta time 组织提问。",
+  "lesson": "把相机控制中的位置、观察方向、视锥和时间步长转写成浏览器中的可观察实验。",
+  "aiBrief": "围绕 view matrix、lookAt 基、FOV 视锥和 delta time 组织提问。",
   "referenceBrief": [
-    "相机决定场景从哪里、朝哪里被观察。",
-    "连续更新相机或物体状态可以模拟实时观察。"
+    "相机并不移动模型顶点本身，而是通过视图矩阵把世界空间转换到观察空间。",
+    "lookAt 通常由相机位置、目标点和 up 向量构造观察坐标系。",
+    "FOV 改变透视投影视锥，会影响屏幕空间中的尺度感和可见范围。",
+    "delta time 用真实时间归一化每帧更新，避免帧率改变运动速度。"
   ],
   "starterState": {
     "shape": "cube",
@@ -24,11 +26,11 @@
   "checkpoints": [
     {
       "id": "camera-position",
-      "title": "设置相机位置",
-      "concept": "相机位置决定观察起点。",
-      "question": "相机位置改变时，为什么不需要修改物体顶点也能改变画面？",
-      "expectedKeywords": ["相机", "视图", "观察", "位置"],
-      "hint": "改变的是观察方式，不是模型本身。",
+      "title": "相机位置与观察空间",
+      "concept": "相机位置改变时，view matrix 会改变世界空间到观察空间的坐标变换。",
+      "question": "如果模型矩阵没有变化，为什么改变相机位置仍会改变物体在屏幕上的位置和大小？",
+      "expectedKeywords": ["视图矩阵", "观察空间", "相对", "相机", "坐标"],
+      "hint": "想一想渲染管线最终使用的是物体相对于相机的坐标，而不是只看模型本地坐标。",
       "patchId": "01-camera-position",
       "expectedObservation": "立方体从正面被观察。",
       "state": {
@@ -40,11 +42,11 @@
     },
     {
       "id": "look-direction",
-      "title": "观察方向",
-      "concept": "相机朝向决定视线指向哪里。",
-      "question": "只移动相机位置但不更新观察方向，可能会出现什么问题？",
-      "expectedKeywords": ["看向", "方向", "目标", "视线"],
-      "hint": "相机需要知道自己看向哪一个点或方向。",
+      "title": "构造观察基",
+      "concept": "lookAt 会用 eye、target 和 up 构造相机的前向、右向和上向基向量。",
+      "question": "为什么 lookAt 不只需要相机位置，还需要目标点或观察方向？",
+      "expectedKeywords": ["方向", "基向量", "target", "up", "视线"],
+      "hint": "一个点只能说明相机在哪里，不能说明它的局部坐标轴朝向哪里。",
       "patchId": "02-look-direction",
       "expectedObservation": "立方体从斜上方被观察。",
       "state": {
@@ -56,11 +58,11 @@
     },
     {
       "id": "fov",
-      "title": "视野范围",
-      "concept": "FOV 控制透视相机可见范围和透视感。",
-      "question": "FOV 变大时，通常会让画面产生什么变化？",
-      "expectedKeywords": ["视野", "更广", "透视", "范围"],
-      "hint": "更大的视野会看到更多场景。",
+      "title": "视锥与透视感",
+      "concept": "FOV 决定透视投影矩阵中的视锥开角，进而影响 NDC 中的尺度分布。",
+      "question": "FOV 变大时，为什么画面会看到更多内容，同时近处物体的透视变形也更明显？",
+      "expectedKeywords": ["视锥", "投影", "透视", "NDC", "范围"],
+      "hint": "更大的开角会把更宽的观察空间压到同一个屏幕范围内。",
       "patchId": "03-fov",
       "expectedObservation": "多个立方体进入视野。",
       "state": {
@@ -74,11 +76,11 @@
     },
     {
       "id": "delta-time",
-      "title": "连续相机观察",
-      "concept": "实时场景通常按每帧时间差更新，保持运动稳定。",
-      "question": "为什么相机或物体运动常常要乘以 deltaTime？",
-      "expectedKeywords": ["帧率", "速度", "稳定", "时间"],
-      "hint": "不同机器每秒帧数可能不同。",
+      "title": "时间步长与帧率",
+      "concept": "实时渲染中每帧更新应按时间积分，而不是假设每帧耗时相同。",
+      "question": "如果每帧都增加固定角度而不乘 deltaTime，为什么高帧率机器上的运动会更快？",
+      "expectedKeywords": ["帧率", "时间", "速度", "deltaTime", "积分"],
+      "hint": "同样一秒内，高帧率机器会执行更多次每帧更新。",
       "patchId": "04-delta-time",
       "expectedObservation": "场景持续旋转，便于观察相机下的空间变化。",
       "state": {

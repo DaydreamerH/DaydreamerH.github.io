@@ -11,11 +11,12 @@
   "runtime": "three-shader-material",
   "previewTitle": "Texture Coordinates",
   "draft": false,
-  "aiBrief": "将图片纹理简化为程序化纹理，重点讲 UV、采样、混合。",
+  "aiBrief": "将图片纹理简化为程序化纹理，重点讲 UV、插值、采样频率和混合。",
   "referenceBrief": [
     "纹理通常贴在由两个三角形组成的矩形上。",
     "UV 坐标描述片元在纹理空间中的位置。",
-    "mix 可以表达两种纹理结果的混合。"
+    "fragment shader 接收到的是插值后的 UV，而不是只有顶点上的原始 UV。",
+    "mix 可以表达两种纹理结果的线性混合。"
   ],
   "referenceFiles": [
     {
@@ -39,67 +40,71 @@
     "每轮只提出一个问题。",
     "先判断用户回答，再决定是否应用 patch。",
     "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "回答不完整时给一个提示，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
     "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
       "id": "quad-geometry",
-      "title": "建立矩形",
-      "concept": "矩形通常拆成两个三角形绘制。",
-      "question": "为什么一个矩形通常可以由两个三角形组成？",
+      "title": "矩形与三角形图元",
+      "concept": "GPU 光栅化通常围绕三角形图元组织，矩形可以拆成两个三角形。",
+      "question": "为什么实时渲染里常把矩形拆成两个三角形，而不是把矩形当作基础光栅化图元？",
       "expectedKeywords": [
-        "两个",
         "三角形",
-        "矩形"
+        "共面",
+        "光栅化",
+        "插值",
+        "稳定"
       ],
-      "hint": "GPU 的基础图元常用三角形。",
+      "hint": "三角形一定共面，重心插值和覆盖测试都更稳定。",
       "patchId": "01-quad-geometry",
       "expectedObservation": "画面出现一个居中的矩形。"
     },
     {
       "id": "uv-coordinates",
-      "title": "理解 UV 坐标",
-      "concept": "UV 描述顶点对应纹理空间的位置。",
-      "question": "UV 坐标为什么通常使用 0 到 1 的范围？",
+      "title": "UV 空间",
+      "concept": "UV 把几何表面映射到纹理空间，通常用归一化坐标解耦图片分辨率。",
+      "question": "为什么 UV 通常使用 0 到 1 的归一化范围，而不是直接使用纹理像素坐标？",
       "expectedKeywords": [
         "归一化",
-        "纹理",
-        "坐标",
-        "0",
-        "1"
+        "分辨率",
+        "映射",
+        "采样",
+        "纹理空间"
       ],
-      "hint": "这样同一套坐标可以适配不同尺寸的纹理。",
+      "hint": "这样同一套 UV 可以适配不同尺寸的纹理图像。",
       "patchId": "02-uv-gradient",
       "expectedObservation": "矩形显示由 UV 产生的渐变。"
     },
     {
       "id": "procedural-sampling",
-      "title": "模拟纹理采样",
-      "concept": "fragment shader 用插值后的 UV 查询纹理颜色。",
-      "question": "片元着色器为什么需要插值后的 UV，而不是只使用顶点上的 UV？",
+      "title": "片元级采样",
+      "concept": "光栅化会为矩形内部每个片元插值 UV，fragment shader 再用 UV 查询颜色。",
+      "question": "为什么纹理采样必须发生在片元级，而不是只在四个顶点上采样一次？",
       "expectedKeywords": [
         "片元",
         "插值",
+        "UV",
         "采样",
-        "UV"
+        "分辨率"
       ],
-      "hint": "矩形内部的大量片元并不是原始顶点。",
+      "hint": "屏幕上有大量像素位于顶点之间，它们都需要自己的纹理坐标和颜色。",
       "patchId": "03-checker-sampling",
-      "expectedObservation": "矩形显示棋盘格纹理。"
+      "expectedObservation": "矩形显示低对比、低频率的程序化方格纹理。"
     },
     {
       "id": "texture-mix",
-      "title": "混合纹理结果",
-      "concept": "mix 可以在两个颜色来源之间按比例插值。",
-      "question": "mix(textureA, textureB, amount) 中 amount 变大时，颜色会更接近哪一项？",
+      "title": "线性混合",
+      "concept": "mix(a, b, t) 是逐分量线性插值，t 控制结果靠近 a 还是 b。",
+      "question": "mix(textureA, textureB, amount) 为什么可以看作一次线性插值？",
       "expectedKeywords": [
-        "textureB",
-        "第二",
+        "线性插值",
         "amount",
-        "插值"
+        "textureA",
+        "textureB",
+        "权重"
       ],
-      "hint": "amount 为 0 接近第一项，为 1 接近第二项。",
+      "hint": "amount 为 0 接近第一项，为 1 接近第二项，中间值按比例混合。",
       "patchId": "04-texture-mix",
       "expectedObservation": "矩形显示两种程序化纹理混合后的结果。"
     }

@@ -27,7 +27,7 @@ geometry.setIndex([0, 2, 1, 1, 2, 3]);
 
 const uniforms = {
   uColor: { value: new THREE.Color(0.130, 0.160, 0.190) },
-  uAccentColor: { value: new THREE.Color(0.000, 0.680, 0.710) },
+  uAccentColor: { value: new THREE.Color(0.420, 0.480, 0.520) },
   uObjectColor: { value: new THREE.Color(0.950, 0.480, 0.200) },
   uLightColor: { value: new THREE.Color(1.000, 1.000, 1.000) },
   uLightPos: { value: new THREE.Vector3(1.500, 1.800, 2.200) },
@@ -76,7 +76,7 @@ function render(time = 0) {
   const seconds = time * 0.001;
   
   renderer.render(scene, camera);
-  report({ shape: "quad", mode: "checker", objects: meshes.length });
+  report({ shape: "quad", mode: "uv-gradient", objects: meshes.length });
   
 }
 
