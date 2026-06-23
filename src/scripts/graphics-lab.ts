@@ -1,5 +1,10 @@
 import * as THREE from "three";
-import { closeBrackets, completionKeymap } from "@codemirror/autocomplete";
+import {
+  autocompletion,
+  closeBrackets,
+  completionKeymap,
+  type CompletionContext
+} from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { javascript } from "@codemirror/lang-javascript";
 import { searchKeymap } from "@codemirror/search";
@@ -46,6 +51,74 @@ declare global {
 
 const STORAGE_KEY = "daydreamerh.graphics-lab.v1";
 
+const jsCompletions = [
+  "THREE.Scene",
+  "THREE.PerspectiveCamera",
+  "THREE.WebGLRenderer",
+  "THREE.ShaderMaterial",
+  "THREE.Mesh",
+  "THREE.BoxGeometry",
+  "THREE.SphereGeometry",
+  "THREE.PlaneGeometry",
+  "THREE.Color",
+  "THREE.Vector2",
+  "THREE.Vector3",
+  "THREE.Matrix4",
+  "requestAnimationFrame",
+  "cancelAnimationFrame",
+  "renderer.render",
+  "renderer.setSize",
+  "camera.lookAt",
+  "scene.add",
+  "uniforms",
+  "vertexShader",
+  "fragmentShader"
+].map((label) => ({ label, type: "variable" }));
+
+const glslCompletions = [
+  "uniform",
+  "varying",
+  "attribute",
+  "void main()",
+  "gl_Position",
+  "gl_FragColor",
+  "projectionMatrix",
+  "modelViewMatrix",
+  "normalMatrix",
+  "position",
+  "normal",
+  "uv",
+  "vec2",
+  "vec3",
+  "vec4",
+  "mat3",
+  "mat4",
+  "float",
+  "normalize",
+  "dot",
+  "cross",
+  "mix",
+  "sin",
+  "cos",
+  "max",
+  "min",
+  "clamp",
+  "texture2D"
+].map((label) => ({ label, type: "keyword" }));
+
+function labCompletionSource(fileName: LabFileName) {
+  const completions = fileName === "main.js" ? jsCompletions : glslCompletions;
+
+  return (context: CompletionContext) => {
+    const word = context.matchBefore(/[\w.$]+/);
+    if (!word || (word.from === word.to && !context.explicit)) return null;
+    return {
+      from: word.from,
+      options: completions
+    };
+  };
+}
+
 const defaultFiles: Record<LabFileName, LabFile> = {
   "main.js": {
     name: "main.js",
@@ -79,7 +152,7 @@ const material = new THREE.ShaderMaterial({
 });
 
 const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1.4, 1.4, 1.4, 24, 24, 24),
+  new THREE.BoxGeometry(1.45, 1.45, 1.45, 1, 1, 1),
   material
 );
 scene.add(cube);
@@ -136,10 +209,7 @@ void main() {
   vUv = uv;
   vNormal = normalize(normalMatrix * normal);
 
-  vec3 animatedPosition = position;
-  animatedPosition += normal * sin(uTime + position.y * 3.0) * 0.035;
-
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(animatedPosition, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`
   },
   "fragment.glsl": {
@@ -183,6 +253,16 @@ function loadFiles() {
         files[name].source = parsed[name] ?? files[name].source;
       }
     });
+    if (
+      files["main.js"].source.includes(
+        "new THREE.BoxGeometry(1.4, 1.4, 1.4, 24, 24, 24)"
+      )
+    ) {
+      files["main.js"].source = defaultFiles["main.js"].source;
+    }
+    if (files["vertex.glsl"].source.includes("animatedPosition")) {
+      files["vertex.glsl"].source = defaultFiles["vertex.glsl"].source;
+    }
     return files;
   } catch {
     return cloneDefaultFiles();
@@ -214,6 +294,10 @@ function createEditorState(
       rectangularSelection(),
       highlightActiveLine(),
       closeBrackets(),
+      autocompletion({
+        override: [labCompletionSource(fileName)],
+        activateOnTyping: true
+      }),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -290,7 +374,7 @@ function initGraphicsLab(root: HTMLElement) {
     statusLabel.textContent = text;
     statusDot.dataset.state = type;
     root.dataset.labState = type;
-    root.dataset.labStatus = text;
+    root.dataset.labMessage = text;
   };
 
   const setError = (message = "") => {
