@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { PanelLeftClose, PanelLeftOpen } from "@lucide/astro";
+import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen } from "@lucide/astro";
 import { getCategoryLabel, getLevelLabel } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
@@ -46,32 +46,47 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
             <PanelLeftOpen class="toggle-icon icon-expand" size={18} aria-hidden="true" />
           </button>
         </div>
-        <label class="select-field compact-select">
-          <span>分类</span>
-          <select data-category-select>
-            <option value="all">全部分类</option>
-            {categories.map((category) => (
-              <option value={category} selected={category === activeNode.category}>{category}</option>
-            ))}
-          </select>
-        </label>
-        <label class="search-field coach-search">
-          <span>搜索文章</span>
-          <input data-node-search type="search" placeholder="输入标题、标签或分类..." autocomplete="off" />
-        </label>
-        <div class="node-picker-head">
-          <span data-node-count></span>
-          <small>选择测试上下文</small>
-        </div>
-        <div class="node-list" data-node-list>
-          {knowledgeNodes
-            .filter((node) => node.category === activeNode.category)
-            .map((node, index) => (
-            <button class={index === 0 ? "is-active" : ""} data-node={node.id} type="button">
-              <span>{node.title}</span>
-              <small>{node.category}</small>
+        <div class="node-picker is-collapsed" data-node-picker>
+          <div class="node-picker-head">
+            <span data-node-count></span>
+            <button
+              class="picker-toggle"
+              type="button"
+              data-toggle-picker
+              aria-label="展开文章选择"
+              aria-expanded="false"
+            >
+              <ChevronDown class="toggle-icon icon-expand" size={17} aria-hidden="true" />
+              <ChevronUp class="toggle-icon icon-collapse" size={17} aria-hidden="true" />
             </button>
-          ))}
+          </div>
+          <button class="selected-node-card" type="button" data-selected-node-card>
+            <span data-selected-node-title>{activeNode.title}</span>
+          </button>
+          <div class="node-picker-body" data-node-picker-body>
+            <label class="select-field compact-select">
+              <span>分类</span>
+              <select data-category-select>
+                <option value="all">全部分类</option>
+                {categories.map((category) => (
+                  <option value={category} selected={category === activeNode.category}>{category}</option>
+                ))}
+              </select>
+            </label>
+            <label class="search-field coach-search">
+              <span>搜索文章</span>
+              <input data-node-search type="search" placeholder="输入标题、标签或分类..." autocomplete="off" />
+            </label>
+            <div class="node-list" data-node-list>
+              {knowledgeNodes
+                .filter((node) => node.category === activeNode.category)
+                .map((node, index) => (
+                <button class={index === 0 ? "is-active" : ""} data-node={node.id} type="button">
+                  <span>{node.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <p class="muted-copy" data-context-description>{activeNode.description}</p>
         <div class="tag-row" data-context-tags>
@@ -169,6 +184,10 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const nodeList = document.querySelector("[data-node-list]");
     const nodeSearch = document.querySelector("[data-node-search]");
     const nodeCount = document.querySelector("[data-node-count]");
+    const nodePicker = document.querySelector("[data-node-picker]");
+    const pickerToggle = document.querySelector("[data-toggle-picker]");
+    const selectedNodeCard = document.querySelector("[data-selected-node-card]");
+    const selectedNodeTitle = document.querySelector("[data-selected-node-title]");
 
     function escapeHtml(value) {
       return value
@@ -297,6 +316,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       contextLink.textContent = node.title;
       contextLink.href = node.href;
       contextReturn.href = node.href;
+      selectedNodeTitle.textContent = node.title;
 
       document.querySelector("[data-context-tags]").replaceChildren(...node.tags.map((tag) => {
         const span = document.createElement("span");
@@ -323,9 +343,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         button.type = "button";
         button.dataset.node = id;
         button.classList.toggle("is-active", id === state.node);
-        button.innerHTML = "<span></span><small></small>";
+        button.innerHTML = "<span></span>";
         button.querySelector("span").textContent = node.title;
-        button.querySelector("small").textContent = `${node.category} · ${node.level} · ${node.minutes} min`;
         button.addEventListener("click", () => selectNode(id));
         return button;
       }));
@@ -336,6 +355,12 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         empty.textContent = "没有匹配的文章";
         nodeList.replaceChildren(empty);
       }
+    }
+
+    function setNodePickerExpanded(expanded) {
+      nodePicker.classList.toggle("is-collapsed", !expanded);
+      pickerToggle.setAttribute("aria-expanded", String(expanded));
+      pickerToggle.setAttribute("aria-label", expanded ? "收起文章选择" : "展开文章选择");
     }
 
     function resetSession() {
@@ -560,6 +585,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       url.searchParams.set("node", state.node);
       history.replaceState(null, "", url);
       resetSession();
+      setNodePickerExpanded(false);
     }
 
     function updateCategoryFilter() {
@@ -577,6 +603,12 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     nodeSearch.addEventListener("change", () => {
       state.query = nodeSearch.value;
       renderNodeList();
+    });
+    pickerToggle.addEventListener("click", () => {
+      setNodePickerExpanded(nodePicker.classList.contains("is-collapsed"));
+    });
+    selectedNodeCard.addEventListener("click", () => {
+      setNodePickerExpanded(true);
     });
 
     document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
