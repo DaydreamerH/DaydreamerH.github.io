@@ -31,6 +31,7 @@
 
 html {
   background: var(--bg);
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -597,6 +598,7 @@ h3 {
   gap: 14px;
   align-items: start;
   padding: 24px 0 72px;
+  overflow-anchor: none;
   transition: grid-template-columns var(--motion-slow);
 }
 
@@ -622,7 +624,8 @@ h3 {
 
 .coach-layout.is-left-collapsing .coach-sidebar .panel-block {
   opacity: 0;
-  transform: translateX(-8px);
+  transform: scale(0.985);
+  transform-origin: top left;
 }
 
 .coach-layout.is-left-collapsed .coach-sidebar .panel-block > :not(.panel-heading) {
@@ -673,24 +676,25 @@ h3 {
 @keyframes sidebarCollapse {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 
   to {
     opacity: 1;
-    transform: translateX(-2px);
+    transform: none;
   }
 }
 
 @keyframes sidebarContentIn {
   from {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: scale(0.985);
+    transform-origin: top left;
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 }
 
