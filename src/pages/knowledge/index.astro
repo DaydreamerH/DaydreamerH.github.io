@@ -3,6 +3,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
 
+const articleImages = import.meta.glob<{ default: ImageMetadata }>(
+  "../../content/knowledge/**/*.{avif,gif,jpeg,jpg,png,webp}",
+  { eager: true }
+);
+
 const docs = (await getCollection("knowledge"))
   .filter((item) => item.data.status === "ready" && item.data.published !== false)
   .sort((a, b) => {
@@ -15,6 +20,12 @@ const docs = (await getCollection("knowledge"))
 
 const categories = [...new Set(docs.map((doc) => doc.data.category))]
   .sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b), "zh-Hans-CN"));
+
+function getBannerSrc(doc: (typeof docs)[number]) {
+  if (!doc.data.photos) return "";
+  const bannerPath = `../../content/knowledge/${doc.slug}/${doc.data.photos}`;
+  return articleImages[bannerPath]?.default.src ?? "";
+}
 ---
 
 <BaseLayout title="知识库" description="DaydreamerH 的游戏开发知识库。">
@@ -38,6 +49,7 @@ const categories = [...new Set(docs.map((doc) => doc.data.category))]
     {docs.map((doc, index) => (
       <article
         class="knowledge-card"
+        style={getBannerSrc(doc) ? `--card-banner: url("${getBannerSrc(doc)}")` : undefined}
         data-title={doc.data.title.toLowerCase()}
         data-tags={doc.data.tags.join(" ").toLowerCase()}
         data-category={doc.data.category}
