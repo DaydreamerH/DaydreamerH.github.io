@@ -1,12 +1,12 @@
 {
-  "name": "cgweb-knowledge-base",
+  "name": "daydreamerh-github-io",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "set ASTRO_TELEMETRY_DISABLED=1&& astro dev --host 127.0.0.1",
-    "build": "set ASTRO_TELEMETRY_DISABLED=1&& astro build",
-    "preview": "set ASTRO_TELEMETRY_DISABLED=1&& astro preview --host 127.0.0.1",
+    "dev": "node scripts/astro-cli.mjs dev --host 127.0.0.1",
+    "build": "node scripts/astro-cli.mjs build",
+    "preview": "node scripts/astro-cli.mjs preview --host 127.0.0.1",
     "test:graphics-lab": "node scripts/verify-graphics-lab.mjs"
   },
   "dependencies": {
