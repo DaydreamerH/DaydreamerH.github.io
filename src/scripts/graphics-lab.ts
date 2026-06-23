@@ -62,6 +62,13 @@ type LessonCheckpoint = {
   expectedObservation: string;
 };
 
+type CheckpointAdvanceResult = {
+  previousId: string;
+  currentId: string;
+  moved: boolean;
+  completed: boolean;
+};
+
 type GraphicsLesson = {
   id: string;
   title: string;
@@ -84,7 +91,7 @@ type GraphicsLesson = {
 };
 
 type GuideResponse = {
-  type?: "question" | "feedback" | "code_patch" | "debug_fix" | "summary";
+  type?: "question" | "feedback" | "code_patch" | "summary";
   message?: string;
   question?: string;
   patchId?: string;
@@ -290,6 +297,18 @@ function normalizeGuideResponse(response: GuideResponse): GuideResponse {
   };
 }
 
+function removeQuestionSentences(message: string, question: string) {
+  if (!message || !question) return message;
+  return message
+    .split(/(?<=[。！？!?])\s*/)
+    .filter((sentence) => {
+      const trimmed = sentence.trim();
+      return trimmed && !/[？?]/.test(trimmed) && !trimmed.includes("请回答");
+    })
+    .join("")
+    .trim();
+}
+
 function compactReferenceCode(code = "") {
   if (!code) return "(无)";
   const lines = code.split(/\r?\n/);
@@ -314,6 +333,98 @@ function compactReferenceCode(code = "") {
     );
   });
   return useful.slice(0, 80).join("\n") || lines.slice(0, 80).join("\n");
+}
+
+function escapeHtml(value = "") {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderInlineMarkdown(value = "") {
+  return escapeHtml(value)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderGuideMarkdown(markdown = "") {
+  const lines = markdown.split(/\r?\n/);
+  const html: string[] = [];
+  let listOpen = false;
+  let codeOpen = false;
+  const codeBuffer: string[] = [];
+
+  const closeList = () => {
+    if (!listOpen) return;
+    html.push("</ul>");
+    listOpen = false;
+  };
+
+  const closeCode = () => {
+    if (!codeOpen) return;
+    html.push(`<pre><code>${escapeHtml(codeBuffer.join("\n"))}</code></pre>`);
+    codeBuffer.length = 0;
+    codeOpen = false;
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("```")) {
+      if (codeOpen) {
+        closeCode();
+      } else {
+        closeList();
+        codeOpen = true;
+      }
+      return;
+    }
+
+    if (codeOpen) {
+      codeBuffer.push(line);
+      return;
+    }
+
+    if (!trimmed) {
+      closeList();
+      return;
+    }
+
+    const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = Math.min(5, heading[1].length + 2);
+      html.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+      return;
+    }
+
+    const quote = trimmed.match(/^>\s+(.+)$/);
+    if (quote) {
+      closeList();
+      html.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
+      return;
+    }
+
+    const listItem = trimmed.match(/^[-*]\s+(.+)$/) || trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (listItem) {
+      if (!listOpen) {
+        html.push("<ul>");
+        listOpen = true;
+      }
+      html.push(`<li>${renderInlineMarkdown(listItem[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+  });
+
+  closeCode();
+  closeList();
+  return html.join("");
 }
 
 function createEditorState(
@@ -412,11 +523,11 @@ function initGraphicsLab(root: HTMLElement) {
   const guideForm = root.querySelector<HTMLFormElement>("[data-guide-form]");
   const guideInput = root.querySelector<HTMLTextAreaElement>("[data-guide-input]");
   const guideStartButton = root.querySelector<HTMLButtonElement>("[data-guide-start]");
-  const guideDebugButton = root.querySelector<HTMLButtonElement>("[data-guide-debug]");
   const guideReturnButton = root.querySelector<HTMLButtonElement>("[data-guide-return]");
   const guideEndpointInput = root.querySelector<HTMLInputElement>("[data-guide-endpoint]");
   const guideKeyInput = root.querySelector<HTMLInputElement>("[data-guide-key]");
   const guideModelInput = root.querySelector<HTMLInputElement>("[data-guide-model]");
+  const labHints = root.querySelector<HTMLElement>("[data-lab-hints]");
 
   if (
     !labWorkspace ||
@@ -434,13 +545,15 @@ function initGraphicsLab(root: HTMLElement) {
 
   let files = loadFiles(lesson);
   let activeFile: LabFileName = "main.js";
-  let activeWorkspaceTab: WorkspaceTab = "main.js";
+  let activeWorkspaceTab: WorkspaceTab = "ai";
   let guideConversationStarted = false;
   let cleanup: RuntimeCleanup | undefined;
   let runTimer = 0;
   let saveTimer = 0;
   let runId = 0;
   let currentCheckpointIndex = 0;
+  let guideWorkspaceInitialized = false;
+  let lessonFreeMode = false;
   const completedPatches = new Set<string>();
   const guideHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
 
@@ -484,6 +597,21 @@ function initGraphicsLab(root: HTMLElement) {
     root.dataset.guidePhase = phase;
   };
 
+  const resetGuideSession = () => {
+    guideHistory.length = 0;
+    guideConversationStarted = false;
+    if (guideLog) guideLog.innerHTML = "";
+    setGuideAlert();
+    setGuideState("等待 API");
+  };
+
+  const hasGuideApiConfig = () =>
+    Boolean(
+      guideEndpointInput?.value.trim() &&
+        guideKeyInput?.value.trim() &&
+        guideModelInput?.value.trim()
+    );
+
   const appendGuideEntry = (
     role: "assistant" | "user" | "system",
     title: string,
@@ -491,14 +619,29 @@ function initGraphicsLab(root: HTMLElement) {
   ) => {
     if (!guideLog) return;
     const article = document.createElement("article");
-    article.dataset.role = role;
-    const strong = document.createElement("strong");
-    strong.textContent = title;
-    article.append(strong);
-    if (message) {
-      const paragraph = document.createElement("p");
-      paragraph.textContent = message;
-      article.append(paragraph);
+    if (role === "system") {
+      article.className = "guide-event";
+      const label = document.createElement("span");
+      label.textContent = title;
+      article.append(label);
+      if (message) {
+        const paragraph = document.createElement("p");
+        paragraph.textContent = message;
+        article.append(paragraph);
+      }
+    } else {
+      article.className = `message ${role === "user" ? "from-user" : "from-coach"}`;
+      const body = document.createElement("div");
+      body.className = "message-body";
+      if (message) {
+        body.innerHTML = renderGuideMarkdown(message);
+      }
+      if (title) {
+        const label = document.createElement("span");
+        label.textContent = title;
+        article.append(label);
+      }
+      article.append(body);
     }
     guideLog.append(article);
     guideLog.scrollTop = guideLog.scrollHeight;
@@ -544,6 +687,7 @@ function initGraphicsLab(root: HTMLElement) {
     activeFile = fileName;
     editorHost.hidden = false;
     if (guideWorkspace) guideWorkspace.hidden = true;
+    if (labHints) labHints.hidden = false;
     editor.setState(
       createEditorState(files[activeFile].source, activeFile, (source) => {
         files[activeFile].source = source;
@@ -554,10 +698,33 @@ function initGraphicsLab(root: HTMLElement) {
     syncTabs();
   };
 
+  const resetLessonCode = () => {
+    stopRuntime();
+    files = cloneStarterFiles(lesson);
+    completedPatches.clear();
+    currentCheckpointIndex = 0;
+    lessonFreeMode = false;
+    root.dataset.checkpointId = currentCheckpoint()?.id ?? "";
+    persistFiles(lesson, files);
+    editor.setState(
+      createEditorState(files[activeFile].source, activeFile, (source) => {
+        files[activeFile].source = source;
+        saveSoon();
+        scheduleRun();
+      })
+    );
+    setError();
+  };
+
   const switchGuide = () => {
+    if (!guideWorkspaceInitialized) {
+      resetLessonCode();
+      guideWorkspaceInitialized = true;
+    }
     activeWorkspaceTab = "ai";
     editorHost.hidden = true;
     if (guideWorkspace) guideWorkspace.hidden = false;
+    if (labHints) labHints.hidden = true;
     setGuidePhase(guideConversationStarted ? "conversation" : "setup");
     syncTabs();
   };
@@ -565,14 +732,22 @@ function initGraphicsLab(root: HTMLElement) {
   const getFilesSnapshot = () =>
     fileNames.map((name) => `--- ${name} ---\n${files[name].source}`).join("\n\n");
 
-  const advanceCheckpoint = (patchId?: string, nextCheckpointId?: string) => {
+  const advanceCheckpoint = (patchId?: string, nextCheckpointId?: string): CheckpointAdvanceResult => {
+    const previousId = currentCheckpoint()?.id ?? "";
     if (nextCheckpointId) {
       const found = lesson.checkpoints.findIndex((checkpoint) => checkpoint.id === nextCheckpointId);
       if (found >= 0) currentCheckpointIndex = found;
     } else if (patchId && currentCheckpoint()?.patchId === patchId) {
       currentCheckpointIndex = Math.min(currentCheckpointIndex + 1, lesson.checkpoints.length - 1);
     }
-    root.dataset.checkpointId = currentCheckpoint()?.id ?? "";
+    const currentId = currentCheckpoint()?.id ?? "";
+    root.dataset.checkpointId = currentId;
+    return {
+      previousId,
+      currentId,
+      moved: Boolean(currentId && currentId !== previousId),
+      completed: Boolean(patchId && currentId === previousId && previousId && currentCheckpoint()?.patchId === patchId)
+    };
   };
 
   const applyGuidePatches = (patches: GuidePatch[]) => {
@@ -621,25 +796,28 @@ function initGraphicsLab(root: HTMLElement) {
     return { patch, changedFiles };
   };
 
-  const buildGuideMessages = (mode: "start" | "answer" | "debug", userText = "") => {
+  const buildGuideMessages = (mode: "start" | "answer", userText = "") => {
     const checkpoint = currentCheckpoint();
     const errorText = errorBox.textContent || "";
     const systemPrompt = `你是图形学实验教练，当前网站是纯静态页面，课程内容和代码 patch 已经预设在本地。
 必须遵守：
 1. 每轮最多提出一个问题。
 2. 不要一次性讲完整教程，不要输出长篇代码。
-3. 用户回答正确或基本正确时，优先返回 patchId，让网页应用本地预设 patch。
-4. 用户回答不完整时，只给简短反馈和一个提示，不要返回 patchId。
-5. 只有在 debug 模式并且本地 patch 无法解决时，才可以返回 patches。
+3. 预设课程推进模式下，用户回答正确或基本正确时，优先返回 patchId，让网页应用本地预设 patch。
+4. 预设课程推进模式下，用户回答不完整时，只给简短反馈和一个提示，不要返回 patchId。
+5. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
 6. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-7. 只返回 JSON，不返回 Markdown。
+7. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
+8. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
+9. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
+10. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
-  "type": "question | feedback | code_patch | debug_fix | summary",
-  "message": "给用户看的简短反馈，最多 80 字",
-  "question": "下一步问题，没有则为空字符串",
+  "type": "question | feedback | code_patch | summary",
+  "message": "给用户看的简短反馈或过渡说明，最多 80 字，不得包含问题",
+  "question": "唯一的下一步问题，没有则为空字符串",
   "patchId": "要应用的本地预设 patch id，没有则为空字符串",
-  "patches": [],
+  "patches": [{"file": "main.js | vertex.glsl | fragment.glsl", "operation": "replace | replace_all", "target": "replace 时必填", "content": "替换内容"}],
   "runAfterApply": true,
   "expectedObservation": "应用 patch 后应观察到的现象",
   "nextCheckpointId": "可选，进入的 checkpoint id"
@@ -658,7 +836,8 @@ ${compactReferenceCode(lesson.referenceCode)}
 ${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
 当前 checkpoint：
 ${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
-已完成 patchId：${[...completedPatches].join(", ") || "(无)"}`;
+已完成 patchId：${[...completedPatches].join(", ") || "(无)"}
+当前阶段：${lessonFreeMode ? "自由实验模式，用户可以要求解释或修改代码；如果用户要求改变效果，优先返回 patches 让网页直接应用。" : "预设课程推进模式，优先使用本地 patchId。"}`;
 
     const userPrompt = `模式：${mode}
 用户输入：${userText || "(无)"}
@@ -675,8 +854,9 @@ ${getFilesSnapshot()}`;
     ];
   };
 
-  const requestGuide = async (mode: "start" | "answer" | "debug", userText = "") => {
-    if (!guideEndpointInput?.value || !guideKeyInput?.value || !guideModelInput?.value) {
+  const requestGuide = async (mode: "start" | "answer", userText = "") => {
+    if (!hasGuideApiConfig()) {
+      setGuidePhase("setup");
       setGuideAlert("请先填写 Endpoint、API Key 和 Model。");
       setGuideState("等待 API");
       return;
@@ -717,31 +897,51 @@ ${getFilesSnapshot()}`;
     const directPatches = parsed.patches ?? [];
 
     if (mode === "start") {
+      if (guideLog) guideLog.innerHTML = "";
       setGuidePhase("conversation");
     }
-    if (parsed.message) appendGuideEntry("assistant", "AI 反馈", parsed.message);
-    if (parsed.question) appendGuideEntry("assistant", "下一问", parsed.question);
 
     let changedFiles: LabFileName[] = [];
+    let checkpointMoved = false;
+    let lessonCompleted = false;
     if (parsed.patchId) {
       const result = applyLessonPatch(parsed.patchId);
       changedFiles = result.changedFiles;
-      appendGuideEntry("system", "课程 patch 已应用", `${result.patch.id}：${result.patch.description}`);
-      advanceCheckpoint(parsed.patchId, parsed.nextCheckpointId);
+      const advanceResult = advanceCheckpoint(parsed.patchId, parsed.nextCheckpointId);
+      checkpointMoved = advanceResult.moved;
+      lessonCompleted = advanceResult.completed;
+      if (lessonCompleted) lessonFreeMode = true;
     } else if (directPatches.length) {
       changedFiles = applyGuidePatches(directPatches);
-      appendGuideEntry("system", "代码已应用", `${changedFiles.join(", ")} 已更新。`);
-      advanceCheckpoint(undefined, parsed.nextCheckpointId);
+      const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
+      checkpointMoved = advanceResult.moved;
     }
 
-    if (changedFiles.length && parsed.expectedObservation) {
-      appendGuideEntry("assistant", "观察目标", parsed.expectedObservation);
-    }
+    const shouldAskNextQuestion =
+      Boolean(changedFiles.length) &&
+      checkpointMoved &&
+      Boolean(currentCheckpoint()) &&
+      !parsed.question;
+    const parsedQuestion = lessonCompleted ? "" : parsed.question;
+    const displayedQuestion =
+      parsedQuestion ||
+      (mode === "start" && parsed.type === "question" ? currentCheckpoint()?.question : "") ||
+      (shouldAskNextQuestion ? currentCheckpoint()?.question : "");
+    const displayedMessage = removeQuestionSentences(parsed.message ?? "", displayedQuestion ?? "");
+    const completionMessage =
+      lessonCompleted && !displayedQuestion
+        ? "预设实验已完成。你可以继续让 AI 解释当前代码，也可以直接要求它修改代码、shader 或画面效果。"
+        : "";
+    const aiText = [displayedMessage, displayedQuestion ?? "", completionMessage]
+      .filter(Boolean)
+      .join("\n\n");
+    if (aiText) appendGuideEntry("assistant", "AI Guide", aiText);
+
     if (changedFiles.length && parsed.runAfterApply) {
       await runProgram();
     }
 
-    setGuideState(parsed.type === "question" ? "等待回答" : "已更新");
+    setGuideState(displayedQuestion ? "等待回答" : lessonCompleted ? "可自由提问" : "已更新");
   };
 
   const stopRuntime = () => {
@@ -806,13 +1006,14 @@ ${getFilesSnapshot()}`;
   };
 
   const resetLab = () => {
-    stopRuntime();
-    files = cloneStarterFiles(lesson);
-    completedPatches.clear();
-    currentCheckpointIndex = 0;
-    persistFiles(lesson, files);
-    switchFile(activeFile);
-    setError();
+    const shouldReturnToGuide = activeWorkspaceTab === "ai";
+    resetLessonCode();
+    resetGuideSession();
+    if (shouldReturnToGuide) {
+      switchGuide();
+    } else {
+      switchFile(activeFile);
+    }
     void runProgram();
   };
 
@@ -848,27 +1049,25 @@ ${getFilesSnapshot()}`;
     });
   });
 
-  guideDebugButton?.addEventListener("click", () => {
-    void requestGuide("debug", "请根据当前运行错误给出最小修复。").catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      setGuideState("API 错误");
-      setGuideAlert(message);
-    });
-  });
-
   guideConfigureButton?.addEventListener("click", () => {
     setGuidePhase("setup");
   });
 
   guideReturnButton?.addEventListener("click", () => {
-    setGuidePhase("conversation");
+    setGuidePhase(guideConversationStarted ? "conversation" : "setup");
   });
 
   guideForm?.addEventListener("submit", (event) => {
     event.preventDefault();
+    if (!guideConversationStarted) {
+      setGuidePhase("setup");
+      setGuideAlert("请先填写 API 并生成第一问。");
+      setGuideState("等待 API");
+      return;
+    }
     const userText = guideInput?.value.trim() ?? "";
     if (!userText) return;
-    appendGuideEntry("user", "你的回答", userText);
+    appendGuideEntry("user", "", userText);
     if (guideInput) guideInput.value = "";
     void requestGuide("answer", userText).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
@@ -939,10 +1138,9 @@ ${getFilesSnapshot()}`;
   root.dataset.labReady = "true";
   root.dataset.guideReady = "true";
 
-  if (guideWorkspace) guideWorkspace.hidden = true;
-  syncTabs();
   setGuidePhase("setup");
   setGuideState("等待 API");
+  switchGuide();
   void runProgram();
 }
 

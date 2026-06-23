@@ -61,7 +61,11 @@ const lessonPayload = JSON.stringify(defaultGraphicsLesson);
         </div>
 
         <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
-          <button class="is-active" type="button" role="tab" data-file-tab data-file="main.js" aria-selected="true">
+          <button class="lab-ai-tab is-active" type="button" role="tab" data-guide-tab aria-selected="true">
+            <Bot size={16} aria-hidden="true" />
+            <span>AI</span>
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
             main.js
           </button>
           <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
@@ -69,10 +73,6 @@ const lessonPayload = JSON.stringify(defaultGraphicsLesson);
           </button>
           <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
             fragment.glsl
-          </button>
-          <button class="lab-ai-tab" type="button" role="tab" data-guide-tab aria-selected="false">
-            <Bot size={16} aria-hidden="true" />
-            <span>AI</span>
           </button>
         </div>
 
@@ -116,30 +116,32 @@ const lessonPayload = JSON.stringify(defaultGraphicsLesson);
               </div>
             </div>
 
-            <div class="guide-conversation" data-guide-conversation hidden>
-              <div class="lab-panel-head guide-panel-head">
+            <div class="guide-conversation chat-panel" data-guide-conversation hidden>
+              <div class="chat-toolbar guide-chat-toolbar">
                 <div>
                   <span>AI Guide</span>
                   <strong>{defaultGraphicsLesson.title}</strong>
                 </div>
-                <div class="guide-actions">
-                  <span class="lab-guide-state" data-guide-state-mirror>等待回答</span>
-                  <button type="button" data-guide-configure>API</button>
-                  <button type="button" data-guide-debug>调试错误</button>
-                </div>
+                <small class="lab-guide-state" data-guide-state-mirror>等待回答</small>
               </div>
 
-              <div class="guide-alert" data-guide-chat-alert hidden></div>
-              <div class="guide-log" data-guide-log></div>
-              <form class="guide-input-row" data-guide-form>
-                <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"></textarea>
-                <button type="submit">提交</button>
+              <div class="chat-alert" data-guide-chat-alert hidden></div>
+              <div class="message-list guide-log" aria-label="AI 图形学实验对话" data-guide-log></div>
+              <form class="answer-box guide-input-row" data-guide-form>
+                <label for="guide-answer">你的输入</label>
+                <textarea id="guide-answer" data-guide-input rows="4" placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"></textarea>
+                <div>
+                  <div class="guide-actions">
+                    <button type="button" data-guide-configure>API</button>
+                  </div>
+                  <button type="submit">提交</button>
+                </div>
               </form>
             </div>
           </section>
         </div>
 
-        <div class="lab-hints">
+        <div class="lab-hints" data-lab-hints>
           <span>Ctrl + Enter 运行</span>
           <span>Ctrl + S 保存</span>
           <span>自动保存到当前浏览器</span>

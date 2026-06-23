@@ -11,7 +11,7 @@
     {
       "file": "vertex.glsl",
       "operation": "replace_all",
-      "content": "varying vec3 vColor;\n\nvoid main() {\n  vColor = color;\n  gl_Position = vec4(position, 1.0);\n}"
+      "content": "attribute vec3 color;\nvarying vec3 vColor;\n\nvoid main() {\n  vColor = color;\n  gl_Position = vec4(position, 1.0);\n}"
     },
     {
       "file": "fragment.glsl",

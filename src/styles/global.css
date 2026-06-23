@@ -969,6 +969,10 @@ h3 {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
 }
 
+.lab-editor-panel:has(.lab-guide-workspace:not([hidden])) {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
 .lab-panel-head {
   display: flex;
   align-items: center;
@@ -1158,7 +1162,9 @@ h3 {
 
 .lab-editor-shell {
   position: relative;
+  display: grid;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -1169,6 +1175,7 @@ h3 {
 
 .lab-editor-host[hidden],
 .lab-guide-workspace[hidden],
+.lab-hints[hidden],
 .guide-setup[hidden],
 .guide-conversation[hidden] {
   display: none;
@@ -1178,6 +1185,7 @@ h3 {
   display: grid;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
   background: var(--panel);
 }
 
@@ -1193,6 +1201,12 @@ h3 {
 
 .guide-conversation {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--panel);
+  overflow: hidden;
 }
 
 .guide-panel-head {
@@ -1227,13 +1241,15 @@ h3 {
 
 .guide-alert {
   border-color: var(--line-strong);
+  background: color-mix(in srgb, #222831 7%, #ffffff);
   color: var(--text);
 }
 
 .guide-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: flex-start;
   gap: 8px;
 }
 
@@ -1246,6 +1262,10 @@ h3 {
   color: var(--text);
   padding: 0 12px;
   cursor: pointer;
+}
+
+.guide-actions {
+  flex: 0 0 auto;
 }
 
 .lab-ai-config {
@@ -1262,6 +1282,10 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
+.lab-guide-state {
+  width: fit-content;
+}
+
 .lab-hints span {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1270,68 +1294,64 @@ h3 {
 }
 
 .guide-log {
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  overflow: auto;
-  padding: 14px;
-  background: var(--panel);
+  min-height: 0;
+  max-height: none;
 }
 
-.guide-log article {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-strong);
-  padding: 12px;
+.guide-log .message {
+  width: auto;
+  min-width: min(190px, 62vw);
+  max-width: min(78%, 680px);
 }
 
-.guide-log article[data-role="user"] {
-  margin-left: min(140px, 18%);
-  background: var(--panel);
+.guide-log .from-coach {
+  background: #ffffff;
 }
 
-.guide-log article[data-role="assistant"] {
-  margin-right: min(140px, 18%);
+.guide-log .from-user {
+  justify-self: end;
+  min-width: min(54px, 62vw);
 }
 
-.guide-log article[data-role="system"] {
-  border-style: dashed;
+.guide-log .message-body {
+  gap: 7px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
-.guide-log strong {
-  display: block;
-  margin-bottom: 4px;
+.guide-log .message-body strong {
   color: var(--text);
-  font-size: 0.9rem;
 }
 
-.guide-log p,
+.guide-log .guide-event {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(88%, 760px);
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-strong) 68%, transparent);
+  color: var(--muted);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.guide-log .guide-event span {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.guide-log .guide-event p,
 .lab-ai-config p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
-.guide-input-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding: 12px 14px;
-}
-
-.guide-input-row textarea {
-  width: 100%;
-  min-height: 74px;
-  resize: vertical;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--text);
-  padding: 10px 12px;
-}
-
-.guide-input-row button,
 .lab-ai-config input {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1339,13 +1359,6 @@ h3 {
   color: var(--text);
 }
 
-.guide-input-row button {
-  min-height: 34px;
-  padding: 0 12px;
-  cursor: pointer;
-}
-
-.guide-input-row button:hover,
 .guide-actions button:hover,
 .lab-ai-config button:hover {
   border-color: var(--line-strong);
@@ -1695,6 +1708,95 @@ h3 {
 .answer-box button:disabled {
   cursor: wait;
   opacity: 0.68;
+}
+
+.lab-guide-workspace .chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.lab-guide-workspace .chat-toolbar {
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.lab-guide-workspace .guide-chat-toolbar {
+  flex: 0 0 auto;
+  min-height: 74px;
+}
+
+.lab-guide-workspace .chat-toolbar > div:first-child {
+  gap: 3px;
+  min-width: 0;
+}
+
+.lab-guide-workspace .chat-toolbar small {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 0;
+  font-size: 0.78rem;
+}
+
+.lab-guide-workspace .chat-alert {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  margin: 16px 20px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #222831 8%, #eeeeee);
+  color: var(--text);
+  padding: 13px 14px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.lab-guide-workspace .message-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+  gap: 16px;
+  padding: 22px;
+  align-content: start;
+}
+
+.lab-guide-workspace .answer-box {
+  flex: 0 0 auto;
+  grid-template-rows: auto 104px auto;
+  gap: 10px;
+  background: var(--panel);
+  padding: 14px 16px 16px;
+}
+
+.lab-guide-workspace .answer-box textarea {
+  height: 104px;
+  min-height: 104px;
+  max-height: 104px;
+  resize: none;
+  background: #ffffff;
+  line-height: 1.55;
+}
+
+.lab-guide-workspace .answer-box > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 38px;
+  align-items: center;
+}
+
+.lab-guide-workspace .guide-setup[hidden],
+.lab-guide-workspace .guide-conversation[hidden] {
+  display: none;
 }
 
 .author-section {
@@ -2076,10 +2178,6 @@ h3 {
 
   .graphics-lab,
   .graphics-lab.is-editor-expanded {
-    grid-template-columns: 1fr;
-  }
-
-  .guide-input-row {
     grid-template-columns: 1fr;
   }
 
