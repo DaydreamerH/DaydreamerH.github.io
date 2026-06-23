@@ -28,8 +28,13 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
 
 <BaseLayout title={doc.data.title} description={doc.data.description}>
   <article class="article-layout">
+    <a class="back-link" href="/knowledge/">返回知识库</a>
+
+    {banner && (
+      <img class="article-banner" src={banner.src} alt="" loading="eager" />
+    )}
+
     <header class="article-head">
-      <a class="back-link" href="/knowledge/">返回知识库</a>
       <p class="eyebrow">{doc.data.track}</p>
       <h1>{doc.data.title}</h1>
       {doc.data.description && <p>{doc.data.description}</p>}
@@ -40,10 +45,6 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
         {doc.data.date && <span>{doc.data.date.slice(0, 10)}</span>}
       </div>
     </header>
-
-    {banner && (
-      <img class="article-banner" src={banner.src} alt="" loading="eager" />
-    )}
 
     {doc.data.prerequisites.length > 0 && (
       <aside class="prereq-box">
