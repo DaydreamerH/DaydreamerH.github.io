@@ -7,6 +7,7 @@
     "dev": "node scripts/astro-cli.mjs dev --host 127.0.0.1",
     "build": "node scripts/astro-cli.mjs build",
     "preview": "node scripts/astro-cli.mjs preview --host 127.0.0.1",
+    "new:post": "node scripts/new-post.mjs",
     "test:graphics-lab": "node scripts/verify-graphics-lab.mjs"
   },
   "dependencies": {
