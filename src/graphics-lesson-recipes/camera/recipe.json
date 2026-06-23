@@ -1,0 +1,95 @@
+{
+  "id": "camera",
+  "source": "07_camera",
+  "title": "Camera",
+  "category": "空间变换",
+  "series": "LearnOpenGL 基础",
+  "order": 7,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "观察相机位置、朝向和视野范围对画面的影响。",
+  "previewTitle": "Camera",
+  "lesson": "把相机控制中的位置、观察方向和 delta time 转写成浏览器中的可观察实验。",
+  "aiBrief": "围绕 camera position、lookAt、FOV、delta time 组织提问。",
+  "referenceBrief": [
+    "相机决定场景从哪里、朝哪里被观察。",
+    "连续更新相机或物体状态可以模拟实时观察。"
+  ],
+  "starterState": {
+    "shape": "cube",
+    "mode": "checker",
+    "camera": "perspective",
+    "cameraPosition": [0, 0, 5]
+  },
+  "checkpoints": [
+    {
+      "id": "camera-position",
+      "title": "设置相机位置",
+      "concept": "相机位置决定观察起点。",
+      "question": "相机位置改变时，为什么不需要修改物体顶点也能改变画面？",
+      "expectedKeywords": ["相机", "视图", "观察", "位置"],
+      "hint": "改变的是观察方式，不是模型本身。",
+      "patchId": "01-camera-position",
+      "expectedObservation": "立方体从正面被观察。",
+      "state": {
+        "shape": "cube",
+        "mode": "checker",
+        "camera": "perspective",
+        "cameraPosition": [0, 0, 5]
+      }
+    },
+    {
+      "id": "look-direction",
+      "title": "观察方向",
+      "concept": "相机朝向决定视线指向哪里。",
+      "question": "只移动相机位置但不更新观察方向，可能会出现什么问题？",
+      "expectedKeywords": ["看向", "方向", "目标", "视线"],
+      "hint": "相机需要知道自己看向哪一个点或方向。",
+      "patchId": "02-look-direction",
+      "expectedObservation": "立方体从斜上方被观察。",
+      "state": {
+        "shape": "cube",
+        "mode": "checker",
+        "camera": "perspective",
+        "cameraPosition": [2.5, 1.8, 4.2]
+      }
+    },
+    {
+      "id": "fov",
+      "title": "视野范围",
+      "concept": "FOV 控制透视相机可见范围和透视感。",
+      "question": "FOV 变大时，通常会让画面产生什么变化？",
+      "expectedKeywords": ["视野", "更广", "透视", "范围"],
+      "hint": "更大的视野会看到更多场景。",
+      "patchId": "03-fov",
+      "expectedObservation": "多个立方体进入视野。",
+      "state": {
+        "shape": "cube",
+        "mode": "checker",
+        "camera": "perspective",
+        "cameraPosition": [2.8, 2.0, 5.4],
+        "fov": 58,
+        "objectCount": 3
+      }
+    },
+    {
+      "id": "delta-time",
+      "title": "连续相机观察",
+      "concept": "实时场景通常按每帧时间差更新，保持运动稳定。",
+      "question": "为什么相机或物体运动常常要乘以 deltaTime？",
+      "expectedKeywords": ["帧率", "速度", "稳定", "时间"],
+      "hint": "不同机器每秒帧数可能不同。",
+      "patchId": "04-delta-time",
+      "expectedObservation": "场景持续旋转，便于观察相机下的空间变化。",
+      "state": {
+        "shape": "cube",
+        "mode": "checker",
+        "camera": "perspective",
+        "cameraPosition": [2.8, 2.0, 5.4],
+        "fov": 58,
+        "objectCount": 3,
+        "animated": true
+      }
+    }
+  ]
+}

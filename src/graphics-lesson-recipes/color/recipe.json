@@ -1,0 +1,80 @@
+{
+  "id": "color",
+  "source": "08_color",
+  "title": "Color",
+  "category": "光照基础",
+  "series": "LearnOpenGL 基础",
+  "order": 8,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "观察物体颜色和光源颜色如何共同决定最终显示结果。",
+  "previewTitle": "Light Color",
+  "lesson": "用颜色乘法表达物体颜色和光源颜色的关系。",
+  "aiBrief": "讲解 objectColor、lightColor 以及二者相乘形成最终颜色。",
+  "referenceBrief": [
+    "物体颜色描述表面对不同颜色光的保留比例。",
+    "光源颜色会限制或改变最终可见颜色。"
+  ],
+  "starterState": {
+    "shape": "cube",
+    "mode": "color-multiply",
+    "camera": "perspective",
+    "objectColor": [0.95, 0.48, 0.2],
+    "showLight": true
+  },
+  "checkpoints": [
+    {
+      "id": "object-color",
+      "title": "物体颜色",
+      "concept": "物体颜色不是最终颜色，而是和光照共同作用。",
+      "question": "为什么物体颜色不等同于最终显示颜色？",
+      "expectedKeywords": ["光源", "材质", "最终", "影响"],
+      "hint": "没有光照或光源颜色不同时，最终显示会不同。",
+      "patchId": "01-object-color",
+      "expectedObservation": "画面显示一个橙色立方体。",
+      "state": {
+        "shape": "cube",
+        "mode": "color-multiply",
+        "camera": "perspective",
+        "objectColor": [0.95, 0.48, 0.2],
+        "showLight": true
+      }
+    },
+    {
+      "id": "light-color",
+      "title": "光源颜色",
+      "concept": "光源颜色会影响照到物体上的颜色成分。",
+      "question": "如果白色物体被蓝色光照亮，最终颜色为什么会偏蓝？",
+      "expectedKeywords": ["光源", "颜色", "相乘", "蓝"],
+      "hint": "最终颜色常由物体颜色和光照颜色共同决定。",
+      "patchId": "02-light-color",
+      "expectedObservation": "立方体颜色变为受蓝绿色光影响的结果。",
+      "state": {
+        "shape": "cube",
+        "mode": "color-multiply",
+        "camera": "perspective",
+        "objectColor": [1, 1, 1],
+        "lightColor": [0.0, 0.68, 0.71],
+        "showLight": true
+      }
+    },
+    {
+      "id": "separate-light-marker",
+      "title": "区分物体与光源",
+      "concept": "光源可以用单独对象标记位置，但它不是被照亮物体本身。",
+      "question": "为什么示例中常用一个小立方体或小球表示光源位置？",
+      "expectedKeywords": ["位置", "光源", "标记", "观察"],
+      "hint": "这样更容易理解光从哪里来。",
+      "patchId": "03-light-marker",
+      "expectedObservation": "画面中出现表示光源位置的小球。",
+      "state": {
+        "shape": "cube",
+        "mode": "color-multiply",
+        "camera": "perspective",
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightColor": [1, 1, 1],
+        "showLight": true
+      }
+    }
+  ]
+}

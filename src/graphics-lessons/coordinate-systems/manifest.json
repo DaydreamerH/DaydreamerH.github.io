@@ -1,0 +1,106 @@
+{
+  "id": "coordinate-systems",
+  "title": "Coordinate Systems",
+  "category": "空间变换",
+  "series": "LearnOpenGL 基础",
+  "order": 6,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "从二维图形过渡到三维立方体，观察模型、视图和投影的分工。",
+  "source": "OpenGLProject/src/06_coordinate_systems",
+  "runtime": "three-shader-material",
+  "previewTitle": "Coordinate Systems",
+  "draft": false,
+  "aiBrief": "重点讲局部空间、世界空间、观察空间、裁剪空间。",
+  "referenceBrief": [
+    "MVP 变换描述顶点从局部空间到屏幕的过程。",
+    "视图和投影共同决定 3D 物体如何被观察。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/coordinate.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/coordinate.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/strange_box.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "回答不完整时给一个提示，不要应用 patch。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "local-world",
+      "title": "局部空间到世界空间",
+      "concept": "物体顶点最初位于局部空间，模型变换决定它在场景中的位置。",
+      "question": "局部空间中的顶点为什么还需要模型变换？",
+      "expectedKeywords": [
+        "局部",
+        "世界",
+        "模型",
+        "位置"
+      ],
+      "hint": "同一个模型可以被摆放到不同位置。",
+      "patchId": "01-local-world",
+      "expectedObservation": "画面显示带纹理的基础平面。"
+    },
+    {
+      "id": "enter-3d",
+      "title": "进入三维物体",
+      "concept": "立方体比平面更容易观察不同空间变换带来的方向变化。",
+      "question": "为什么三维物体比二维平面更适合观察空间变换？",
+      "expectedKeywords": [
+        "三维",
+        "深度",
+        "方向",
+        "空间"
+      ],
+      "hint": "立方体有多个面，可以体现深度和遮挡。",
+      "patchId": "02-enter-3d",
+      "expectedObservation": "画面出现一个立方体。"
+    },
+    {
+      "id": "view-transform",
+      "title": "理解视图变换",
+      "concept": "视图变换描述相机如何观察场景。",
+      "question": "移动相机位置时，为什么物体在屏幕上的样子会改变？",
+      "expectedKeywords": [
+        "相机",
+        "视图",
+        "观察",
+        "位置"
+      ],
+      "hint": "屏幕显示的是物体相对于相机的结果。",
+      "patchId": "03-view-transform",
+      "expectedObservation": "立方体从更明显的斜上方被观察。"
+    },
+    {
+      "id": "projection",
+      "title": "观察投影",
+      "concept": "透视投影决定可视范围和近大远小的感觉。",
+      "question": "透视投影为什么会让远处物体看起来更小？",
+      "expectedKeywords": [
+        "透视",
+        "距离",
+        "投影",
+        "近大远小"
+      ],
+      "hint": "投影会把三维空间压到二维屏幕上。",
+      "patchId": "04-projection",
+      "expectedObservation": "多个立方体进入视野，空间层次更明显。"
+    }
+  ]
+}

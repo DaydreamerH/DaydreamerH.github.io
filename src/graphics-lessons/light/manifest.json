@@ -1,0 +1,129 @@
+{
+  "id": "light",
+  "title": "Light",
+  "category": "光照基础",
+  "series": "LearnOpenGL 基础",
+  "order": 9,
+  "level": "intermediate",
+  "createdAt": "2026-06-24",
+  "description": "从环境光、漫反射到高光，逐步观察基础 Phong 光照。",
+  "source": "OpenGLProject/src/09_light",
+  "runtime": "three-shader-material",
+  "previewTitle": "Phong Lighting",
+  "draft": false,
+  "aiBrief": "围绕法线、光照方向、漫反射、高光和观察方向组织提问。",
+  "referenceBrief": [
+    "漫反射依赖表面法线与光照方向。",
+    "高光还需要观察方向。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/cube.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/cube.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "回答不完整时给一个提示，不要应用 patch。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "ambient",
+      "title": "环境光",
+      "concept": "环境光提供最低亮度，但不体现方向。",
+      "question": "为什么只使用环境光时，物体看起来缺少立体感？",
+      "expectedKeywords": [
+        "方向",
+        "均匀",
+        "立体",
+        "明暗"
+      ],
+      "hint": "环境光不关心表面朝向。",
+      "patchId": "01-ambient",
+      "expectedObservation": "立方体被均匀照亮。"
+    },
+    {
+      "id": "normal",
+      "title": "使用法线",
+      "concept": "法线描述表面朝向，是方向光照计算的基础。",
+      "question": "为什么漫反射计算需要表面法线？",
+      "expectedKeywords": [
+        "法线",
+        "朝向",
+        "夹角",
+        "光"
+      ],
+      "hint": "表面朝向光源时更亮，背向时更暗。",
+      "patchId": "02-normal",
+      "expectedObservation": "立方体不同面开始出现明暗差异。"
+    },
+    {
+      "id": "diffuse",
+      "title": "漫反射",
+      "concept": "漫反射通常由法线与光照方向的点积决定。",
+      "question": "dot(normal, lightDir) 越大，为什么表面通常越亮？",
+      "expectedKeywords": [
+        "点积",
+        "夹角",
+        "朝向",
+        "亮"
+      ],
+      "hint": "点积越大，两个方向越接近。",
+      "patchId": "03-diffuse",
+      "expectedObservation": "面向光源的表面更亮。"
+    },
+    {
+      "id": "specular",
+      "title": "高光",
+      "concept": "高光与观察方向有关，用来表现较亮的反射区域。",
+      "question": "为什么高光计算除了光源方向，还需要观察方向？",
+      "expectedKeywords": [
+        "观察",
+        "反射",
+        "视线",
+        "高光"
+      ],
+      "hint": "高光取决于反射方向是否接近眼睛方向。",
+      "patchId": "04-specular",
+      "expectedObservation": "立方体表面出现更明显的亮部。"
+    },
+    {
+      "id": "moving-light",
+      "title": "动态观察光照",
+      "concept": "物体或光源相对位置变化时，光照结果会实时变化。",
+      "question": "如果物体旋转但光源位置不变，明暗为什么会持续变化？",
+      "expectedKeywords": [
+        "法线",
+        "相对",
+        "旋转",
+        "光源"
+      ],
+      "hint": "旋转会改变表面法线相对光源的方向。",
+      "patchId": "05-moving-light",
+      "expectedObservation": "立方体旋转，光照随表面朝向持续变化。"
+    }
+  ]
+}

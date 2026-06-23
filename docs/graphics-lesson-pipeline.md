@@ -152,6 +152,47 @@ Avoid:
 - Exposing internal source paths or runtime details in user-facing descriptions.
 - Letting AI write the entire final code during the guided phase.
 
+## Course Folder Management
+
+Graphics lessons are managed like blog posts: each lesson owns one folder, and the site scans lesson folders automatically. Do not centralize lesson content in a single registry or generator file.
+
+Recommended folder naming:
+
+```text
+src/graphics-lessons/
+  hello-triangle/
+  shaders/
+  textures/
+```
+
+Classification belongs to each lesson's `manifest.json`:
+
+```json
+{
+  "id": "hello-triangle",
+  "title": "Hello Triangle",
+  "category": "Shader 基础",
+  "series": "LearnOpenGL 基础",
+  "order": 2,
+  "createdAt": "2026-06-23"
+}
+```
+
+The current required fields still follow the Manifest Contract above. Optional classification fields such as `series` and `order` may be added later when the WebGL index needs richer grouping.
+
+## Recipe Drafts
+
+Batch-generated lessons should start from recipe drafts. Recipes are stored separately from generated lesson packs:
+
+```text
+src/graphics-lesson-recipes/<lesson-id>/
+  recipe.json
+```
+
+The recipe is the editable source for a generated lesson. It should contain the lesson id, source folder name, user-facing text, optional `series`/`order`, `starterState`, and checkpoint definitions. The generator converts those fields into a complete `src/graphics-lessons/<lesson-id>/` pack.
+
+Use `createdAt` in `YYYY-MM-DD` format. This date should reflect the actual creation or update date of the lesson pack. `order` may describe a learning path, but it should not replace real dates for recent-update sorting.
+
 ## Source-To-Lesson Batch Flow
 
 Raw source projects can remain outside the tracked site repository. The current ignored source location is:
@@ -181,30 +222,25 @@ Batch generation should follow these stages:
 4. Generate `starter/` WebGL files with TODO blocks.
 5. Generate `manifest.json` with checkpoint drafts.
 6. Generate patch drafts for each checkpoint.
-7. Register the lesson in `src/data/graphicsLessons.ts`.
+7. Write the lesson into its own `src/graphics-lessons/<lesson-id>/` folder.
 8. Build and verify.
 9. Manually review user-facing text and visual behavior.
 
-The existing sample generator is:
+The current recipe-driven generator is:
 
 ```bash
-node scripts/generate-graphics-lesson.mjs
+npm run generate:graphics-lessons
 ```
 
-At the moment it is a fixed Hello Triangle generator. For real batch use, upgrade it to accept source and output arguments:
+It scans `src/graphics-lesson-recipes/*/recipe.json`, reads source references from `OpenGLProject/src`, and writes one self-contained folder per lesson under `src/graphics-lessons/`.
+
+Useful direct commands:
 
 ```bash
-node scripts/generate-graphics-lesson.mjs --source-root OpenGLProject/src --out-root src/graphics-lessons --all --draft
-```
-
-Recommended future npm script:
-
-```json
-{
-  "scripts": {
-    "generate:graphics-lessons": "node scripts/generate-graphics-lesson.mjs --source-root OpenGLProject/src --out-root src/graphics-lessons --all --draft"
-  }
-}
+node scripts/generate-graphics-lesson.mjs --id shaders
+node scripts/generate-graphics-lesson.mjs --source 03_shaders
+node scripts/generate-graphics-lesson.mjs --date 2026-06-24
+node scripts/generate-graphics-lesson.mjs --dry-run
 ```
 
 After generation:
@@ -216,19 +252,17 @@ npm run test:graphics-lab
 
 ## Registration Rule
 
-After a lesson folder is generated, it must be imported in `src/data/graphicsLessons.ts`.
+Generated lesson folders are loaded automatically by `src/data/graphicsLessons.ts` with `import.meta.glob`.
 
-Current pattern:
+A lesson appears on the WebGL lesson index when it contains:
 
-```ts
-import manifestRaw from "../graphics-lessons/<lesson-id>/manifest.json?raw";
-import starterMain from "../graphics-lessons/<lesson-id>/starter/main.js?raw";
-import vertexShader from "../graphics-lessons/<lesson-id>/starter/vertex.glsl?raw";
-import fragmentShader from "../graphics-lessons/<lesson-id>/starter/fragment.glsl?raw";
-import patch01Raw from "../graphics-lessons/<lesson-id>/patches/01-topic.json?raw";
-```
+- `manifest.json`
+- `starter/main.js`
+- `starter/vertex.glsl`
+- `starter/fragment.glsl`
+- at least one `patches/*.json`
 
-When the number of lessons grows, replace manual imports with a typed `import.meta.glob` loader. That should be done before adding many lessons.
+The experiment detail page receives only the selected lesson payload. It should not need to know how many other lessons exist.
 
 ## Review Checklist
 

@@ -1,0 +1,84 @@
+{
+  "id": "shaders",
+  "source": "03_shaders",
+  "title": "Shaders",
+  "category": "Shader 基础",
+  "series": "LearnOpenGL 基础",
+  "order": 3,
+  "level": "intro",
+  "createdAt": "2026-06-24",
+  "description": "观察顶点属性、varying 和 uniform 如何影响 shader 输出。",
+  "previewTitle": "Shader Attributes",
+  "lesson": "从基础三角形开始，依次观察顶点颜色、插值和 uniform 对 shader 输出的影响。",
+  "aiBrief": "围绕 shader stage、attribute、varying、uniform 组织提问。不要要求用户编译 OpenGL。",
+  "referenceBrief": [
+    "顶点属性可以携带位置、颜色等每顶点数据。",
+    "varying 会在光栅化阶段插值后传入 fragment shader。",
+    "uniform 适合表达一次 draw call 内保持一致的参数。"
+  ],
+  "starterState": {
+    "shape": "triangle",
+    "mode": "solid",
+    "color": [0.13, 0.16, 0.19]
+  },
+  "checkpoints": [
+    {
+      "id": "shader-stage-role",
+      "title": "区分 shader 阶段",
+      "concept": "vertex shader 处理顶点位置，fragment shader 处理片元颜色。",
+      "question": "顶点着色器和片元着色器分别主要负责什么？",
+      "expectedKeywords": ["顶点", "位置", "片元", "颜色"],
+      "hint": "先按管线顺序想：顶点先被处理，然后才产生片元。",
+      "patchId": "01-stage-role",
+      "expectedObservation": "画面显示基础三角形。",
+      "state": {
+        "shape": "triangle",
+        "mode": "solid",
+        "color": [1.0, 0.5, 0.2]
+      }
+    },
+    {
+      "id": "vertex-attribute-color",
+      "title": "传递顶点颜色",
+      "concept": "颜色可以像位置一样作为每顶点 attribute 进入 shader。",
+      "question": "为什么顶点颜色适合作为 attribute，而不是只写死在 fragment shader 里？",
+      "expectedKeywords": ["每顶点", "attribute", "颜色", "插值"],
+      "hint": "attribute 是每个顶点一份的数据。",
+      "patchId": "02-attribute-color",
+      "expectedObservation": "三角形出现顶点颜色渐变。",
+      "state": {
+        "shape": "triangle",
+        "mode": "vertex-color"
+      }
+    },
+    {
+      "id": "uniform-color",
+      "title": "使用 uniform 控制颜色",
+      "concept": "uniform 在一次绘制中保持一致，适合控制整体参数。",
+      "question": "uniform 和 attribute 的关键区别是什么？",
+      "expectedKeywords": ["一致", "每顶点", "uniform", "attribute"],
+      "hint": "思考数据是每个顶点不同，还是整次绘制共享。",
+      "patchId": "03-uniform-color",
+      "expectedObservation": "三角形变为统一的蓝绿色。",
+      "state": {
+        "shape": "triangle",
+        "mode": "solid",
+        "color": [0.0, 0.68, 0.71]
+      }
+    },
+    {
+      "id": "varying-interpolation",
+      "title": "观察 varying 插值",
+      "concept": "varying 会在三角形内部被插值，fragment shader 收到的是插值后的值。",
+      "question": "为什么 varying 传入 fragment shader 后，三角形内部会出现平滑过渡？",
+      "expectedKeywords": ["插值", "光栅化", "顶点", "片元"],
+      "hint": "片元位于顶点之间，所以会收到顶点值混合后的结果。",
+      "patchId": "04-varying-interpolation",
+      "expectedObservation": "画面恢复为明显的颜色插值效果。",
+      "state": {
+        "shape": "triangle",
+        "mode": "vertex-color"
+      }
+    }
+  ]
+}

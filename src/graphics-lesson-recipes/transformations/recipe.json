@@ -1,0 +1,91 @@
+{
+  "id": "transformations",
+  "source": "05_transformations",
+  "title": "Transformations",
+  "category": "空间变换",
+  "series": "LearnOpenGL 基础",
+  "order": 5,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "观察平移、旋转和缩放如何改变物体在画面中的位置与姿态。",
+  "previewTitle": "Transform",
+  "lesson": "使用 Three.js 对象变换对应模型矩阵，观察变换参数对最终画面的影响。",
+  "aiBrief": "围绕模型变换中的 translate、rotate、scale 组织学习。",
+  "referenceBrief": [
+    "模型变换把局部空间的物体放到场景中。",
+    "平移、旋转和缩放可以组合成最终模型矩阵。"
+  ],
+  "starterState": {
+    "shape": "quad",
+    "mode": "checker",
+    "rotation": [0, 0, 0],
+    "scale": 1
+  },
+  "checkpoints": [
+    {
+      "id": "model-transform-role",
+      "title": "理解模型变换",
+      "concept": "模型变换描述物体自身如何摆放到场景中。",
+      "question": "模型矩阵主要用来描述物体的哪些变换？",
+      "expectedKeywords": ["平移", "旋转", "缩放"],
+      "hint": "想一想物体如何被摆放、转动和改变大小。",
+      "patchId": "01-model-transform",
+      "expectedObservation": "画面显示一个未旋转的纹理矩形。",
+      "state": {
+        "shape": "quad",
+        "mode": "checker",
+        "rotation": [0, 0, 0],
+        "scale": 1
+      }
+    },
+    {
+      "id": "rotation",
+      "title": "旋转物体",
+      "concept": "旋转会改变顶点相对坐标轴的方向。",
+      "question": "旋转变换会改变物体的大小吗？它主要改变什么？",
+      "expectedKeywords": ["不改变", "方向", "角度"],
+      "hint": "只旋转时，矩形边长没有变化。",
+      "patchId": "02-rotation",
+      "expectedObservation": "矩形在画面中倾斜显示。",
+      "state": {
+        "shape": "quad",
+        "mode": "checker",
+        "rotation": [0, 0, 0.6],
+        "scale": 1
+      }
+    },
+    {
+      "id": "scale",
+      "title": "缩放物体",
+      "concept": "缩放改变顶点到局部原点的距离。",
+      "question": "缩放矩阵为什么会让物体看起来变大或变小？",
+      "expectedKeywords": ["顶点", "距离", "比例", "scale"],
+      "hint": "缩放会把坐标分量乘上比例系数。",
+      "patchId": "03-scale",
+      "expectedObservation": "倾斜矩形变小并保持纹理效果。",
+      "state": {
+        "shape": "quad",
+        "mode": "checker",
+        "rotation": [0, 0, 0.6],
+        "scale": 0.72
+      }
+    },
+    {
+      "id": "animated-transform",
+      "title": "观察连续变换",
+      "concept": "每帧更新变换参数可以形成动画。",
+      "question": "如果每一帧都略微改变旋转角度，画面会发生什么？",
+      "expectedKeywords": ["动画", "旋转", "每帧"],
+      "hint": "实时渲染循环会不断重绘当前状态。",
+      "patchId": "04-animated-transform",
+      "expectedObservation": "矩形开始持续旋转。",
+      "state": {
+        "shape": "quad",
+        "mode": "checker",
+        "rotation": [0, 0, 0],
+        "scale": 0.72,
+        "animated": true
+      }
+    }
+  ]
+}

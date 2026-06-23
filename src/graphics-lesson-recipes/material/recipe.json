@@ -1,0 +1,142 @@
+{
+  "id": "material",
+  "source": "10_material",
+  "title": "Material",
+  "category": "光照基础",
+  "series": "LearnOpenGL 基础",
+  "order": 10,
+  "level": "intermediate",
+  "createdAt": "2026-06-24",
+  "description": "在基础光照上观察材质参数对环境光、漫反射和高光的影响。",
+  "previewTitle": "Material",
+  "lesson": "在 Phong 光照基础上改变 ambient、diffuse、specular 和 shininess。",
+  "aiBrief": "把材质拆成 ambient、diffuse、specular、shininess 参数，帮助用户观察它们如何影响结果。",
+  "referenceBrief": [
+    "材质描述物体如何响应光照。",
+    "shininess 控制高光集中程度。"
+  ],
+  "starterState": {
+    "shape": "cube",
+    "mode": "diffuse",
+    "camera": "perspective",
+    "showLight": true,
+    "ambientStrength": 0.15,
+    "specularStrength": 0.2,
+    "shininess": 8
+  },
+  "checkpoints": [
+    {
+      "id": "material-role",
+      "title": "材质参数的作用",
+      "concept": "材质描述物体如何响应光照，而不是光源本身。",
+      "question": "材质参数和光源参数有什么区别？",
+      "expectedKeywords": ["材质", "物体", "光源", "响应"],
+      "hint": "一个描述物体表面，一个描述照射条件。",
+      "patchId": "01-material-role",
+      "expectedObservation": "立方体显示基础漫反射光照。",
+      "state": {
+        "shape": "cube",
+        "mode": "diffuse",
+        "camera": "perspective",
+        "showLight": true,
+        "ambientStrength": 0.15
+      }
+    },
+    {
+      "id": "ambient-material",
+      "title": "环境光响应",
+      "concept": "ambient 决定物体在间接光或基础光照下保留多少颜色。",
+      "question": "ambient 分量过高时，为什么物体可能显得发灰或缺少层次？",
+      "expectedKeywords": ["环境光", "均匀", "层次", "明暗"],
+      "hint": "环境光不区分表面朝向。",
+      "patchId": "02-ambient-material",
+      "expectedObservation": "立方体整体亮度提高，但层次变弱。",
+      "state": {
+        "shape": "cube",
+        "mode": "diffuse",
+        "camera": "perspective",
+        "showLight": true,
+        "ambientStrength": 0.45
+      }
+    },
+    {
+      "id": "diffuse-material",
+      "title": "漫反射颜色",
+      "concept": "diffuse 影响物体在直接光照下的主体颜色。",
+      "question": "为什么 diffuse 通常决定物体最主要的可见颜色？",
+      "expectedKeywords": ["漫反射", "主体", "颜色", "直接光"],
+      "hint": "多数非金属表面的主要亮部来自漫反射。",
+      "patchId": "03-diffuse-material",
+      "expectedObservation": "立方体恢复较清晰的橙色漫反射。",
+      "state": {
+        "shape": "cube",
+        "mode": "diffuse",
+        "camera": "perspective",
+        "showLight": true,
+        "objectColor": [0.95, 0.48, 0.2],
+        "ambientStrength": 0.15
+      }
+    },
+    {
+      "id": "specular-material",
+      "title": "高光强度",
+      "concept": "specular 控制镜面反射的强弱。",
+      "question": "specular 强度提高时，画面中最明显的变化通常是什么？",
+      "expectedKeywords": ["高光", "反射", "更亮"],
+      "hint": "观察朝向光源和相机的表面。",
+      "patchId": "04-specular-material",
+      "expectedObservation": "立方体出现更明显的高光。",
+      "state": {
+        "shape": "cube",
+        "mode": "material",
+        "camera": "perspective",
+        "showLight": true,
+        "objectColor": [0.95, 0.48, 0.2],
+        "ambientStrength": 0.12,
+        "specularStrength": 0.75,
+        "shininess": 32
+      }
+    },
+    {
+      "id": "shininess",
+      "title": "高光集中度",
+      "concept": "shininess 控制高光区域是宽散还是集中。",
+      "question": "shininess 变大时，高光范围通常会变宽还是变窄？",
+      "expectedKeywords": ["变窄", "集中", "shininess", "高光"],
+      "hint": "指数越大，只有更接近反射方向的位置才足够亮。",
+      "patchId": "05-shininess",
+      "expectedObservation": "高光变得更集中。",
+      "state": {
+        "shape": "cube",
+        "mode": "material",
+        "camera": "perspective",
+        "showLight": true,
+        "objectColor": [0.95, 0.48, 0.2],
+        "ambientStrength": 0.12,
+        "specularStrength": 0.8,
+        "shininess": 96
+      }
+    },
+    {
+      "id": "material-motion",
+      "title": "动态观察材质",
+      "concept": "旋转物体有助于观察同一材质在不同法线方向下的响应。",
+      "question": "为什么旋转物体有助于判断材质的高光表现？",
+      "expectedKeywords": ["法线", "观察", "高光", "变化"],
+      "hint": "高光会随着表面朝向和视线关系移动。",
+      "patchId": "06-material-motion",
+      "expectedObservation": "立方体旋转，便于观察高光随角度移动。",
+      "state": {
+        "shape": "cube",
+        "mode": "material",
+        "camera": "perspective",
+        "showLight": true,
+        "objectColor": [0.95, 0.48, 0.2],
+        "ambientStrength": 0.12,
+        "specularStrength": 0.8,
+        "shininess": 96,
+        "animated": true
+      }
+    }
+  ]
+}

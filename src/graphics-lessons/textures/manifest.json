@@ -1,0 +1,107 @@
+{
+  "id": "textures",
+  "title": "Textures",
+  "category": "纹理基础",
+  "series": "LearnOpenGL 基础",
+  "order": 4,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "用程序化纹理观察 UV 坐标、采样和混合的基础概念。",
+  "source": "OpenGLProject/src/04_textures",
+  "runtime": "three-shader-material",
+  "previewTitle": "Texture Coordinates",
+  "draft": false,
+  "aiBrief": "将图片纹理简化为程序化纹理，重点讲 UV、采样、混合。",
+  "referenceBrief": [
+    "纹理通常贴在由两个三角形组成的矩形上。",
+    "UV 坐标描述片元在纹理空间中的位置。",
+    "mix 可以表达两种纹理结果的混合。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/mix_image.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/texture.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/texture.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "回答不完整时给一个提示，不要应用 patch。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "quad-geometry",
+      "title": "建立矩形",
+      "concept": "矩形通常拆成两个三角形绘制。",
+      "question": "为什么一个矩形通常可以由两个三角形组成？",
+      "expectedKeywords": [
+        "两个",
+        "三角形",
+        "矩形"
+      ],
+      "hint": "GPU 的基础图元常用三角形。",
+      "patchId": "01-quad-geometry",
+      "expectedObservation": "画面出现一个居中的矩形。"
+    },
+    {
+      "id": "uv-coordinates",
+      "title": "理解 UV 坐标",
+      "concept": "UV 描述顶点对应纹理空间的位置。",
+      "question": "UV 坐标为什么通常使用 0 到 1 的范围？",
+      "expectedKeywords": [
+        "归一化",
+        "纹理",
+        "坐标",
+        "0",
+        "1"
+      ],
+      "hint": "这样同一套坐标可以适配不同尺寸的纹理。",
+      "patchId": "02-uv-gradient",
+      "expectedObservation": "矩形显示由 UV 产生的渐变。"
+    },
+    {
+      "id": "procedural-sampling",
+      "title": "模拟纹理采样",
+      "concept": "fragment shader 用插值后的 UV 查询纹理颜色。",
+      "question": "片元着色器为什么需要插值后的 UV，而不是只使用顶点上的 UV？",
+      "expectedKeywords": [
+        "片元",
+        "插值",
+        "采样",
+        "UV"
+      ],
+      "hint": "矩形内部的大量片元并不是原始顶点。",
+      "patchId": "03-checker-sampling",
+      "expectedObservation": "矩形显示棋盘格纹理。"
+    },
+    {
+      "id": "texture-mix",
+      "title": "混合纹理结果",
+      "concept": "mix 可以在两个颜色来源之间按比例插值。",
+      "question": "mix(textureA, textureB, amount) 中 amount 变大时，颜色会更接近哪一项？",
+      "expectedKeywords": [
+        "textureB",
+        "第二",
+        "amount",
+        "插值"
+      ],
+      "hint": "amount 为 0 接近第一项，为 1 接近第二项。",
+      "patchId": "04-texture-mix",
+      "expectedObservation": "矩形显示两种程序化纹理混合后的结果。"
+    }
+  ]
+}
