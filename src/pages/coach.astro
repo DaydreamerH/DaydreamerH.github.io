@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "@lucide/astro";
+import { PanelLeftClose, PanelLeftOpen } from "@lucide/astro";
 import { categoryLabels, levelLabels } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
@@ -84,49 +84,6 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           <a class="context-return" href="/knowledge/">返回知识库</a>
         </div>
       </div>
-    </aside>
-
-    <section class="chat-panel">
-      <div class="chat-toolbar">
-        <div>
-          <span>Session</span>
-          <strong data-session-title>{activeNode.title}</strong>
-        </div>
-        <div class="toolbar-actions">
-          <button type="button" data-reset>重新开始</button>
-        </div>
-      </div>
-
-      <div class="message-list" aria-label="AI 对话" data-message-list></div>
-
-      <form class="answer-box" data-answer-form>
-        <label for="answer">你的输入</label>
-        <textarea id="answer" rows="4" data-answer-input placeholder="填写 API 后，输入你想测试的回答或让模型基于当前知识点提问。"></textarea>
-        <div>
-          <span data-answer-hint>先填写右侧 API 信息，再提交你的输入。</span>
-          <button type="submit">提交</button>
-        </div>
-      </form>
-    </section>
-
-    <aside class="feedback-panel">
-      <div class="panel-block feedback-summary">
-        <div class="panel-heading panel-heading-row">
-          <div>
-            <span>反馈摘要</span>
-            <strong data-feedback-title>等待回答</strong>
-          </div>
-          <button class="side-toggle" type="button" data-toggle-right aria-label="折叠右侧面板" aria-expanded="true">
-            <PanelRightClose class="toggle-icon icon-collapse" size={18} aria-hidden="true" />
-            <PanelRightOpen class="toggle-icon icon-expand" size={18} aria-hidden="true" />
-          </button>
-        </div>
-        <p class="feedback-source" data-feedback-source>请先填写右侧 API 信息。</p>
-        <ul class="feedback-list" data-feedback-list>
-          <li>提交输入后，这里会显示针对当前知识点的反馈要点。</li>
-          <li>不会保存到浏览器存储或任何持久化位置。</li>
-        </ul>
-      </div>
 
       <div class="panel-block">
         <div class="panel-heading">
@@ -157,6 +114,31 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         <p class="api-note">密钥只保存在当前页面内存中，刷新后清空。浏览器直连 API 需要服务商允许 CORS。</p>
       </div>
     </aside>
+
+    <section class="chat-panel">
+      <div class="chat-toolbar">
+        <div>
+          <span>Session</span>
+          <strong data-session-title>{activeNode.title}</strong>
+        </div>
+        <div class="toolbar-actions">
+          <button type="button" data-reset>重新开始</button>
+        </div>
+      </div>
+
+      <div class="chat-alert" data-chat-alert hidden></div>
+      <div class="chat-status" data-chat-status hidden></div>
+      <div class="message-list" aria-label="AI 对话" data-message-list></div>
+
+      <form class="answer-box" data-answer-form>
+        <label for="answer">你的输入</label>
+        <textarea id="answer" rows="4" data-answer-input placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"></textarea>
+        <div>
+          <span data-answer-hint>填写左侧 API 后，可先生成第一题。</span>
+          <button type="submit">提交</button>
+        </div>
+      </form>
+    </section>
   </section>
 
   <script define:vars={{ nodesJson }}>
@@ -176,9 +158,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const answerForm = document.querySelector("[data-answer-form]");
     const answerInput = document.querySelector("[data-answer-input]");
     const answerHint = document.querySelector("[data-answer-hint]");
-    const feedbackTitle = document.querySelector("[data-feedback-title]");
-    const feedbackList = document.querySelector("[data-feedback-list]");
-    const feedbackSource = document.querySelector("[data-feedback-source]");
+    const chatAlert = document.querySelector("[data-chat-alert]");
+    const chatStatus = document.querySelector("[data-chat-status]");
     const apiEndpointInput = document.querySelector("[data-api-endpoint]");
     const apiKeyInput = document.querySelector("[data-api-key]");
     const apiModelInput = document.querySelector("[data-api-model]");
@@ -195,18 +176,18 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       return article;
     }
 
-    function renderFeedback(title, items) {
-      feedbackTitle.textContent = title;
-      feedbackList.replaceChildren(...items.map((item) => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        return li;
-      }));
+    function setStatus(text = "") {
+      chatStatus.textContent = text;
+      chatStatus.hidden = !text;
     }
 
-    function setFeedbackSource(text, tone = "muted") {
-      feedbackSource.textContent = text;
-      feedbackSource.dataset.tone = tone;
+    function showAlert(text = "") {
+      chatAlert.textContent = text;
+      chatAlert.hidden = !text;
+    }
+
+    function clearAlert() {
+      showAlert("");
     }
 
     function renderContext() {
@@ -247,20 +228,12 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     }
 
     function resetSession() {
-      const node = nodes[state.node];
       renderContext();
-      messageList.replaceChildren(createMessage(
-        "coach",
-        "AI Coach",
-        "请先在右侧填写 Endpoint、API Key 和 Model。配置完成后，输入你的回答或测试需求，我会基于当前知识点调用模型生成反馈。"
-      ));
-      renderFeedback("等待 API", [
-        "填写右侧 API 信息后提交内容，这里会显示 AI 反馈摘要。",
-        "不会保存到浏览器存储或任何持久化位置。"
-      ]);
-      setFeedbackSource("请先填写右侧 API 信息。");
+      messageList.replaceChildren();
+      clearAlert();
+      setStatus("");
       answerInput.value = "";
-      answerHint.textContent = "先填写右侧 API 信息，再提交你的输入。";
+      answerHint.textContent = "填写左侧 API 后，可先生成第一题。";
     }
 
     function normalizeEndpoint(value) {
@@ -291,19 +264,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     }
 
     function renderApiRequired() {
-      messageList.append(createMessage(
-        "coach",
-        "AI Coach",
-        "请先在右侧填写 Endpoint、API Key 和 Model。填写完成后可以直接点击“确认 API 并生成第一题”。"
-      ));
-      renderFeedback("需要 API 信息", [
-        "Endpoint、API Key 和 Model 都是必填项。",
-        "配置只在当前页面内存中使用，刷新后清空。",
-        "如果服务商不允许浏览器跨域请求，需要后续增加代理层。"
-      ]);
-      setFeedbackSource("尚未调用模型。", "error");
-      answerHint.textContent = "填写右侧 API 信息后，可以先生成第一题。";
-      messageList.scrollTop = messageList.scrollHeight;
+      showAlert("请先填写 Endpoint、API Key 和 Model，然后点击“确认 API 并生成第一题”。");
+      answerHint.textContent = "补全左侧 API 信息后再开始。";
       focusMissingApiField();
     }
 
@@ -346,9 +308,12 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       return `API 请求失败：${status} ${message}`;
     }
 
-    async function requestAiFeedback(node, answer) {
+    async function requestAiFeedback(node, answer, mode = "feedback") {
       const endpoint = normalizeEndpoint(apiEndpointInput.value);
       const knowledgeContext = buildKnowledgeContext(node);
+      const modeInstruction = mode === "question"
+        ? "请提出第一道测试题。只输出一个问题和一句答题关注点，不要给答案。"
+        : "请先用 2 到 4 个短要点反馈用户回答，再继续提出下一道测试题。输出里必须包含“下一题：”。";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -364,10 +329,10 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
               content: [
                 "你是一个面向 UE5 游戏开发学习的知识点测试教练。",
                 "你会收到一段知识库上下文和用户输入，请严格基于上下文处理，不要编造上下文之外的细节。",
-                "如果用户要求出题，请给出一个围绕当前知识点的问题，并附上一句答题关注点。",
-                "如果用户提交了回答，请给出反馈摘要：指出命中的关键点、遗漏点和下一次改进方向。",
-                "不要评分，不要继续深度追问，不要保存或索要个人信息。",
-                "输出必须简洁，使用 3 到 5 个中文短要点，每个要点单独一行。"
+                "用户开始测试时，给出一个围绕当前知识点的问题，并附一句答题关注点。",
+                "用户提交回答后，先指出命中的关键点、遗漏点和改进方向，然后自动给出下一题。",
+                "不要评分，不要索要个人信息，不要输出与当前知识点无关的内容。",
+                "输出应简洁、适合聊天窗口阅读。"
               ].join("\n")
             },
             {
@@ -377,7 +342,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
                 knowledgeContext,
                 "用户输入：",
                 answer,
-                "请基于以上知识库上下文处理用户输入，并只返回反馈摘要或单个测试问题。"
+                "任务要求：",
+                modeInstruction
               ].join("\n\n")
             }
           ]
@@ -394,10 +360,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       if (!content) {
         throw new Error("API 返回中没有可用的 message.content。");
       }
-      return content
-        .split(/\n+/)
-        .map((line) => line.replace(/^[-*•\d.\s]+/, "").trim())
-        .filter(Boolean);
+      return content.trim();
     }
 
     async function generateFirstQuestion() {
@@ -407,33 +370,24 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         return;
       }
 
-      messageList.append(createMessage("coach", "AI Coach", `正在基于「${node.title}」生成第一题...`));
-      renderFeedback("生成第一题", ["正在确认 API 并请求模型生成测试问题。"]);
-      setFeedbackSource("使用你填写的 API 生成第一题。");
+      clearAlert();
+      setStatus(`正在基于「${node.title}」生成第一题...`);
       startQuestionButton.disabled = true;
       answerForm.querySelector("button").disabled = true;
 
       try {
         const question = await requestAiFeedback(
           node,
-          "请基于当前知识点提出第一道测试题。只提出问题和一句答题关注点，不要给答案。"
+          "开始测试，请提出第一道题。",
+          "question"
         );
-        messageList.append(createMessage("coach", "AI Coach", question.join("\n")));
-        renderFeedback("第一题已生成", [
-          "API 配置可用，题目已发送到对话区。",
-          "在输入框回答这道题后提交，我会基于同一知识点上下文给出反馈摘要。"
-        ]);
-        setFeedbackSource("来自当前页面填写的模型配置。", "success");
-        answerHint.textContent = "回答上方题目后提交，获取反馈摘要。";
+        messageList.append(createMessage("coach", "AI Coach", question));
+        answerHint.textContent = "回答上方题目后提交，获取反馈并进入下一题。";
         answerInput.focus();
       } catch (error) {
-        renderFeedback("API 调用失败", [
-          error.message,
-          "如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。"
-        ]);
-        messageList.append(createMessage("coach", "AI Coach", "API 调用失败，请检查右侧配置后再次确认。"));
-        setFeedbackSource("已停止本次 API 调用，未保存任何配置。", "error");
+        showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
       } finally {
+        setStatus("");
         startQuestionButton.disabled = false;
         answerForm.querySelector("button").disabled = false;
         messageList.scrollTop = messageList.scrollHeight;
@@ -455,30 +409,33 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         return;
       }
 
+      clearAlert();
       messageList.append(createMessage("user", "DaydreamerH", answer));
-      renderFeedback("生成中", ["正在请求 AI 生成反馈摘要..."]);
-      setFeedbackSource("使用你填写的 API 生成反馈。");
+      setStatus("正在分析回答并准备下一题...");
       answerForm.querySelector("button").disabled = true;
+      startQuestionButton.disabled = true;
 
       try {
         const aiFeedback = await requestAiFeedback(node, answer);
-        renderFeedback("AI 反馈摘要", aiFeedback);
-        messageList.append(createMessage("coach", "AI Coach", aiFeedback.join("\n")));
-        setFeedbackSource("来自当前页面填写的模型配置。", "success");
+        messageList.append(createMessage("coach", "AI Coach", aiFeedback));
       } catch (error) {
-        renderFeedback("API 调用失败", [
-          error.message,
-          "如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。"
-        ]);
-        messageList.append(createMessage("coach", "AI Coach", "API 调用失败，请检查右侧配置后再次提交。"));
-        setFeedbackSource("已停止本次 API 调用，未保存任何配置。", "error");
+        showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
       } finally {
+        setStatus("");
         answerForm.querySelector("button").disabled = false;
+        startQuestionButton.disabled = false;
       }
 
       answerInput.value = "";
-      answerHint.textContent = "可以修改答案后再次提交，或切换知识点。";
+      answerHint.textContent = "继续回答最新问题。Ctrl + Enter 提交。";
       messageList.scrollTop = messageList.scrollHeight;
+    });
+
+    answerInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && event.ctrlKey) {
+        event.preventDefault();
+        answerForm.requestSubmit();
+      }
     });
 
     startQuestionButton.addEventListener("click", generateFirstQuestion);
@@ -502,13 +459,6 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       layout.classList.toggle("is-left-collapsed");
       const isCollapsed = layout.classList.contains("is-left-collapsed");
       event.currentTarget.setAttribute("aria-label", isCollapsed ? "展开左侧面板" : "折叠左侧面板");
-      event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
-    });
-
-    document.querySelector("[data-toggle-right]").addEventListener("click", (event) => {
-      layout.classList.toggle("is-right-collapsed");
-      const isCollapsed = layout.classList.contains("is-right-collapsed");
-      event.currentTarget.setAttribute("aria-label", isCollapsed ? "展开右侧面板" : "折叠右侧面板");
       event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
     });
 

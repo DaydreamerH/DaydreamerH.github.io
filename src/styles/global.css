@@ -399,8 +399,7 @@ h3 {
 
 .coach-status,
 .panel-block,
-.chat-panel,
-.feedback-panel {
+.chat-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(24, 28, 32, 0.78);
@@ -419,30 +418,21 @@ h3 {
 
 .coach-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 14px;
   align-items: start;
   padding-bottom: 72px;
 }
 
 .coach-layout.compact {
-  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  grid-template-columns: 320px minmax(0, 1fr);
 }
 
 .coach-layout.is-left-collapsed {
-  grid-template-columns: 36px minmax(0, 1fr) 300px;
+  grid-template-columns: 36px minmax(0, 1fr);
 }
 
-.coach-layout.is-right-collapsed {
-  grid-template-columns: 280px minmax(0, 1fr) 36px;
-}
-
-.coach-layout.is-left-collapsed.is-right-collapsed {
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
-}
-
-.coach-layout.is-left-collapsed .coach-sidebar,
-.coach-layout.is-right-collapsed .feedback-panel {
+.coach-layout.is-left-collapsed .coach-sidebar {
   display: flex;
   justify-content: center;
   overflow: visible;
@@ -451,34 +441,28 @@ h3 {
   padding: 0;
 }
 
-.coach-layout.is-left-collapsed .coach-sidebar .panel-block > :not(.panel-heading),
-.coach-layout.is-right-collapsed .feedback-panel .panel-block > :not(.panel-heading),
-.coach-layout.is-right-collapsed .feedback-panel .panel-block:not(.feedback-summary) {
+.coach-layout.is-left-collapsed .coach-sidebar .panel-block > :not(.panel-heading) {
   display: none;
 }
 
-.coach-layout.is-left-collapsed .coach-sidebar .panel-block,
-.coach-layout.is-right-collapsed .feedback-panel .feedback-summary {
+.coach-layout.is-left-collapsed .coach-sidebar .panel-block {
   min-height: 0;
   border: 0;
   background: transparent;
   padding: 0;
 }
 
-.coach-layout.is-left-collapsed .coach-sidebar .panel-heading,
-.coach-layout.is-right-collapsed .feedback-panel .panel-heading {
+.coach-layout.is-left-collapsed .coach-sidebar .panel-heading {
   align-items: center;
   justify-content: center;
   margin-bottom: 0;
 }
 
-.coach-layout.is-left-collapsed .coach-sidebar .panel-heading > div,
-.coach-layout.is-right-collapsed .feedback-panel .panel-heading > div {
+.coach-layout.is-left-collapsed .coach-sidebar .panel-heading > div {
   display: none;
 }
 
-.coach-sidebar,
-.feedback-panel {
+.coach-sidebar {
   display: grid;
   gap: 12px;
 }
@@ -557,8 +541,7 @@ h3 {
   display: none;
 }
 
-.coach-layout.is-left-collapsed .side-toggle[data-toggle-left],
-.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] {
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] {
   width: 34px;
   min-width: 34px;
   min-height: 34px;
@@ -567,19 +550,16 @@ h3 {
   color: var(--accent-strong);
 }
 
-.coach-layout.is-left-collapsed .side-toggle[data-toggle-left]:hover,
-.coach-layout.is-right-collapsed .side-toggle[data-toggle-right]:hover {
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left]:hover {
   border-color: rgba(76, 201, 167, 0.32);
   background: rgba(76, 201, 167, 0.08);
 }
 
-.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-collapse,
-.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] .icon-collapse {
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-collapse {
   display: none;
 }
 
-.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-expand,
-.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] .icon-expand {
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-expand {
   display: block;
 }
 
@@ -641,8 +621,7 @@ h3 {
 }
 
 .api-config span,
-.api-note,
-.feedback-source {
+.api-note {
   color: var(--muted);
   font-size: 0.82rem;
 }
@@ -679,18 +658,6 @@ h3 {
   margin: 12px 0 0;
 }
 
-.feedback-source {
-  margin: -2px 0 12px;
-}
-
-.feedback-source[data-tone="success"] {
-  color: var(--accent-strong);
-}
-
-.feedback-source[data-tone="error"] {
-  color: #ffb4a8;
-}
-
 .context-return {
   display: inline-flex;
   margin-top: 14px;
@@ -699,7 +666,7 @@ h3 {
 }
 
 .chat-panel {
-  min-height: 680px;
+  min-height: 720px;
   overflow: hidden;
 }
 
@@ -728,12 +695,32 @@ h3 {
   padding: 0 12px;
 }
 
+.chat-alert,
+.chat-status {
+  margin: 14px 16px 0;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.chat-alert {
+  border: 1px solid rgba(255, 180, 168, 0.38);
+  background: rgba(255, 180, 168, 0.08);
+  color: #ffcbc2;
+}
+
+.chat-status {
+  border: 1px solid rgba(76, 201, 167, 0.26);
+  background: rgba(76, 201, 167, 0.08);
+  color: var(--accent-strong);
+}
+
 .message-list {
   display: grid;
   justify-items: start;
   gap: 14px;
-  min-height: 320px;
-  max-height: 420px;
+  min-height: 420px;
+  max-height: 560px;
   overflow: auto;
   padding: 18px;
 }
@@ -800,20 +787,6 @@ h3 {
 .answer-box button:disabled {
   cursor: wait;
   opacity: 0.68;
-}
-
-.feedback-panel {
-  padding: 12px;
-}
-
-.feedback-list {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--muted);
-}
-
-.feedback-list li + li {
-  margin-top: 8px;
 }
 
 .author-section {
@@ -1051,14 +1024,11 @@ h3 {
     min-height: auto;
   }
 
-  .coach-layout.is-left-collapsed,
-  .coach-layout.is-right-collapsed,
-  .coach-layout.is-left-collapsed.is-right-collapsed {
+  .coach-layout.is-left-collapsed {
     grid-template-columns: 1fr;
   }
 
-  .coach-layout.is-left-collapsed .coach-sidebar,
-  .coach-layout.is-right-collapsed .feedback-panel {
+  .coach-layout.is-left-collapsed .coach-sidebar {
     display: none;
   }
 
