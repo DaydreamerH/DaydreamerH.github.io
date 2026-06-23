@@ -19,8 +19,9 @@ const fileNames = ["main.js", "vertex.glsl", "fragment.glsl"];
 const defaultTeachingRules = [
   "每轮只提出一个问题。",
   "先判断用户回答，再决定是否应用 patch。",
-  "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-  "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
+  "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+  "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+  "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
   "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
 ];
 
@@ -389,6 +390,9 @@ function filesFromState(state) {
 }
 
 function buildPatch(checkpoint) {
+  if (!checkpoint.patchId || !checkpoint.state) {
+    throw new Error(`Checkpoint ${checkpoint.id} cannot build patch without patchId and state.`);
+  }
   const files = filesFromState(checkpoint.state);
   return {
     id: checkpoint.patchId,
@@ -410,8 +414,11 @@ function validateRecipe(recipe) {
     if (!checkpoint.question.includes("？") && !checkpoint.question.includes("?")) {
       throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} must ask one question.`);
     }
-    if (!checkpoint.patchId || !checkpoint.state) {
-      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} is missing patchId or state.`);
+    if (checkpoint.patchId && !checkpoint.state) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has patchId but is missing state.`);
+    }
+    if (!checkpoint.patchId && checkpoint.state) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has state but is missing patchId.`);
     }
   }
 }
@@ -473,7 +480,7 @@ function generateLesson(recipe, options) {
     writeFile(outDir, `starter/${file}`, content);
   }
 
-  for (const checkpoint of recipe.checkpoints) {
+  for (const checkpoint of recipe.checkpoints.filter((item) => item.patchId)) {
     const patch = buildPatch(checkpoint);
     writeFile(outDir, `patches/${patch.id}.json`, stableJson(patch));
   }
