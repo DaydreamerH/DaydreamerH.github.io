@@ -1117,7 +1117,7 @@ h3 {
 }
 
 .article-layout {
-  width: min(860px, 100%);
+  width: min(1080px, 100%);
   margin: 0 auto;
   padding: 48px 0 80px;
 }
