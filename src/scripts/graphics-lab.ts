@@ -734,19 +734,27 @@ function initGraphicsLab(root: HTMLElement) {
 
   const advanceCheckpoint = (patchId?: string, nextCheckpointId?: string): CheckpointAdvanceResult => {
     const previousId = currentCheckpoint()?.id ?? "";
+    const patchCheckpointIndex = patchId
+      ? lesson.checkpoints.findIndex((checkpoint) => checkpoint.patchId === patchId)
+      : -1;
+    const isLastPatch = patchCheckpointIndex === lesson.checkpoints.length - 1;
+
     if (nextCheckpointId) {
       const found = lesson.checkpoints.findIndex((checkpoint) => checkpoint.id === nextCheckpointId);
       if (found >= 0) currentCheckpointIndex = found;
+    } else if (patchCheckpointIndex >= 0 && !isLastPatch) {
+      currentCheckpointIndex = patchCheckpointIndex + 1;
     } else if (patchId && currentCheckpoint()?.patchId === patchId) {
       currentCheckpointIndex = Math.min(currentCheckpointIndex + 1, lesson.checkpoints.length - 1);
     }
+
     const currentId = currentCheckpoint()?.id ?? "";
     root.dataset.checkpointId = currentId;
     return {
       previousId,
       currentId,
       moved: Boolean(currentId && currentId !== previousId),
-      completed: Boolean(patchId && currentId === previousId && previousId && currentCheckpoint()?.patchId === patchId)
+      completed: Boolean(patchId && isLastPatch)
     };
   };
 
