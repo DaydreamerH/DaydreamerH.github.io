@@ -22,12 +22,31 @@ const checks = [
     test: (html) => html.includes("data-editor-host")
   },
   {
+    name: "AI guide panel",
+    test: (html) => html.includes("data-guide-log") && html.includes("data-guide-start")
+  },
+  {
     name: "runtime script",
     test: (html) => /<script[^>]+type="module"[^>]+src="\/_astro\/webgl\./.test(html)
   }
 ];
 
 const html = existsSync(webglHtmlPath) ? readFileSync(webglHtmlPath, "utf8") : "";
+const runtimeMatch = html.match(/<script[^>]+type="module"[^>]+src="\/(_astro\/webgl\.[^"]+\.js)"/);
+const runtimeScriptPath = runtimeMatch ? join(root, "dist", runtimeMatch[1]) : "";
+const runtimeScript = runtimeScriptPath && existsSync(runtimeScriptPath)
+  ? readFileSync(runtimeScriptPath, "utf8")
+  : "";
+
+checks.push(
+  {
+    name: "AI guide runtime",
+    test: () =>
+      runtimeScript.includes("__graphicsLabGuideSmokeTest") &&
+      runtimeScript.includes("guideReady")
+  }
+);
+
 const failures = checks.filter((check) => !check.test(html));
 
 if (failures.length) {

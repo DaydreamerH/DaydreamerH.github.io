@@ -37,6 +37,22 @@ type SmokeResult = {
   error: string;
 };
 
+type GuidePatch = {
+  file: LabFileName;
+  operation: "replace_all" | "replace";
+  target?: string;
+  content: string;
+};
+
+type GuideResponse = {
+  type?: "question" | "feedback" | "code_patch" | "debug_fix" | "summary";
+  message?: string;
+  question?: string;
+  patches?: GuidePatch[];
+  runAfterApply?: boolean;
+  expectedObservation?: string;
+};
+
 declare global {
   interface Window {
     __graphicsLabSmokeTest?: () => Promise<{
@@ -46,10 +62,31 @@ declare global {
       status: string;
       error: string;
     }>;
+    __graphicsLabGuideSmokeTest?: () => Promise<{
+      ok: boolean;
+      status: string;
+      error: string;
+      appliedFiles: LabFileName[];
+    }>;
   }
 }
 
 const STORAGE_KEY = "daydreamerh.graphics-lab.v1";
+
+const shaderLessonReference = {
+  title: "LearnOpenGL Shader Primer",
+  topic: "Shaders, GLSL, uniforms, vector swizzling, vertex-to-fragment data flow",
+  summary: [
+    "Shader 是运行在 GPU 上的小程序，图形管线的不同阶段通过输入和输出连接。",
+    "GLSL 类似 C，常用 vec2/vec3/vec4、mat 系列、uniform、varying 和 main 函数。",
+    "顶点着色器处理每个顶点的位置与可传递数据，片段着色器决定最终像素颜色。",
+    "顶点着色器和片段着色器之间通过同名同类型的输出/输入变量传递数据。当前 Three.js WebGL1 示例使用 varying。",
+    "uniform 是 CPU/应用侧传给 shader 的全局值，可以随时间更新，用来控制颜色、时间、矩阵或材质参数。",
+    "向量 swizzling 可以用 .xyzw/.rgba/.stpq 组合访问或重组分量。"
+  ],
+  firstStep:
+    "先确认用户理解 vertex shader 与 fragment shader 如何通过 varying 传递颜色，再让 AI 修改当前实验显示由 shader 控制的颜色变化。"
+};
 
 const jsCompletions = [
   "THREE.Scene",
@@ -276,6 +313,28 @@ function persistFiles(files: Record<LabFileName, LabFile>) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
+function extractJsonObject(text: string) {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced?.[1] ?? text;
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start < 0 || end <= start) {
+    throw new Error("AI 没有返回可解析的 JSON。");
+  }
+  return JSON.parse(candidate.slice(start, end + 1)) as GuideResponse;
+}
+
+function normalizeGuideResponse(response: GuideResponse): GuideResponse {
+  return {
+    type: response.type ?? "feedback",
+    message: response.message ?? "",
+    question: response.question ?? "",
+    patches: Array.isArray(response.patches) ? response.patches : [],
+    runAfterApply: Boolean(response.runAfterApply),
+    expectedObservation: response.expectedObservation ?? ""
+  };
+}
+
 function createEditorState(
   source: string,
   fileName: LabFileName,
@@ -348,6 +407,7 @@ function createEditorState(
 }
 
 function initGraphicsLab(root: HTMLElement) {
+  const labWorkspace = root.querySelector<HTMLElement>("[data-lab-workspace]");
   const canvas = root.querySelector<HTMLCanvasElement>("[data-lab-canvas]");
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
   const fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
@@ -358,8 +418,17 @@ function initGraphicsLab(root: HTMLElement) {
   const statusDot = root.querySelector<HTMLElement>("[data-lab-status-dot]");
   const errorBox = root.querySelector<HTMLElement>("[data-lab-errors]");
   const autoRunToggle = root.querySelector<HTMLInputElement>("[data-auto-run]");
+  const guideState = root.querySelector<HTMLElement>("[data-guide-state]");
+  const guideLog = root.querySelector<HTMLElement>("[data-guide-log]");
+  const guideForm = root.querySelector<HTMLFormElement>("[data-guide-form]");
+  const guideInput = root.querySelector<HTMLTextAreaElement>("[data-guide-input]");
+  const guideStartButton = root.querySelector<HTMLButtonElement>("[data-guide-start]");
+  const guideDebugButton = root.querySelector<HTMLButtonElement>("[data-guide-debug]");
+  const guideEndpointInput = root.querySelector<HTMLInputElement>("[data-guide-endpoint]");
+  const guideKeyInput = root.querySelector<HTMLInputElement>("[data-guide-key]");
+  const guideModelInput = root.querySelector<HTMLInputElement>("[data-guide-model]");
 
-  if (!canvas || !editorHost || !runButton || !resetButton || !expandButton || !statusLabel || !statusDot || !errorBox) {
+  if (!labWorkspace || !canvas || !editorHost || !runButton || !resetButton || !expandButton || !statusLabel || !statusDot || !errorBox) {
     return;
   }
 
@@ -369,6 +438,7 @@ function initGraphicsLab(root: HTMLElement) {
   let runTimer = 0;
   let saveTimer = 0;
   let runId = 0;
+  const guideHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
 
   const setStatus = (type: "idle" | "running" | "ok" | "error", text: string) => {
     statusLabel.textContent = text;
@@ -381,6 +451,31 @@ function initGraphicsLab(root: HTMLElement) {
     errorBox.textContent = message;
     errorBox.hidden = !message;
     root.dataset.labError = message;
+  };
+
+  const setGuideState = (text: string) => {
+    if (guideState) guideState.textContent = text;
+    root.dataset.guideState = text;
+  };
+
+  const appendGuideEntry = (
+    role: "assistant" | "user" | "system",
+    title: string,
+    message = ""
+  ) => {
+    if (!guideLog) return;
+    const article = document.createElement("article");
+    article.dataset.role = role;
+    const strong = document.createElement("strong");
+    strong.textContent = title;
+    article.append(strong);
+    if (message) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = message;
+      article.append(paragraph);
+    }
+    guideLog.append(article);
+    guideLog.scrollTop = guideLog.scrollHeight;
   };
 
   const saveSoon = () => {
@@ -426,6 +521,154 @@ function initGraphicsLab(root: HTMLElement) {
       })
     );
     syncTabs();
+  };
+
+  const getFilesSnapshot = () =>
+    (Object.keys(files) as LabFileName[])
+      .map((name) => `--- ${name} ---\n${files[name].source}`)
+      .join("\n\n");
+
+  const applyGuidePatches = (patches: GuidePatch[]) => {
+    const changedFiles = new Set<LabFileName>();
+
+    patches.forEach((patch) => {
+      if (!(patch.file in files)) {
+        throw new Error(`AI 请求修改不允许的文件：${patch.file}`);
+      }
+      if (patch.operation === "replace_all") {
+        files[patch.file].source = patch.content;
+        changedFiles.add(patch.file);
+        return;
+      }
+      if (patch.operation === "replace") {
+        if (!patch.target) throw new Error("replace patch 缺少 target。");
+        if (!files[patch.file].source.includes(patch.target)) {
+          throw new Error(`无法在 ${patch.file} 中找到 AI 指定的替换片段。`);
+        }
+        files[patch.file].source = files[patch.file].source.replace(patch.target, patch.content);
+        changedFiles.add(patch.file);
+        return;
+      }
+      throw new Error(`不支持的 patch 操作：${patch.operation}`);
+    });
+
+    if (changedFiles.has(activeFile)) {
+      editor.setState(
+        createEditorState(files[activeFile].source, activeFile, (source) => {
+          files[activeFile].source = source;
+          saveSoon();
+          scheduleRun();
+        })
+      );
+    }
+
+    persistFiles(files);
+  };
+
+  const buildGuideMessages = (mode: "start" | "answer" | "debug", userText = "") => {
+    const errorText = errorBox.textContent || "";
+    const systemPrompt = `你是一个图形学实验导师，参考 LearnOpenGL 的 Shaders 教程，但当前页面使用 Three.js ShaderMaterial 与 WebGL1 风格 GLSL。
+
+教学规则：
+1. 目标是帮助用户理解原理，不要一次性讲完整教程。
+2. 每轮最多提出一个关键问题。用户答对后，才给出代码修改。
+3. 只允许修改 main.js、vertex.glsl、fragment.glsl。
+4. 你必须只返回 JSON，不要返回 Markdown，不要返回解释性前后缀。
+5. JSON schema:
+{
+  "type": "question | feedback | code_patch | debug_fix | summary",
+  "message": "给用户看的简短反馈，最多 80 字",
+  "question": "下一步问题，没有则为空字符串",
+  "patches": [
+    {
+      "file": "main.js | vertex.glsl | fragment.glsl",
+      "operation": "replace_all | replace",
+      "target": "replace 时必须提供",
+      "content": "完整新内容或替换内容"
+    }
+  ],
+  "runAfterApply": true,
+  "expectedObservation": "运行后用户应该观察到的现象"
+}
+6. 如果生成代码，优先使用 replace_all 给出完整文件，避免 target 匹配失败。
+7. 代码必须能在当前 Three.js 环境运行。fragment.glsl 使用 gl_FragColor；顶点与片段之间使用 varying。`;
+
+    const lessonPrompt = `当前教学主题：${shaderLessonReference.title}
+话题：${shaderLessonReference.topic}
+参考要点：
+${shaderLessonReference.summary.map((item) => `- ${item}`).join("\n")}
+第一阶段目标：${shaderLessonReference.firstStep}`;
+
+    const userPrompt = `模式：${mode}
+用户输入：${userText || "(无)"}
+当前运行状态：${root.dataset.labState || "unknown"}
+当前运行错误：${errorText || "(无)"}
+当前代码：
+${getFilesSnapshot()}`;
+
+    return [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: lessonPrompt },
+      ...guideHistory.slice(-6),
+      { role: "user", content: userPrompt }
+    ];
+  };
+
+  const requestGuide = async (mode: "start" | "answer" | "debug", userText = "") => {
+    if (!guideEndpointInput?.value || !guideKeyInput?.value || !guideModelInput?.value) {
+      appendGuideEntry("system", "需要 API", "请先填写 Endpoint、API Key 和 Model。");
+      setGuideState("等待 API");
+      return;
+    }
+
+    setGuideState("AI 思考中");
+
+    const response = await fetch(guideEndpointInput.value.trim(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${guideKeyInput.value.trim()}`
+      },
+      body: JSON.stringify({
+        model: guideModelInput.value.trim(),
+        messages: buildGuideMessages(mode, userText),
+        temperature: 0.35,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`API 请求失败：${response.status} ${detail.slice(0, 220)}`);
+    }
+
+    const payload = await response.json();
+    const content = payload?.choices?.[0]?.message?.content;
+    if (typeof content !== "string") {
+      throw new Error("API 返回中没有 message.content。");
+    }
+
+    guideHistory.push({ role: "user", content: userText || mode });
+    guideHistory.push({ role: "assistant", content });
+
+    const parsed = normalizeGuideResponse(extractJsonObject(content));
+    const patches = parsed.patches ?? [];
+
+    if (parsed.message) appendGuideEntry("assistant", "AI 反馈", parsed.message);
+    if (parsed.question) appendGuideEntry("assistant", "下一问", parsed.question);
+
+    if (patches.length) {
+      applyGuidePatches(patches);
+      appendGuideEntry("system", "代码已应用", `${patches.map((patch) => patch.file).join(", ")} 已更新。`);
+      if (parsed.expectedObservation) {
+        appendGuideEntry("assistant", "观察目标", parsed.expectedObservation);
+      }
+      if (parsed.runAfterApply) {
+        await runProgram();
+      }
+    }
+
+    setGuideState(parsed.type === "question" ? "等待回答" : "已更新");
   };
 
   const stopRuntime = () => {
@@ -513,10 +756,46 @@ function initGraphicsLab(root: HTMLElement) {
   resetButton.addEventListener("click", resetLab);
 
   expandButton.addEventListener("click", () => {
-    const isExpanded = root.classList.toggle("is-editor-expanded");
+    const isExpanded = labWorkspace.classList.toggle("is-editor-expanded");
     expandButton.textContent = isExpanded ? "回到预览" : "展开编辑器";
     expandButton.setAttribute("aria-pressed", String(isExpanded));
     editor.requestMeasure();
+  });
+
+  guideStartButton?.addEventListener("click", () => {
+    void requestGuide("start").catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      setGuideState("API 错误");
+      appendGuideEntry("system", "API 错误", message);
+    });
+  });
+
+  guideDebugButton?.addEventListener("click", () => {
+    void requestGuide("debug", "请根据当前运行错误给出最小修复。").catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      setGuideState("API 错误");
+      appendGuideEntry("system", "API 错误", message);
+    });
+  });
+
+  guideForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const userText = guideInput?.value.trim() ?? "";
+    if (!userText) return;
+    appendGuideEntry("user", "你的回答", userText);
+    if (guideInput) guideInput.value = "";
+    void requestGuide("answer", userText).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      setGuideState("API 错误");
+      appendGuideEntry("system", "API 错误", message);
+    });
+  });
+
+  guideInput?.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      guideForm?.requestSubmit();
+    }
   });
 
   window.addEventListener("keydown", (event) => {
@@ -548,10 +827,54 @@ function initGraphicsLab(root: HTMLElement) {
     };
   };
 
+  const guideSmokeTest = async () => {
+    const patches: GuidePatch[] = [
+      {
+        file: "vertex.glsl",
+        operation: "replace_all",
+        content: `varying vec2 vUv;
+varying vec4 vertexColor;
+
+uniform float uTime;
+
+void main() {
+  vUv = uv;
+  float green = 0.5 + 0.5 * sin(uTime);
+  vertexColor = vec4(vUv.x, green, vUv.y, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`
+      },
+      {
+        file: "fragment.glsl",
+        operation: "replace_all",
+        content: `varying vec2 vUv;
+varying vec4 vertexColor;
+
+void main() {
+  gl_FragColor = vertexColor;
+}`
+      }
+    ];
+
+    applyGuidePatches(patches);
+    await runProgram();
+    await new Promise((resolve) => window.setTimeout(resolve, 180));
+
+    return {
+      ok: root.dataset.labState === "ok" && !errorBox.textContent,
+      status: statusLabel.textContent || "",
+      error: errorBox.textContent || "",
+      appliedFiles: patches.map((patch) => patch.file)
+    };
+  };
+
   window.__graphicsLabSmokeTest = smokeTest;
+  window.__graphicsLabGuideSmokeTest = guideSmokeTest;
   root.dataset.labReady = "true";
+  root.dataset.guideReady = "true";
 
   syncTabs();
+  setGuideState("等待 API");
   void runProgram();
 }
 

@@ -3,65 +3,113 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="Graphics Lab" description="WebGL 与 shader 实验编辑器。">
-  <section class="graphics-lab wide-surface" data-graphics-lab aria-label="Graphics Lab 编辑器">
-    <div class="lab-preview-panel">
-      <div class="lab-panel-head">
-        <div>
-          <span>Preview</span>
-          <strong>Transform Starter</strong>
+  <section class="graphics-lab-page wide-surface" data-graphics-lab aria-label="Graphics Lab 编辑器">
+    <div class="graphics-lab" data-lab-workspace>
+      <div class="lab-preview-panel">
+        <div class="lab-panel-head">
+          <div>
+            <span>Preview</span>
+            <strong>Transform Starter</strong>
+          </div>
+          <div class="lab-status">
+            <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
+            <span data-lab-status>等待运行</span>
+          </div>
         </div>
-        <div class="lab-status">
-          <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
-          <span data-lab-status>等待运行</span>
+
+        <div class="lab-canvas-wrap">
+          <canvas data-lab-canvas aria-label="实时图形预览"></canvas>
         </div>
+
+        <div class="lab-error-box" data-lab-errors hidden></div>
       </div>
 
-      <div class="lab-canvas-wrap">
-        <canvas data-lab-canvas aria-label="实时图形预览"></canvas>
-      </div>
+      <aside class="lab-editor-panel">
+        <div class="lab-panel-head">
+          <div>
+            <span>Editor</span>
+            <strong>Three.js + Shader</strong>
+          </div>
+          <div class="lab-toolbar">
+            <label class="lab-toggle">
+              <input type="checkbox" data-auto-run checked />
+              <span>Auto</span>
+            </label>
+            <button type="button" data-run>运行</button>
+            <button type="button" data-reset-lab>重置</button>
+            <button type="button" data-expand-editor aria-pressed="false">展开编辑器</button>
+          </div>
+        </div>
 
-      <div class="lab-error-box" data-lab-errors hidden></div>
+        <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
+          <button class="is-active" type="button" role="tab" data-file-tab data-file="main.js" aria-selected="true">
+            main.js
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
+            vertex.glsl
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
+            fragment.glsl
+          </button>
+        </div>
+
+        <div class="lab-editor-shell">
+          <div class="lab-editor-host" data-editor-host></div>
+        </div>
+
+        <div class="lab-hints">
+          <span>Ctrl + Enter 运行</span>
+          <span>Ctrl + S 保存</span>
+          <span>自动保存到当前浏览器</span>
+        </div>
+      </aside>
     </div>
 
-    <aside class="lab-editor-panel">
-      <div class="lab-panel-head">
-        <div>
-          <span>Editor</span>
-          <strong>Three.js + Shader</strong>
+    <section class="lab-ai-panel" aria-label="AI 图形学实验教练">
+      <div class="lab-ai-main">
+        <div class="lab-panel-head">
+          <div>
+            <span>AI Guide</span>
+            <strong>LearnOpenGL Shader Primer</strong>
+          </div>
+          <span class="lab-guide-state" data-guide-state>等待 API</span>
         </div>
-        <div class="lab-toolbar">
-          <label class="lab-toggle">
-            <input type="checkbox" data-auto-run checked />
-            <span>Auto</span>
-          </label>
-          <button type="button" data-run>运行</button>
-          <button type="button" data-reset-lab>重置</button>
-          <button type="button" data-expand-editor aria-pressed="false">展开编辑器</button>
+        <div class="guide-log" data-guide-log>
+          <article>
+            <strong>实验规则</strong>
+            <p>AI 会围绕着色器、GLSL、uniform、顶点到片段的数据传递逐步提问。回答通过后，AI 才会返回受控代码修改，并由页面应用到当前实验。</p>
+          </article>
         </div>
+        <form class="guide-input-row" data-guide-form>
+          <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你想测试的 shader 概念。Ctrl + Enter 提交。"></textarea>
+          <div>
+            <button type="button" data-guide-start>生成第一问</button>
+            <button type="submit">提交回答</button>
+            <button type="button" data-guide-debug>调试运行错误</button>
+          </div>
+        </form>
       </div>
 
-      <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
-        <button class="is-active" type="button" role="tab" data-file-tab data-file="main.js" aria-selected="true">
-          main.js
-        </button>
-        <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
-          vertex.glsl
-        </button>
-        <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
-          fragment.glsl
-        </button>
-      </div>
-
-      <div class="lab-editor-shell">
-        <div class="lab-editor-host" data-editor-host></div>
-      </div>
-
-      <div class="lab-hints">
-        <span>Ctrl + Enter 运行</span>
-        <span>Ctrl + S 保存</span>
-        <span>自动保存到当前浏览器</span>
-      </div>
-    </aside>
+      <aside class="lab-ai-config">
+        <div class="panel-heading">
+          <span>AI API</span>
+          <strong>OpenAI-compatible</strong>
+        </div>
+        <label>
+          <span>Endpoint</span>
+          <input data-guide-endpoint type="url" value="https://api.deepseek.com/chat/completions" autocomplete="off" />
+        </label>
+        <label>
+          <span>API Key</span>
+          <input data-guide-key type="password" placeholder="sk-..." autocomplete="off" />
+        </label>
+        <label>
+          <span>Model</span>
+          <input data-guide-model type="text" value="deepseek-v4-flash" autocomplete="off" />
+        </label>
+        <p>密钥只保存在当前页面内存中。AI 只能修改 main.js、vertex.glsl、fragment.glsl。</p>
+      </aside>
+    </section>
   </section>
 
   <script>
