@@ -1,0 +1,165 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
+import { graphicsLessons } from "../../data/graphicsLessons";
+
+export function getStaticPaths() {
+  return graphicsLessons.map((lesson) => ({
+    params: { lessonId: lesson.id },
+    props: { lesson }
+  }));
+}
+
+const { lesson } = Astro.props;
+const lessonPayload = JSON.stringify(lesson);
+---
+
+<BaseLayout title={`${lesson.title} - WebGL 实验`} description={lesson.aiBrief}>
+  <section
+    class="graphics-lab-page wide-surface"
+    data-graphics-lab
+    data-lesson-payload={lessonPayload}
+    aria-label={`${lesson.title} 编辑器`}
+  >
+    <div class="graphics-lab" data-lab-workspace>
+      <div class="lab-preview-panel">
+        <div class="lab-panel-head">
+          <div>
+            <span>Preview</span>
+            <strong data-preview-title>{lesson.previewTitle}</strong>
+          </div>
+          <div class="lab-status">
+            <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
+            <span data-lab-status>等待运行</span>
+          </div>
+        </div>
+
+        <div class="lab-canvas-wrap">
+          <canvas data-lab-canvas aria-label="实时图形预览"></canvas>
+        </div>
+
+        <div class="lab-error-box" data-lab-errors hidden></div>
+      </div>
+
+      <aside class="lab-editor-panel">
+        <div class="lab-panel-head">
+          <div>
+            <span>Editor</span>
+            <strong>Three.js + Shader</strong>
+          </div>
+          <div class="lab-toolbar">
+            <a class="lab-toolbar-link" href="/webgl/">课程</a>
+            <label class="lab-toggle">
+              <input type="checkbox" data-auto-run checked />
+              <span>Auto</span>
+            </label>
+            <button type="button" data-run>运行</button>
+            <button type="button" data-reset-lab>重置</button>
+            <button
+              class="lab-expand-toggle"
+              type="button"
+              data-expand-editor
+              aria-label="展开工作区"
+              title="展开工作区"
+              aria-pressed="false"
+            >
+              <Maximize2 class="toggle-icon icon-expand-workspace" size={17} aria-hidden="true" />
+              <Minimize2 class="toggle-icon icon-contract-workspace" size={17} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
+          <button class="lab-ai-tab is-active" type="button" role="tab" data-guide-tab aria-selected="true">
+            <Bot size={16} aria-hidden="true" />
+            <span>AI</span>
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
+            main.js
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
+            vertex.glsl
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
+            fragment.glsl
+          </button>
+        </div>
+
+        <div class="lab-editor-shell">
+          <div class="lab-editor-host" data-editor-host></div>
+          <section class="lab-guide-workspace" data-guide-workspace hidden aria-label="AI 图形学实验教练">
+            <div class="guide-setup" data-guide-setup>
+              <div class="lab-panel-head guide-panel-head">
+                <div>
+                  <span>AI Guide</span>
+                  <strong data-guide-lesson-title>{lesson.title}</strong>
+                </div>
+                <span class="lab-guide-state" data-guide-state>等待 API</span>
+              </div>
+
+              <div class="guide-setup-body">
+                <div class="guide-rule-card">
+                  <strong>当前实验</strong>
+                  <p>{lesson.aiBrief}</p>
+                </div>
+
+                <div class="guide-alert" data-guide-alert hidden></div>
+
+                <div class="lab-ai-config">
+                  <label>
+                    <span>Endpoint</span>
+                    <input data-guide-endpoint type="url" value="https://api.deepseek.com/chat/completions" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>API Key</span>
+                    <input data-guide-key type="password" placeholder="sk-..." autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>Model</span>
+                    <input data-guide-model type="text" value="deepseek-v4-flash" autocomplete="off" />
+                  </label>
+                  <button type="button" data-guide-start>生成第一问</button>
+                  <button type="button" data-guide-return hidden>返回对话</button>
+                  <p>密钥只保存在当前页面内存中。AI 按课程 checkpoint 推进，代码变更优先使用本地预设 patch。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-conversation chat-panel" data-guide-conversation hidden>
+              <div class="chat-toolbar guide-chat-toolbar">
+                <div>
+                  <span>AI Guide</span>
+                  <strong>{lesson.title}</strong>
+                </div>
+                <small class="lab-guide-state" data-guide-state-mirror>等待回答</small>
+              </div>
+
+              <div class="chat-alert" data-guide-chat-alert hidden></div>
+              <div class="message-list guide-log" aria-label="AI 图形学实验对话" data-guide-log></div>
+              <form class="answer-box guide-input-row" data-guide-form>
+                <label for="guide-answer">你的输入</label>
+                <textarea id="guide-answer" data-guide-input rows="4" placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"></textarea>
+                <div>
+                  <div class="guide-actions">
+                    <button type="button" data-guide-configure>API</button>
+                  </div>
+                  <button type="submit">提交</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        <div class="lab-hints" data-lab-hints>
+          <span>Ctrl + Enter 运行</span>
+          <span>Ctrl + S 保存</span>
+          <span>自动保存到当前浏览器</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <script>
+    import "../../scripts/graphics-lab";
+  </script>
+</BaseLayout>

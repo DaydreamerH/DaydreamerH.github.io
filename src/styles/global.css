@@ -419,6 +419,7 @@ h3 {
 .knowledge-list,
 .category-stack,
 .module-grid,
+.lesson-grid,
 .knowledge-grid {
   display: grid;
   gap: 12px;
@@ -426,6 +427,7 @@ h3 {
 
 .knowledge-row,
 .knowledge-card,
+.lesson-library-card,
 .module-card,
 .prereq-box {
   border: 1px solid var(--line);
@@ -488,8 +490,41 @@ h3 {
 }
 
 .module-card,
+.lesson-library-card,
 .knowledge-card {
   padding: 18px;
+}
+
+.lesson-grid {
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+}
+
+.lesson-library-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+}
+
+.lesson-library-card[hidden] {
+  display: none;
+}
+
+.lesson-library-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-hover);
+}
+
+.lesson-library-card p {
+  color: var(--muted);
+}
+
+.lesson-library-card h2 {
+  margin: 16px 0 9px;
+  font-size: clamp(1.12rem, 1.8vw, 1.34rem);
+}
+
+.lesson-library-card h2 a {
+  color: var(--text);
 }
 
 .knowledge-card {
@@ -1080,6 +1115,7 @@ h3 {
 }
 
 .lab-toolbar button,
+.lab-toolbar-link,
 .lab-file-tabs button {
   min-height: 34px;
   border: 1px solid var(--line);
@@ -1091,6 +1127,15 @@ h3 {
 
 .lab-toolbar button {
   padding: 0 11px;
+}
+
+.lab-toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  padding: 0 11px;
+  font-size: 0.84rem;
 }
 
 .lab-toolbar .lab-expand-toggle {
@@ -1114,6 +1159,7 @@ h3 {
 }
 
 .lab-toolbar button:hover,
+.lab-toolbar-link:hover,
 .lab-file-tabs button:hover {
   border-color: var(--line-strong);
   color: var(--text);
@@ -2168,6 +2214,7 @@ h3 {
   }
 
   .module-grid,
+  .lesson-grid,
   .knowledge-grid {
     grid-template-columns: 1fr;
   }
@@ -2203,6 +2250,7 @@ h3 {
   }
 
   .lab-toolbar button,
+  .lab-toolbar-link,
   .lab-file-tabs button {
     flex: 1;
   }

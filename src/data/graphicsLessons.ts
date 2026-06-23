@@ -50,6 +50,13 @@ export type GraphicsLesson = {
   patches: Record<string, GraphicsLessonPatch>;
 };
 
+export type GraphicsLessonSummary = Pick<
+  GraphicsLesson,
+  "id" | "title" | "category" | "level" | "source" | "runtime" | "previewTitle" | "aiBrief"
+> & {
+  checkpointCount: number;
+};
+
 const parseJson = <T>(raw: string): T => JSON.parse(raw) as T;
 
 const helloTriangleManifest = parseJson<Omit<GraphicsLesson, "starterFiles" | "patches">>(
@@ -74,5 +81,17 @@ export const graphicsLessons: GraphicsLesson[] = [
     patches: Object.fromEntries(helloTrianglePatches.map((patch) => [patch.id, patch]))
   }
 ];
+
+export const graphicsLessonSummaries: GraphicsLessonSummary[] = graphicsLessons.map((lesson) => ({
+  id: lesson.id,
+  title: lesson.title,
+  category: lesson.category,
+  level: lesson.level,
+  source: lesson.source,
+  runtime: lesson.runtime,
+  previewTitle: lesson.previewTitle,
+  aiBrief: lesson.aiBrief,
+  checkpointCount: lesson.checkpoints.length
+}));
 
 export const defaultGraphicsLesson = graphicsLessons[0];
