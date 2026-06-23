@@ -24,12 +24,20 @@
   },
   "checkpoints": [
     {
+      "id": "triangle-primitive",
+      "title": "三角形作为基础图元",
+      "concept": "三角形总是共面，内部任意点都能用三个顶点的重心坐标表示，因此覆盖测试和属性插值都稳定。",
+      "question": "为什么四边形拆成两个三角形后，GPU 可以用同一套重心插值规则覆盖整个矩形？",
+      "expectedKeywords": ["三角形", "重心坐标", "共面", "插值", "覆盖"],
+      "hint": "每个三角形内部都能用三个顶点的权重描述片元位置。"
+    },
+    {
       "id": "quad-geometry",
       "title": "矩形与三角形图元",
       "concept": "GPU 光栅化通常围绕三角形图元组织，矩形可以拆成两个三角形。",
-      "question": "为什么实时渲染里常把矩形拆成两个三角形，而不是把矩形当作基础光栅化图元？",
-      "expectedKeywords": ["三角形", "共面", "光栅化", "插值", "稳定"],
-      "hint": "三角形一定共面，重心插值和覆盖测试都更稳定。",
+      "question": "如果一个矩形由两个三角形组成，为什么共享边上的片元需要得到一致的 UV 插值结果？",
+      "expectedKeywords": ["共享边", "UV", "插值", "连续", "三角形"],
+      "hint": "共享边两侧若插值不一致，纹理会出现接缝。",
       "patchId": "01-quad-geometry",
       "expectedObservation": "画面出现一个居中的矩形。",
       "state": {
@@ -39,12 +47,20 @@
       }
     },
     {
+      "id": "uv-normalization",
+      "title": "UV 归一化",
+      "concept": "UV 通常使用 [0, 1] 坐标，使几何表面和纹理分辨率解耦。",
+      "question": "如果同一张模型要从 512x512 纹理换成 2048x2048 纹理，为什么归一化 UV 不需要随分辨率重写？",
+      "expectedKeywords": ["归一化", "分辨率", "纹理空间", "映射", "解耦"],
+      "hint": "UV 描述的是纹理空间比例位置，不是具体像素编号。"
+    },
+    {
       "id": "uv-coordinates",
       "title": "UV 空间",
       "concept": "UV 把几何表面映射到纹理空间，通常用归一化坐标解耦图片分辨率。",
-      "question": "为什么 UV 通常使用 0 到 1 的归一化范围，而不是直接使用纹理像素坐标？",
-      "expectedKeywords": ["归一化", "分辨率", "映射", "采样", "纹理空间"],
-      "hint": "这样同一套 UV 可以适配不同尺寸的纹理图像。",
+      "question": "为什么片元颜色可以直接用 vec3(uv, 1.0 - uv.x) 显示成平滑渐变？",
+      "expectedKeywords": ["UV", "片元", "插值", "渐变", "连续"],
+      "hint": "fragment shader 收到的是每个片元插值后的 UV，因此相邻片元的值会连续变化。",
       "patchId": "02-uv-gradient",
       "expectedObservation": "矩形显示由 UV 产生的渐变。",
       "state": {
@@ -53,12 +69,20 @@
       }
     },
     {
+      "id": "sampling-frequency",
+      "title": "采样频率",
+      "concept": "纹理采样发生在片元阶段，采样频率接近屏幕像素频率；这决定了细节、走样和过滤的风险。",
+      "question": "为什么高频棋盘纹理在屏幕上缩小时容易出现走样，而低频纹理更稳定？",
+      "expectedKeywords": ["采样频率", "高频", "走样", "屏幕像素", "过滤"],
+      "hint": "当纹理变化频率高于屏幕采样能力时，相邻像素无法稳定表达原始信号。"
+    },
+    {
       "id": "procedural-sampling",
       "title": "片元级采样",
       "concept": "光栅化会为矩形内部每个片元插值 UV，fragment shader 再用 UV 查询颜色。",
-      "question": "为什么纹理采样必须发生在片元级，而不是只在四个顶点上采样一次？",
-      "expectedKeywords": ["片元", "插值", "UV", "采样", "分辨率"],
-      "hint": "屏幕上有大量像素位于顶点之间，它们都需要自己的纹理坐标和颜色。",
+      "question": "为什么用 floor(vUv * scale) 生成方格时，scale 越大越容易产生密集变化和锯齿？",
+      "expectedKeywords": ["floor", "scale", "频率", "UV", "锯齿"],
+      "hint": "scale 增大后，同样的 UV 范围会被分成更多格子，颜色切换更频繁。",
       "patchId": "03-checker-sampling",
       "expectedObservation": "矩形显示低对比、低频率的程序化方格纹理。",
       "state": {
@@ -68,12 +92,20 @@
       }
     },
     {
+      "id": "linear-interpolation",
+      "title": "线性插值公式",
+      "concept": "mix(a, b, t) 等价于 a * (1 - t) + b * t，t 控制结果在两端之间的位置。",
+      "question": "从 a * (1 - t) + b * t 出发，为什么 t = 0.25 时结果更接近 a 而不是 b？",
+      "expectedKeywords": ["线性插值", "t", "权重", "a", "b"],
+      "hint": "t = 0.25 时，a 的权重是 0.75，b 的权重是 0.25。"
+    },
+    {
       "id": "texture-mix",
       "title": "线性混合",
       "concept": "mix(a, b, t) 是逐分量线性插值，t 控制结果靠近 a 还是 b。",
-      "question": "mix(textureA, textureB, amount) 为什么可以看作一次线性插值？",
-      "expectedKeywords": ["线性插值", "amount", "textureA", "textureB", "权重"],
-      "hint": "amount 为 0 接近第一项，为 1 接近第二项，中间值按比例混合。",
+      "question": "为什么 mix(textureA, textureB, amount) 对 RGB 三个通道是分别线性混合，而不是把颜色当成一个单独标量？",
+      "expectedKeywords": ["RGB", "逐分量", "线性插值", "amount", "颜色"],
+      "hint": "vec3 混合会分别计算 r、g、b 三个分量的插值。",
       "patchId": "04-texture-mix",
       "expectedObservation": "矩形显示两种程序化纹理混合后的结果。",
       "state": {

@@ -38,72 +38,131 @@
   "teachingRules": [
     "每轮只提出一个问题。",
     "先判断用户回答，再决定是否应用 patch。",
-    "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
+    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
     "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
+      "id": "space-chain",
+      "title": "坐标空间链",
+      "concept": "典型顶点变换链可写为 p_clip = P * V * M * p_local。",
+      "question": "在 p_clip = P * V * M * p_local 中，为什么 M、V、P 分别不应该混在同一个概念里理解？",
+      "expectedKeywords": [
+        "M",
+        "V",
+        "P",
+        "局部",
+        "世界",
+        "观察",
+        "裁剪"
+      ],
+      "hint": "它们分别负责物体摆放、相机观察和投影裁剪，语义不同。"
+    },
+    {
       "id": "local-world",
       "title": "局部空间到世界空间",
       "concept": "局部顶点只描述模型自身形状，model matrix 负责把它放入世界。",
-      "question": "为什么不能把模型顶点都直接写成世界坐标，而要保留局部空间再用 model matrix 变换？",
+      "question": "为什么保留局部空间能让同一个 mesh 用不同 model matrix 实例化到多个世界位置？",
       "expectedKeywords": [
         "局部",
-        "复用",
-        "模型矩阵",
+        "mesh",
+        "model matrix",
         "实例",
         "世界"
       ],
-      "hint": "同一个 mesh 可以被多个 model matrix 放到不同位置。",
+      "hint": "mesh 数据描述形状，model matrix 描述每个实例的世界变换。",
       "patchId": "01-local-world",
       "expectedObservation": "画面显示带低对比纹理的基础平面。"
+    },
+    {
+      "id": "depth-and-occlusion",
+      "title": "深度与遮挡",
+      "concept": "三维几何不仅有屏幕 x、y，还有深度 z；深度参与遮挡和透视比例。",
+      "question": "为什么只看二维平面很难暴露 view/projection 矩阵中的深度错误，而立方体更容易暴露？",
+      "expectedKeywords": [
+        "深度",
+        "z",
+        "遮挡",
+        "projection",
+        "立方体"
+      ],
+      "hint": "立方体有多个面和不同深度，错误的深度关系会直接影响可见面和比例。"
     },
     {
       "id": "enter-3d",
       "title": "三维方向与深度",
       "concept": "三维物体可以暴露深度、遮挡和不同面的法线方向。",
-      "question": "从二维平面换成三维立方体后，为什么更容易判断空间变换是否正确？",
+      "question": "为什么立方体的多个面能帮助你判断旋转、相机方向和透视是否同时正确？",
       "expectedKeywords": [
+        "多个面",
         "深度",
-        "遮挡",
         "方向",
-        "法线",
-        "三维"
+        "旋转",
+        "透视"
       ],
-      "hint": "平面缺少多个方向的面，很多旋转或深度错误不容易被看出来。",
+      "hint": "不同朝向的面会在屏幕上形成不同的投影形状和遮挡关系。",
       "patchId": "02-enter-3d",
       "expectedObservation": "画面出现一个低对比纹理立方体。"
+    },
+    {
+      "id": "view-inverse",
+      "title": "View 是相机变换的逆",
+      "concept": "view matrix 通常是相机世界矩阵的逆，把世界点表示到相机局部坐标系中。",
+      "question": "如果相机在世界中向 +x 移动，为什么 view 变换看起来像把世界向 -x 移动？",
+      "expectedKeywords": [
+        "逆矩阵",
+        "相机",
+        "世界",
+        "相反",
+        "view"
+      ],
+      "hint": "观察空间把相机固定在原点，因此需要把世界用相机变换的逆搬过去。"
     },
     {
       "id": "view-transform",
       "title": "世界空间到观察空间",
       "concept": "view matrix 相当于把整个世界变换到以相机为原点的坐标系。",
-      "question": "为什么移动相机可以理解为对世界应用一个相反方向的 view 变换？",
+      "question": "为什么同一个世界点经过不同 view matrix 后，会得到不同的观察空间坐标？",
       "expectedKeywords": [
-        "相反",
-        "视图矩阵",
+        "view matrix",
         "观察空间",
         "相机",
-        "世界"
+        "坐标",
+        "相对"
       ],
-      "hint": "渲染时常把相机固定在观察空间原点，再把世界变换过去。",
+      "hint": "观察空间坐标描述的是点相对于当前相机坐标系的位置。",
       "patchId": "03-view-transform",
       "expectedObservation": "立方体从更明显的斜上方被观察。"
+    },
+    {
+      "id": "clip-and-ndc",
+      "title": "裁剪空间到 NDC",
+      "concept": "projection 输出裁剪空间坐标 p_clip，随后执行 p_ndc = p_clip.xyz / p_clip.w。",
+      "question": "为什么透视投影要先保留 w，再用 xyz / w 得到 NDC，而不是直接输出最终屏幕坐标？",
+      "expectedKeywords": [
+        "w",
+        "透视除法",
+        "NDC",
+        "裁剪空间",
+        "深度"
+      ],
+      "hint": "w 携带了透视缩放所需的深度关系，除以 w 后才形成近大远小。"
     },
     {
       "id": "projection",
       "title": "裁剪空间与透视除法",
       "concept": "projection matrix 输出裁剪空间坐标，随后透视除法把 xyz 除以 w 得到 NDC。",
-      "question": "透视投影中为什么需要齐次坐标的 w，并在之后执行透视除法？",
+      "question": "为什么更远的物体在透视除法后会占用更小的 NDC 范围？",
       "expectedKeywords": [
-        "w",
         "透视除法",
+        "w",
+        "远",
         "NDC",
-        "近大远小",
-        "裁剪空间"
+        "近大远小"
       ],
-      "hint": "让屏幕坐标和深度产生关系，是透视效果的关键。",
+      "hint": "远处点通常对应更大的深度相关分母，同样大小的空间位移会被压得更小。",
       "patchId": "04-projection",
       "expectedObservation": "多个立方体进入视野，空间层次更明显。"
     }

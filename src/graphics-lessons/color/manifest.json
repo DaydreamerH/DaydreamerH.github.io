@@ -47,56 +47,99 @@
   "teachingRules": [
     "每轮只提出一个问题。",
     "先判断用户回答，再决定是否应用 patch。",
-    "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch。",
+    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
     "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
+      "id": "color-as-vector",
+      "title": "颜色向量",
+      "concept": "RGB 颜色可看作三维向量，每个分量表示对应通道的相对强度或反射比例。",
+      "question": "为什么 objectColor * lightColor 通常是逐通道相乘，而不是把两个颜色先转成一个标量再相乘？",
+      "expectedKeywords": [
+        "RGB",
+        "逐通道",
+        "向量",
+        "反射",
+        "分量"
+      ],
+      "hint": "红、绿、蓝光的能量和反射比例可以分别变化。"
+    },
+    {
       "id": "object-color",
       "title": "物体颜色",
       "concept": "物体颜色可以理解为表面对不同颜色通道的反射比例。",
-      "question": "为什么物体本身的颜色不能单独决定最终显示颜色，还要考虑光源颜色？",
+      "question": "如果 objectColor = (0.9, 0.4, 0.2)，为什么它表示物体更容易保留红色光而不是蓝色光？",
       "expectedKeywords": [
-        "光源",
-        "反射",
-        "通道",
-        "相乘",
-        "最终颜色"
+        "objectColor",
+        "红色",
+        "蓝色",
+        "反射比例",
+        "通道"
       ],
-      "hint": "如果入射光缺少某个颜色通道，物体通常无法反射出这个通道。",
+      "hint": "每个分量越大，表示对应颜色通道保留得越多。",
       "patchId": "01-object-color",
       "expectedObservation": "立方体显示物体基础颜色。"
+    },
+    {
+      "id": "channel-filtering",
+      "title": "光谱筛选",
+      "concept": "光源颜色提供入射光通道，物体颜色提供反射比例，最终颜色可近似为逐通道能量筛选。",
+      "question": "若 lightColor 的红色分量很低，为什么再红的物体也很难显示出强红色？",
+      "expectedKeywords": [
+        "lightColor",
+        "红色分量",
+        "入射光",
+        "反射",
+        "相乘"
+      ],
+      "hint": "没有足够的红色入射光，物体就没有红色能量可以反射。"
     },
     {
       "id": "light-color",
       "title": "光源颜色",
       "concept": "光源颜色会和物体反射颜色逐通道组合，限制最终可见颜色。",
-      "question": "如果橙色物体被偏蓝的光照亮，为什么最终颜色可能变暗或偏冷？",
+      "question": "从 finalColor = objectColor * lightColor 出发，为什么橙色物体在偏蓝光下可能变暗或偏冷？",
       "expectedKeywords": [
+        "finalColor",
         "逐通道",
-        "相乘",
+        "橙色",
         "蓝光",
-        "缺少",
-        "反射"
+        "相乘"
       ],
-      "hint": "橙色依赖较强红绿通道，蓝色光源可能不提供足够红绿能量。",
+      "hint": "橙色依赖较强红绿通道，偏蓝光会削弱这些通道的输入。",
       "patchId": "02-light-color",
       "expectedObservation": "立方体颜色受光源颜色影响而变化。"
+    },
+    {
+      "id": "light-direction-setup",
+      "title": "从颜色到方向光照",
+      "concept": "颜色相乘只处理通道能量，方向光照还需要 lightDir = normalize(lightPos - fragPos)。",
+      "question": "为什么只知道 lightColor 不能计算漫反射，还必须知道 lightDir 或 lightPos？",
+      "expectedKeywords": [
+        "lightDir",
+        "lightPos",
+        "法线",
+        "夹角",
+        "漫反射"
+      ],
+      "hint": "漫反射亮度取决于表面法线与入射光方向的夹角。"
     },
     {
       "id": "light-position",
       "title": "光源位置",
       "concept": "光源位置为后续方向光照提供 lightDir，是从颜色模型进入光照模型的桥梁。",
-      "question": "为什么在进入漫反射计算前，需要知道光源位置或光照方向？",
+      "question": "为什么 lightDir = normalize(lightPos - fragPos) 必须按片元位置计算，而不是整个物体共用一个固定方向？",
       "expectedKeywords": [
-        "方向",
         "lightDir",
-        "法线",
-        "夹角",
-        "漫反射"
+        "fragPos",
+        "normalize",
+        "片元",
+        "方向"
       ],
-      "hint": "有了光照方向，才可以比较表面朝向是否面向光源。",
+      "hint": "点光源到物体不同片元的方向可能不同。",
       "patchId": "03-light-marker",
       "expectedObservation": "画面中出现表示光源位置的小标记。"
     }
