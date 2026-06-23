@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["DS"]
 photos: "banner.jpeg"
 source: "_posts"
----# 分布式系统第四章
+---
+# 分布式系统第四章
 ## 分布式互斥
 目的：仅基于消息投递，实现对资源的互斥访问。
 

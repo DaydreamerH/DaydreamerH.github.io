@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["CUDA", "C++"]
 source: "_posts"
----## 串行算法介绍
+---
+## 串行算法介绍
 ### QR分解
 本次实验选择的是瘦高型矩阵的QR分解，具体而言是针对32列矩阵的QR分解。
 

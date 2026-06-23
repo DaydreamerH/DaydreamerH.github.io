@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE5", "C++", "蓝图"]
 photos: "banner.jpg"
 source: "_posts"
----# 问题介绍
+---
+# 问题介绍
 
 仿制 Lyra 的运动系统时，在 **Start 与 Stop 动画处**，使用 **Orientation Warping** 失效；而在 **Cycle Layer** 使用正常。
 

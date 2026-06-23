@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.jpg"
 source: "_posts"
----# if语句
+---
+# if语句
 当C\+\+程序必须决定是否执行某个操作时，通常使用if语句来实现选择。
 
 if有两种格式：if和if else.

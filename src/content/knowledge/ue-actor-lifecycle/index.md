@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.jpg"
 source: "_posts"
----## 从硬盘加载
+---
+## 从硬盘加载
 当 `UEgine::LoadMap` 或者 level streaming 使用 `UWorld::AddToWorld` 时，任何已经处于 level 的 Actor 是从硬盘加载的。
 
 1. 当 Actor 从硬盘加载完毕后，会触发 `PostLoad` 函数，如果需要对旧版本数据做兼容处理或修复，就写在这里。 `PostLoad` 和 `PostActorCreated` 不会同时触发：前者说明 Actor 时读档进来的，后者说明 Actor 是新诞生的，例如 `SpawnActor` 或在编辑器手动拖入场景。

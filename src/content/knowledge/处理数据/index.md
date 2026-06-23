@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.jpg"
 source: "_posts"
----# 简单变量
+---
+# 简单变量
 ## 变量名
 C\+\+提倡使用有一定含义的变量名。
 

@@ -14,7 +14,8 @@ prerequisites: []
 tags: []
 photos: "banner.png"
 source: "_posts"
----今早做了个梦
+---
+今早做了个梦
 
 梦有4人，我、A、B、C，我是梦的摄像头，是受害者的紧密关系者；A是我的长者，是任务的主要执行者；B是一个怪物，受A的控制但是情绪不稳定。
 

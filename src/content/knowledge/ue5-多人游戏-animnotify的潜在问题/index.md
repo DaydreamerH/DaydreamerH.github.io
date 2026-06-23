@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["UE", "C++"]
 source: "_posts"
----在开发一个多人联机TPS游戏时，出现了一个网络同步导致的AnimNotify重复触发的问题。
+---
+在开发一个多人联机TPS游戏时，出现了一个网络同步导致的AnimNotify重复触发的问题。
 
 本游戏客户端换弹逻辑为：
 

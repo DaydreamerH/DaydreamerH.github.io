@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["PyTorch", "AI"]
 photos: "banner.jpg"
 source: "_posts"
----# 注意力提示
+---
+# 注意力提示
 注意力是稀缺的，而环境中的干扰注意力的信息却并不少，我们只会将注意力引向感兴趣的一小部分信息。
 
 ## 查询、键和值

@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["HPC", "C", "CUDA"]
 photos: "banner.png"
 source: "_posts"
----# BankConflict介绍
+---
+# BankConflict介绍
 
 ## 基础概念
 ### SM(Streathread tileg Multiprocessor)

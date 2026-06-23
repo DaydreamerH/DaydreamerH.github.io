@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["CG", "OptiX"]
 photos: "banner.jpg"
 source: "_posts"
----# Introduction
+---
+# Introduction
 本节将要介绍的API包括：
 ```
 optixDeviceContextCreate

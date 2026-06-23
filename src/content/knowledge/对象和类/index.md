@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.jpg"
 source: "_posts"
----# 抽象和类
+---
+# 抽象和类
 ## 基本类型
 
 指定基本类型需要完成三个工作：

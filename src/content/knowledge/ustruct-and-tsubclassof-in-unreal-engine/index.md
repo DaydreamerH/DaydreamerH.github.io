@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.png"
 source: "_posts"
----## `UStruct`
+---
+## `UStruct`
 `UStruct` 是对标准 C++ 结构体的增强，使其能被虚幻的反射系统识别。
 
 它比 `UObject` 更轻量，创建速度更快。

@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["c++"]
 photos: "banner.jpg"
 source: "_posts"
----# C++程序的基本构成
+---
+# C++程序的基本构成
 ## 显示消息的C++程序
 ```
 // myfirst.cpp

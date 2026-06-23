@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++", "GAS"]
 photos: "banner.jpg"
 source: "_posts"
----## 问题
+---
+## 问题
 在 Unreal Engine 的 **Gameplay Ability System (GAS)** 中，`GameplayEffect (GE)` 是一个非常核心的概念。
 GE 可以用来表示 Buff、Debuff、DOT（持续伤害）、HOT（持续治疗）等效果。
 它们通常拥有三种持续策略：

@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI", "PyTorch"]
 photos: "banner.jpg"
 source: "_posts"
----Transformer模型完全基于注意力机制，没有任何卷积层或循环神经网络。
+---
+Transformer模型完全基于注意力机制，没有任何卷积层或循环神经网络。
 # 模型
 Transformer作为编码器-解码器架构，整体架构如下图：
 ![](structure.jpg)

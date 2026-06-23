@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["DS"]
 photos: "banner.jpg"
 source: "_posts"
----# 分布式系统第一章
+---
+# 分布式系统第一章
 ## 为什么需要分布式系统
 - 功能分离。
 - 固有的分布性。

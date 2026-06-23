@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++", "CUDA", "HPC"]
 photos: "banner.png"
 source: "_posts"
----## Cholesky 分解在干什么
+---
+## Cholesky 分解在干什么
 Cholesky 分解是将一个对称、正定的矩阵 $A$，分解为一个下三角矩阵 $L$ 及其转置 $L^T$ 乘积：
 $$
 A = LL^T

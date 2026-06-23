@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "MotionWarping", "C++"]
 photos: "banner.jpg"
 source: "_posts"
----![](result.gif)
+---
+![](result.gif)
 
 # UE5 实现一个简单的攀爬（Parkour）模块 —— 代码解析与系统说明
 

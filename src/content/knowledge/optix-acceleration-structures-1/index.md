@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["CG", "OptiX"]
 source: "_posts"
----# Introduction
+---
+# Introduction
 本节将介绍以下API：
 ```
 optixAccelComputeMemoryUsage

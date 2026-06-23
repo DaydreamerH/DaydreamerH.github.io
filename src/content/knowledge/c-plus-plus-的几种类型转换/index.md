@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["C++"]
 source: "_posts"
----在C语言中，我们大多数使用`(type_name) exp`的方式来进行类型转换。
+---
+在C语言中，我们大多数使用`(type_name) exp`的方式来进行类型转换。
 
 但是在C\+\+中，更推荐使用四个转换操作符来实现显式类型转换：
 - static_cast

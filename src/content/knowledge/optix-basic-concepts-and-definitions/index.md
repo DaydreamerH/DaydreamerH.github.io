@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["CG", "OptiX"]
 photos: "banner.jpg"
 source: "_posts"
----# Program
+---
+# Program
 在Nvidia的OptiX中，Program是指GPU上运行的一小段逻辑，用以处理光线计算的某一阶段。
 
 也就是说，每条光线在其生命周期会依次调用不同的Program，例如：RayGen、ClosestHit、Miss等。

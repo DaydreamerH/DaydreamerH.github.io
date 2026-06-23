@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["cv", "AI"]
 photos: "banner.jpg"
 source: "_posts"
----# 计算机视觉
+---
+# 计算机视觉
 ## 视觉
 - 视觉是人类观察世界、认知世界的重要功能手段
 - 视觉可进一步分为视感觉和视知觉

@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["C++"]
 source: "_posts"
----参考：
+---
+参考：
 https://csguide.cn/
 
 一般而言，C\+\+全局变量的作用范围仅限于当前文件，但同时C\+\+也支持分离式编译，允许将程序分割为若干个文件被独立编译。

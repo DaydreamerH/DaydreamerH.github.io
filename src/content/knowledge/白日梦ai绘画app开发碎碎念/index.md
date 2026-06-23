@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["MySQL", "uni-app", "flask", "stable-diffusion"]
 photos: "banner.jpg"
 source: "_posts"
----演示视频如下：
+---
+演示视频如下：
 
 <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=917138949&bvid=BV1Vu4y1s7QK&cid=1298845126&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width=80% height = 500></iframe>
 

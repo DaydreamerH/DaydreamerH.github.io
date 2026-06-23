@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["PyTorch", "AI"]
 photos: "banner.jpg"
 source: "_posts"
----# 线性回归
+---
+# 线性回归
 ## 线性回归的从零开始实现
 ### 生成数据集
 根据带有噪声的线性模型构造一个数据集

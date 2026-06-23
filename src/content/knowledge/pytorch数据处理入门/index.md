@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["PyTorch", "AI"]
 photos: "banner.jpg"
 source: "_posts"
----# PyTorch数据操作入门
+---
+# PyTorch数据操作入门
 ## 张量
 ### 什么是张量
 张量表示一个由数值组成的数组，这个数组可能有多个维度。

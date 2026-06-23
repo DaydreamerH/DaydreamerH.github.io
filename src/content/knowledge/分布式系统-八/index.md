@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: []
 source: "_posts"
----# 分布式系统第九章
+---
+# 分布式系统第九章
 ## Google云计算基础组件
 <!-- 原博客中的 image.png 未随资源目录提供，未发布文章保留正文但不渲染。 -->
 ### Chubby

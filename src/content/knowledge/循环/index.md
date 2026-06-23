@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.jpg"
 source: "_posts"
----# for循环
+---
+# for循环
 ## for循环的组成部分
 for循环的组成部分完成下面这些内容：
 1. 设置初始值

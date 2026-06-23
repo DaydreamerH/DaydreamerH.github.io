@@ -3,6 +3,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
 
+const articleImages = import.meta.glob<{ default: ImageMetadata }>(
+  "../../content/knowledge/**/*.{avif,gif,jpeg,jpg,png,webp}",
+  { eager: true }
+);
+
 export async function getStaticPaths() {
   const docs = (await getCollection("knowledge"))
     .filter((doc) => doc.data.status === "ready" && doc.data.published !== false);
@@ -15,6 +20,10 @@ export async function getStaticPaths() {
 
 const { doc } = Astro.props;
 const { Content } = await render(doc);
+const bannerPath = doc.data.photos
+  ? `../../content/knowledge/${doc.slug}/${doc.data.photos}`
+  : "";
+const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
 ---
 
 <BaseLayout title={doc.data.title} description={doc.data.description}>
@@ -32,8 +41,8 @@ const { Content } = await render(doc);
       </div>
     </header>
 
-    {doc.data.photos && (
-      <img class="article-banner" src={`./${doc.data.photos}`} alt="" loading="eager" />
+    {banner && (
+      <img class="article-banner" src={banner.src} alt="" loading="eager" />
     )}
 
     {doc.data.prerequisites.length > 0 && (

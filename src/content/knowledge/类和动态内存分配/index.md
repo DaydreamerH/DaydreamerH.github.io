@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.jpg"
 source: "_posts"
----# 动态内存和类
+---
+# 动态内存和类
 ## StringBad
 接下来，将要编写一个简单的String类，该类存在一些缺陷供我们讨论。
 

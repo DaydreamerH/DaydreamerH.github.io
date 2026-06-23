@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["GPU"]
 source: "_posts"
----# 获取GPU节点并加载DTK
+---
+# 获取GPU节点并加载DTK
 ```
 sinfo
 ```

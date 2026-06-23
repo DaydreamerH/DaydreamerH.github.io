@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["cv", "AI"]
 source: "_posts"
----# 边缘检测
+---
+# 边缘检测
 图像中的边缘是像素灰度值发生加速变化而不连续的结果。
 
 ## 检测原理

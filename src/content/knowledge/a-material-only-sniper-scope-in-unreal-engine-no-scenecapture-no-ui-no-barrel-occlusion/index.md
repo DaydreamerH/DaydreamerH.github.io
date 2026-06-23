@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.jpg"
 source: "_posts"
----实现前：
+---
+实现前：
 ![](bad.png)
 
 实现后：

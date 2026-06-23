@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["C++"]
 photos: "banner.png"
 source: "_posts"
----# 函数的基本知识
+---
+# 函数的基本知识
 要使用C\+\+函数，必须完成如下工作：
 - 提供函数的定义
 - 提供函数的原型

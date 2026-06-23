@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.png"
 source: "_posts"
----## Ticking
+---
+## Ticking
 Tick 是指在 Actor 或组件上定期执行的一段代码或蓝图脚本，通常是每帧执行一次。
 
 Tick 组和 Tick 依赖是开发者用来精确控制每帧逻辑执行顺序的工具，对于保证游戏逻辑的正确性和物理表现的稳定性至关重要。

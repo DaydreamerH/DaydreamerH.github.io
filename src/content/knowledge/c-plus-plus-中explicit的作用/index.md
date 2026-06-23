@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["C++"]
 source: "_posts"
----参考：
+---
+参考：
 https://csguide.cn/
 
 在C\+\+中，`explicit`通常用于构造函数的声明中，用于防止隐式转换。当将一个参数传递给构造函数时，如果构造函数声明中使用了`explicit`关键字，则只能使用显式转换进行类型转换，而不能进行隐式转换。

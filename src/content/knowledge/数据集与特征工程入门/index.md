@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: ["AI"]
 source: "_posts"
----# sklearn数据集
+---
+# sklearn数据集
 ## sklearn数据集API介绍
 sklearn.datasets
 - 加载获取流行数据集

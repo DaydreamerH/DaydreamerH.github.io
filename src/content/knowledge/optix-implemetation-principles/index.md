@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["CG", "OptiX"]
 photos: "banner.jpg"
 source: "_posts"
----# Error handling
+---
+# Error handling
 OptiX的API调用会返回枚举值，通过减产返回值，我们可以判断调用是否成功。
 
 可以在创建device context时注册一个日志回调函数：

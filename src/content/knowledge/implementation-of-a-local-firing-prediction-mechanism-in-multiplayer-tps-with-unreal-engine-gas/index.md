@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++", "GAS"]
 photos: "banner.jpg"
 source: "_posts"
----200ms延迟：
+---
+200ms延迟：
 预测前：开火不连续，射速异常
 
 ![bad](bad.gif)

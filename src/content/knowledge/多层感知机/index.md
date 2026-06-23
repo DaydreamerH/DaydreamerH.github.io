@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI", "PyTorch"]
 photos: "banner.jpg"
 source: "_posts"
----# 多层感知机
+---
+# 多层感知机
 ## 隐藏层
 - 线性模型的弊端：线性意味着单调假设：任何特征的增大都会导致模型输出的增大或者模型输出的减小
 ### 在网络中加入隐藏层

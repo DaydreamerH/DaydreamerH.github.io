@@ -13,7 +13,8 @@ order: 1000
 prerequisites: []
 tags: []
 source: "_posts"
----# 基础的CNN发展过程
+---
+# 基础的CNN发展过程
 - LeNet：证明卷积神经网络可以不依靠特征工程
 - AlexNet：更深的网络，使用了更大的卷积核，受限于GPU，当时还得两个GPU并行运算
 - VGG：以块的概念设计，VGG块为：卷积+非线性激活+汇聚

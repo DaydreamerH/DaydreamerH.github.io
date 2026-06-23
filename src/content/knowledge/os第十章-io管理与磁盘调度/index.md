@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["OS"]
 photos: "banner.jpg"
 source: "_posts"
----# I/O设备
+---
+# I/O设备
 ## 设备分类
 - 人可读
   - 适用于计算机和用户之间的交互

@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.png"
 source: "_posts"
----## UFunction 声明
+---
+## UFunction 声明
 `UFUNCTION` 是用以告诉引擎该函数被反射系统识别和管理的宏。
 ```
 UFUNCTION([说明符1, 说明符2...], [meta(键1="值1", ...)])

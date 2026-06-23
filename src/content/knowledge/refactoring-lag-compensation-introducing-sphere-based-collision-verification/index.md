@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.jpg"
 source: "_posts"
----为了满足“爆炸子弹”的需求，现在需要对过去实现的延迟补偿组件重构与拓展。
+---
+为了满足“爆炸子弹”的需求，现在需要对过去实现的延迟补偿组件重构与拓展。
 
 ## 状态管理
 `ULagCompensationComponent` 会在每帧对角色的 `PhyAsset` 进行存储。

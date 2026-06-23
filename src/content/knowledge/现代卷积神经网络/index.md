@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI", "PyTorch", "cv"]
 photos: "banner.jpg"
 source: "_posts"
----# 深度卷积神经网络（AlexNet）
+---
+# 深度卷积神经网络（AlexNet）
 2012年，AlexNet首次证明了学习到的特征可以超越手动设计的特征。
 
 AlexNet的架构与LeNet非常相似。

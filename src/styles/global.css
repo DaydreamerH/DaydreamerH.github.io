@@ -190,7 +190,7 @@ h1,
 h2,
 h3,
 p {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 h1,
@@ -1134,7 +1134,9 @@ h3 {
 }
 
 .article-head h1 {
-  font-size: clamp(2rem, 4vw, 3.8rem);
+  max-width: 100%;
+  font-size: clamp(1.65rem, 2.3vw, 2.35rem);
+  line-height: 1.2;
 }
 
 .article-meta {
@@ -1166,10 +1168,23 @@ h3 {
   font-size: 1.02rem;
 }
 
+.article-content h1 {
+  max-width: 100%;
+  margin-top: 32px;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
 .article-content h2 {
-  margin-top: 34px;
-  padding-top: 22px;
-  border-top: 1px solid var(--line);
+  margin-top: 28px;
+  font-size: 1.22rem;
+  line-height: 1.32;
+}
+
+.article-content h3 {
+  margin-top: 24px;
+  font-size: 1.04rem;
+  line-height: 1.35;
 }
 
 .article-content li + li {
@@ -1205,6 +1220,31 @@ h3 {
   background: var(--panel-strong);
   color: var(--text);
   padding: 1px 5px;
+}
+
+.article-content pre {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: #222831;
+  color: #eeeeee;
+  padding: 16px;
+  line-height: 1.55;
+}
+
+.article-content pre code,
+.article-content pre code span {
+  display: inline;
+  border: 0;
+  background: transparent;
+  color: #eeeeee;
+  padding: 0;
+}
+
+.article-content pre code {
+  display: block;
+  min-width: max-content;
 }
 
 .article-cta {

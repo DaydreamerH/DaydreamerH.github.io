@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["DS"]
 photos: "banner.gif"
 source: "_posts"
----# 分布式系统第7章
+---
+# 分布式系统第7章
 ## 基础概念
 复制：在多个节点上保存相同数据的一个副本。
 

@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["socket", "c"]
 photos: "banner.jpg"
 source: "_posts"
----# 服务器软件设计概述
+---
+# 服务器软件设计概述
 ## 最简单服务器的算法
 1. 创建套接字
 2. 绑定到一个熟知端口

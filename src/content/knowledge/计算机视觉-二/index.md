@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI", "cv"]
 photos: "banner.jpg"
 source: "_posts"
----# 坐标变换
+---
+# 坐标变换
 对图像的坐标变换实际上是对像素坐标的空间位置变换，变换的结果是改变了像素在图像中的分布和关系。
 
 ## 基本坐标变换

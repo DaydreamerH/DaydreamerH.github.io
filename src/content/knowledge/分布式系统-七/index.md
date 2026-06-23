@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["DS"]
 photos: "banner.gif"
 source: "_posts"
----# 分布式系统第八章
+---
+# 分布式系统第八章
 ## 基础概念
 ### 本地文件系统
 文件系统提供文件的管理：

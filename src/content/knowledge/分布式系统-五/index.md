@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["DS"]
 photos: "banner.jpg"
 source: "_posts"
----# 分布式系统第六章
+---
+# 分布式系统第六章
 ## 分布式事务
 分布式事务是指访问由多个服务器管理的对象的事务。
 

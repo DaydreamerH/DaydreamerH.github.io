@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["socket", "c"]
 photos: "banner.jpg"
 source: "_posts"
----# 协议的程序接口
+---
+# 协议的程序接口
 ## 不精确指明的协议软件接口
 TCP/IP标准没有规定应用软件与TCP/IP协议软件如何接口的细节；这些标准只建议了所需的功能集，并允许系统设计者选择有关API的具体是实现细节。
 ### 优点与缺点

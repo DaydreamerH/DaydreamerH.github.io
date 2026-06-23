@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["UE", "C++"]
 photos: "banner.jpg"
 source: "_posts"
----UE中所有对象的基类都是 `UObject`. 而 `UClass` 宏的作用是标记 `UObject` 的子类，以便 `UObject` 处理系统可以识别他们。
+---
+UE中所有对象的基类都是 `UObject`. 而 `UClass` 宏的作用是标记 `UObject` 的子类，以便 `UObject` 处理系统可以识别他们。
 
 ## `UCLASS` 宏
 `UCLASS` 是用来告知 UE，被标记的这个 C++ 类要进入反射系统，变成引擎可管理的类型。

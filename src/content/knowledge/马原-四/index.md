@@ -14,7 +14,8 @@ prerequisites: []
 tags: []
 photos: "banner.jpg"
 source: "_posts"
----# 资本主义的本质及规律
+---
+# 资本主义的本质及规律
 ## 商品经济和价值规律
 ### 商品经济产生的社会历史条件（p184）
 - 存在社会分工

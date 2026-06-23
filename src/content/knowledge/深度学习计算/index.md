@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI", "PyTorch"]
 photos: "banner.jpg"
 source: "_posts"
----# 层和块
+---
+# 层和块
 - 我们首先学习的是具有单一输出的线性模型
   - 接受一些输入
   - 生成相应的标量输出

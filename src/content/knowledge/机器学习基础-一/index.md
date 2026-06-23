@@ -14,7 +14,8 @@ prerequisites: []
 tags: ["AI"]
 photos: "banner.jpg"
 source: "_posts"
----# 学习算法
+---
+# 学习算法
 对于某类任务T和性能度量P，一个计算机程序认为可以从经验E中学习是指，通过经验E改进后，它在任务T上由性能度量P衡量的性能会有所提升。
 ## 任务T
 ### 分类
