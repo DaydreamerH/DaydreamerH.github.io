@@ -1,0 +1,40 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "面向 UE5 游戏行业求职的静态知识库与训练台。" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | CGWeb</title>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="/">
+          <span class="brand-mark">CG</span>
+          <span>
+            <strong>CGWeb</strong>
+            <small>UE5 Knowledge Lab</small>
+          </span>
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="/">总览</a>
+          <a href="/knowledge/">知识库</a>
+        </nav>
+      </header>
+      <main>
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

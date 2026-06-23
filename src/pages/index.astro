@@ -1,0 +1,94 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { categoryLabels, trackDescriptions } from "../data/navigation";
+
+const knowledge = await getCollection("knowledge");
+const readyDocs = knowledge.filter((item) => item.data.status === "ready");
+const categories = Object.entries(categoryLabels).map(([key, label]) => ({
+  key,
+  label,
+  count: readyDocs.filter((item) => item.data.category === key).length
+}));
+const nextDocs = readyDocs.sort((a, b) => a.data.order - b.data.order).slice(0, 4);
+---
+
+<BaseLayout title="学习总览">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">UE5 游戏开发求职训练台</p>
+      <h1>把零散学习变成可追踪、可测试、可展示的知识库。</h1>
+      <p class="hero-text">
+        先从 UE5 知识库开始：每个知识点都保留前置关系、岗位路线、预计时间、练习任务和面试追问，后续可以继续接入测验、实验和作品集模块。
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="/knowledge/">进入知识库</a>
+        <a class="button" href="/knowledge/ue-gameplay-framework/">查看示例节点</a>
+      </div>
+    </div>
+    <div class="hero-panel" aria-label="当前知识库状态">
+      <div>
+        <span class="metric">{readyDocs.length}</span>
+        <span class="metric-label">已收录知识点</span>
+      </div>
+      <div>
+        <span class="metric">{categories.filter((item) => item.count > 0).length}</span>
+        <span class="metric-label">已覆盖方向</span>
+      </div>
+      <div>
+        <span class="metric">Static</span>
+        <span class="metric-label">纯静态架构</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-grid">
+    <div class="section-main">
+      <div class="section-heading">
+        <p class="eyebrow">Next Up</p>
+        <h2>建议优先掌握</h2>
+      </div>
+      <div class="knowledge-list compact">
+        {nextDocs.map((doc) => (
+          <a class="knowledge-row" href={`/knowledge/${doc.slug}/`}>
+            <span>
+              <strong>{doc.data.title}</strong>
+              <small>{doc.data.description}</small>
+            </span>
+            <span class="pill">{doc.data.minutes} min</span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <aside class="section-side">
+      <div class="section-heading">
+        <p class="eyebrow">Coverage</p>
+        <h2>知识方向</h2>
+      </div>
+      <div class="category-stack">
+        {categories.map((category) => (
+          <div class="category-line">
+            <span>{category.label}</span>
+            <strong>{category.count}</strong>
+          </div>
+        ))}
+      </div>
+    </aside>
+  </section>
+
+  <section class="track-section">
+    <div class="section-heading">
+      <p class="eyebrow">Roadmap</p>
+      <h2>后续可扩展路线</h2>
+    </div>
+    <div class="track-grid">
+      {trackDescriptions.map((track) => (
+        <article class="track-card">
+          <h3>{track.title}</h3>
+          <p>{track.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

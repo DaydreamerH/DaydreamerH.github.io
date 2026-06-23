@@ -1,0 +1,85 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { categoryLabels, levelLabels } from "../../data/navigation";
+
+const docs = (await getCollection("knowledge"))
+  .filter((item) => item.data.status === "ready")
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="知识库" description="CGWeb UE5 知识库，按岗位路线、分类、难度和标签组织可扩展学习文档。">
+  <section class="page-head">
+    <p class="eyebrow">Knowledge Base</p>
+    <h1>UE5 知识库</h1>
+    <p>
+      使用 Markdown/MDX 作为知识源。后续新增文档时，只需要补充 frontmatter 元数据和正文，列表、筛选和详情页会自动更新。
+    </p>
+  </section>
+
+  <section class="toolbar" aria-label="知识库筛选">
+    <label class="search-field">
+      <span>搜索</span>
+      <input id="knowledge-search" type="search" placeholder="输入 C++、UObject、Gameplay..." />
+    </label>
+    <label class="select-field">
+      <span>分类</span>
+      <select id="category-filter">
+        <option value="all">全部分类</option>
+        {Object.entries(categoryLabels).map(([key, label]) => (
+          <option value={key}>{label}</option>
+        ))}
+      </select>
+    </label>
+  </section>
+
+  <section class="knowledge-grid" id="knowledge-grid">
+    {docs.map((doc) => (
+      <article
+        class="knowledge-card"
+        data-title={doc.data.title.toLowerCase()}
+        data-tags={doc.data.tags.join(" ").toLowerCase()}
+        data-category={doc.data.category}
+      >
+        <div class="card-meta">
+          <span class="pill">{categoryLabels[doc.data.category]}</span>
+          <span>{levelLabels[doc.data.level]} · {doc.data.minutes} min</span>
+        </div>
+        <h2><a href={`/knowledge/${doc.slug}/`}>{doc.data.title}</a></h2>
+        <p>{doc.data.description}</p>
+        <div class="tag-row">
+          {doc.data.tags.map((tag) => <span>{tag}</span>)}
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <p class="empty-state" id="empty-state" hidden>没有匹配的知识点。</p>
+
+  <script>
+    const searchInput = document.querySelector("#knowledge-search");
+    const categoryFilter = document.querySelector("#category-filter");
+    const cards = Array.from(document.querySelectorAll(".knowledge-card"));
+    const emptyState = document.querySelector("#empty-state");
+
+    function applyFilters() {
+      const query = searchInput.value.trim().toLowerCase();
+      const category = categoryFilter.value;
+      let visible = 0;
+
+      for (const card of cards) {
+        const text = `${card.dataset.title} ${card.dataset.tags}`;
+        const matchesQuery = !query || text.includes(query);
+        const matchesCategory = category === "all" || card.dataset.category === category;
+        const show = matchesQuery && matchesCategory;
+        card.hidden = !show;
+        if (show) visible += 1;
+      }
+
+      emptyState.hidden = visible !== 0;
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+    categoryFilter.addEventListener("change", applyFilters);
+  </script>
+</BaseLayout>

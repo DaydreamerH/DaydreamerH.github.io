@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+import { categoryLabels, levelLabels } from "../../data/navigation";
+
+export async function getStaticPaths() {
+  const docs = await getCollection("knowledge");
+  return docs.map((doc) => ({
+    params: { slug: doc.slug },
+    props: { doc }
+  }));
+}
+
+const { doc } = Astro.props;
+const { Content } = await render(doc);
+---
+
+<BaseLayout title={doc.data.title} description={doc.data.description}>
+  <article class="article-layout">
+    <header class="article-head">
+      <a class="back-link" href="/knowledge/">返回知识库</a>
+      <p class="eyebrow">{doc.data.track}</p>
+      <h1>{doc.data.title}</h1>
+      <p>{doc.data.description}</p>
+      <div class="article-meta">
+        <span>{categoryLabels[doc.data.category]}</span>
+        <span>{levelLabels[doc.data.level]}</span>
+        <span>{doc.data.minutes} min</span>
+      </div>
+    </header>
+
+    {doc.data.prerequisites.length > 0 && (
+      <aside class="prereq-box">
+        <strong>前置知识</strong>
+        <div class="tag-row">
+          {doc.data.prerequisites.map((item) => <span>{item}</span>)}
+        </div>
+      </aside>
+    )}
+
+    <div class="article-content">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
