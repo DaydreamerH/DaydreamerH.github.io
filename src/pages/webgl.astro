@@ -2,10 +2,69 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="WebGL 实验" description="WebGL 与图形编程练习页面。">
-  <section class="empty-module">
-    <p class="eyebrow">WebGL Lab</p>
-    <h1>WebGL 实验</h1>
-    <p>用于整理 WebGL、Shader、渲染管线和图形编程练习。</p>
+<BaseLayout title="Graphics Lab" description="WebGL 与 shader 实验编辑器。">
+  <section class="graphics-lab" data-graphics-lab aria-label="Graphics Lab 编辑器">
+    <div class="lab-preview-panel">
+      <div class="lab-panel-head">
+        <div>
+          <span>Preview</span>
+          <strong>Transform Starter</strong>
+        </div>
+        <div class="lab-status">
+          <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
+          <span data-lab-status>等待运行</span>
+        </div>
+      </div>
+
+      <div class="lab-canvas-wrap">
+        <canvas data-lab-canvas aria-label="实时图形预览"></canvas>
+      </div>
+
+      <div class="lab-error-box" data-lab-errors hidden></div>
+    </div>
+
+    <aside class="lab-editor-panel">
+      <div class="lab-panel-head">
+        <div>
+          <span>Editor</span>
+          <strong>Three.js + Shader</strong>
+        </div>
+        <div class="lab-toolbar">
+          <label class="lab-toggle">
+            <input type="checkbox" data-auto-run checked />
+            <span>Auto</span>
+          </label>
+          <button type="button" data-run>运行</button>
+          <button type="button" data-reset-lab>重置</button>
+          <button type="button" data-expand-editor aria-pressed="false">展开编辑器</button>
+        </div>
+      </div>
+
+      <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
+        <button class="is-active" type="button" role="tab" data-file-tab data-file="main.js" aria-selected="true">
+          main.js
+        </button>
+        <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
+          vertex.glsl
+        </button>
+        <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
+          fragment.glsl
+        </button>
+      </div>
+
+      <div class="lab-editor-shell">
+        <div class="lab-editor-host" data-editor-host></div>
+      </div>
+
+      <div class="lab-hints">
+        <span>Ctrl + Enter 运行</span>
+        <span>Ctrl + S 保存</span>
+        <span>自动保存到当前浏览器</span>
+      </div>
+    </aside>
   </section>
+
+  <script>
+    import "../scripts/graphics-lab";
+  </script>
 </BaseLayout>
