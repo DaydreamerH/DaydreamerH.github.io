@@ -6,7 +6,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "DaydreamerH 的游戏开发训练工作台。" } = Astro.props;
+const { title, description = "DaydreamerH 的游戏开发学习记录与测试页面。" } = Astro.props;
 const currentPath = Astro.url.pathname;
 const navItems = [
   { href: "/", label: "工作台", active: currentPath === "/" },
@@ -26,7 +26,7 @@ const navItems = [
   </head>
   <body>
     <div class="site-shell">
-      <header class="topbar">
+      <header class="topbar" data-topbar>
         <a class="brand" href="/">
           <span class="brand-mark">DH</span>
           <span>
@@ -46,5 +46,46 @@ const navItems = [
         <slot />
       </main>
     </div>
+    <script>
+      const topbar = document.querySelector("[data-topbar]");
+      const topRestoreThreshold = 72;
+      const hideThreshold = 144;
+      const scrollDeltaThreshold = 6;
+      let lastScrollY = window.scrollY;
+      let ticking = false;
+
+      function syncTopbar() {
+        if (!topbar) return;
+
+        const currentScrollY = Math.max(window.scrollY, 0);
+        const scrollDelta = currentScrollY - lastScrollY;
+        const isAtTop = currentScrollY <= topRestoreThreshold;
+
+        topbar.classList.toggle("is-detached", !isAtTop);
+
+        if (isAtTop) {
+          topbar.classList.remove("is-hidden");
+        } else if (scrollDelta > scrollDeltaThreshold && currentScrollY > hideThreshold) {
+          topbar.classList.add("is-hidden");
+        } else if (scrollDelta < -scrollDeltaThreshold) {
+          topbar.classList.remove("is-hidden");
+        }
+
+        lastScrollY = currentScrollY;
+        ticking = false;
+      }
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (ticking) return;
+          ticking = true;
+          window.requestAnimationFrame(syncTopbar);
+        },
+        { passive: true }
+      );
+
+      syncTopbar();
+    </script>
   </body>
 </html>

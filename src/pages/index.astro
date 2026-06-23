@@ -1,23 +1,35 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { getCategoryLabel } from "../data/navigation";
+
+const recentDocs = (await getCollection("knowledge"))
+  .filter((item) => item.data.status === "ready" && item.data.published !== false)
+  .sort((a, b) => {
+    const dateA = a.data.date ? Date.parse(a.data.date) : 0;
+    const dateB = b.data.date ? Date.parse(b.data.date) : 0;
+    if (dateA !== dateB) return dateB - dateA;
+    return a.data.title.localeCompare(b.data.title, "zh-Hans-CN");
+  })
+  .slice(0, 5);
 
 const modules = [
   {
     title: "知识库",
     status: "已启动",
-    body: "沉淀游戏开发相关知识节点，支持阅读后跳转到 AI Coach 测试。",
+    body: "按分类整理博客与学习笔记，并提供搜索、分页和详情阅读。",
     href: "/knowledge/"
   },
   {
     title: "AI 对话测试",
     status: "已启动",
-    body: "使用自定义 API 与模型，围绕当前知识点生成问题、分析回答并继续追问。",
+    body: "使用自定义 API 与模型，基于选定文章生成问题并返回回答反馈。",
     href: "/coach/"
   },
   {
     title: "WebGL 实验",
     status: "待完成",
-    body: "保留图形编程、Shader、渲染管线和可视化小实验的入口。",
+    body: "预留图形编程、Shader、渲染管线和可视化练习入口。",
     href: "/webgl/"
   }
 ];
@@ -25,15 +37,22 @@ const modules = [
 
 <BaseLayout title="学习总览">
   <section class="workspace-hero">
-    <div class="identity-panel">
-      <p class="eyebrow">DaydreamerH</p>
-      <h1>游戏开发训练工作台</h1>
-      <p class="hero-text">
-        用知识节点、AI 追问和图形实验，把游戏开发学习推进到能理解、能实现、能复盘的状态。
-      </p>
-      <div class="hero-actions">
-        <a class="button primary" href="/knowledge/">打开知识库</a>
-        <a class="button" href="#modules">查看模块</a>
+    <div class="identity-panel recent-post-panel">
+      <div class="inline-heading">
+        <div>
+          <p class="eyebrow">Recent Posts</p>
+          <h1>近日博客</h1>
+        </div>
+        <a class="button" href="/knowledge/">全部文章</a>
+      </div>
+      <div class="recent-post-list">
+        {recentDocs.map((doc) => (
+          <a class="recent-post-item" href={`/knowledge/${doc.slug}/`}>
+            <span>{doc.data.date ? doc.data.date.slice(0, 10) : "未标注日期"}</span>
+            <strong>{doc.data.title}</strong>
+            <small>{getCategoryLabel(doc.data.category)}</small>
+          </a>
+        ))}
       </div>
     </div>
   </section>

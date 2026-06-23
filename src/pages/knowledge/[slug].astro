@@ -28,8 +28,6 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
 
 <BaseLayout title={doc.data.title} description={doc.data.description}>
   <article class="article-layout">
-    <a class="back-link" href="/knowledge/">返回知识库</a>
-
     {banner && (
       <img class="article-banner" src={banner.src} alt="" loading="eager" />
     )}
@@ -62,8 +60,8 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
     <section class="article-cta">
       <div>
         <p class="eyebrow">Coach</p>
-        <h2>阅读完成后测试这个知识点</h2>
-        <p>用一个简短问题检查自己是否真正理解了当前内容，提交后继续追问。</p>
+        <h2>基于本文开始提问</h2>
+        <p>跳转到 AI Coach，并将当前文章作为测试上下文。</p>
       </div>
       <a class="button primary" href={`/coach/?node=${doc.slug}`}>开始测试</a>
     </section>

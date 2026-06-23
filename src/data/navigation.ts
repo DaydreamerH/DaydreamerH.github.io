@@ -24,14 +24,14 @@ export function getLevelLabel(level: string) {
 export const trackDescriptions = [
   {
     title: "UE Gameplay Programmer",
-    body: "围绕 UE C++、Gameplay Framework、蓝图协作、AI、UI 和网络基础建立可展示的玩法能力。"
+    body: "整理 UE C++、Gameplay Framework、蓝图协作、AI、UI 和网络基础相关内容。"
   },
   {
     title: "Engine/Tools",
-    body: "训练模块、插件、编辑器扩展、资产管线和性能分析能力，为工程化岗位做准备。"
+    body: "记录模块、插件、编辑器扩展、资产管线和性能分析相关内容。"
   },
   {
     title: "Rendering/TA",
-    body: "补齐图形学、材质、Shader、Niagara 和渲染调试，形成可视化案例集。"
+    body: "整理图形学、材质、Shader、Niagara 和渲染调试相关内容。"
   }
 ];
