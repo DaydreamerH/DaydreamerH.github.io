@@ -103,10 +103,16 @@ select {
 }
 
 .main-nav a:hover,
+.main-nav a.is-active,
 .button:hover,
 .knowledge-row:hover,
 .knowledge-card:hover {
   border-color: rgba(76, 201, 167, 0.72);
+}
+
+.main-nav a.is-active {
+  background: rgba(76, 201, 167, 0.12);
+  color: var(--accent-strong);
 }
 
 .button {
@@ -125,7 +131,7 @@ select {
 
 .workspace-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   align-items: stretch;
   padding: 34px 0 28px;
@@ -142,7 +148,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 280px;
+  min-height: 240px;
   padding: 34px;
 }
 
@@ -364,7 +370,7 @@ h3 {
 }
 
 .module-card {
-  min-height: 166px;
+  min-height: 150px;
 }
 
 .module-card.is-muted {
@@ -421,7 +427,7 @@ h3 {
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 14px;
   align-items: start;
-  padding-bottom: 72px;
+  padding: 24px 0 72px;
 }
 
 .coach-layout.compact {
@@ -889,7 +895,7 @@ h3 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 240px;
   gap: 12px;
-  margin: 10px 0 22px;
+  margin: 24px 0 22px;
 }
 
 .search-field,
@@ -1031,6 +1037,24 @@ h3 {
 .article-cta p:not(.eyebrow) {
   margin: 8px 0 0;
   color: var(--muted);
+}
+
+.empty-module {
+  display: grid;
+  gap: 10px;
+  min-height: 360px;
+  align-content: center;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.empty-module h1 {
+  color: var(--text);
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.empty-module p {
+  max-width: 620px;
 }
 
 @media (max-width: 820px) {

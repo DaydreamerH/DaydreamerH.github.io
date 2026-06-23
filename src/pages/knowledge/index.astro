@@ -8,15 +8,7 @@ const docs = (await getCollection("knowledge"))
   .sort((a, b) => a.data.order - b.data.order);
 ---
 
-<BaseLayout title="知识库" description="DaydreamerH 的 UE5 游戏开发知识库。">
-  <section class="page-head">
-    <p class="eyebrow">Knowledge Base</p>
-    <h1>UE5 知识库</h1>
-    <p>
-      把 UE C++、Gameplay、图形学、工具和作品集知识拆成可复习、可测试、可实践的节点。
-    </p>
-  </section>
-
+<BaseLayout title="知识库" description="DaydreamerH 的游戏开发知识库。">
   <section class="toolbar" aria-label="知识库筛选">
     <label class="search-field">
       <span>搜索</span>

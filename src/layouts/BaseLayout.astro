@@ -6,7 +6,14 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "DaydreamerH 的 UE5 游戏开发训练工作台。" } = Astro.props;
+const { title, description = "DaydreamerH 的游戏开发训练工作台。" } = Astro.props;
+const currentPath = Astro.url.pathname;
+const navItems = [
+  { href: "/", label: "工作台", active: currentPath === "/" },
+  { href: "/knowledge/", label: "知识库", active: currentPath.startsWith("/knowledge") },
+  { href: "/coach/", label: "AI Coach", active: currentPath.startsWith("/coach") },
+  { href: "/webgl/", label: "WebGL 实验", active: currentPath.startsWith("/webgl") }
+];
 ---
 
 <!doctype html>
@@ -24,14 +31,15 @@ const { title, description = "DaydreamerH 的 UE5 游戏开发训练工作台。
           <span class="brand-mark">DH</span>
           <span>
             <strong>DaydreamerH</strong>
-            <small>UE5 Training Desk</small>
+            <small>Game Dev Training Desk</small>
           </span>
         </a>
         <nav class="main-nav" aria-label="主导航">
-          <a href="/">工作台</a>
-          <a href="/knowledge/">知识库</a>
-          <a href="/coach/">AI Coach</a>
-          <a href="/#modules">模块</a>
+          {navItems.map((item) => (
+            <a href={item.href} class={item.active ? "is-active" : ""} aria-current={item.active ? "page" : undefined}>
+              {item.label}
+            </a>
+          ))}
         </nav>
       </header>
       <main>

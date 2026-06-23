@@ -26,22 +26,7 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
 const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) => [node.id, node])));
 ---
 
-<BaseLayout title="AI Coach" description="DaydreamerH 的 UE5 知识点提问工作区。">
-  <section class="coach-head">
-    <div>
-      <p class="eyebrow">AI Coach</p>
-      <h1>知识点提问</h1>
-      <p>
-        选择一个知识点，填写 API 后输入测试内容，由你的模型生成反馈摘要。当前流程不保存个人数据。
-      </p>
-    </div>
-    <div class="coach-status">
-      <span class="pill">当前测试</span>
-      <strong data-current-node-title>{activeNode.title}</strong>
-      <small>知识点提问</small>
-    </div>
-  </section>
-
+<BaseLayout title="AI Coach" description="DaydreamerH 的知识点提问工作区。">
   <section class="coach-layout compact" data-coach-layout aria-label="AI Coach 知识点提问">
     <aside class="coach-sidebar">
       <div class="panel-block">
@@ -286,7 +271,6 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
     function renderContext() {
       const node = nodes[state.node];
-      document.querySelector("[data-current-node-title]").textContent = node.title;
       document.querySelector("[data-context-description]").textContent = node.description;
       document.querySelector("[data-session-title]").textContent = node.title;
 

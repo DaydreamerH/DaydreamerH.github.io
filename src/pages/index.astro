@@ -1,52 +1,24 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-import { categoryLabels } from "../data/navigation";
 
-const knowledge = await getCollection("knowledge");
-const readyDocs = knowledge.filter((item) => item.data.status === "ready");
-const categories = Object.entries(categoryLabels).map(([key, label]) => ({
-  key,
-  label,
-  count: readyDocs.filter((item) => item.data.category === key).length
-}));
-const nextDocs = readyDocs.sort((a, b) => a.data.order - b.data.order).slice(0, 4);
 const modules = [
   {
     title: "知识库",
     status: "已启动",
-    body: "围绕 UE C++、Gameplay、图形学和作品集沉淀可复习的知识节点。",
+    body: "沉淀游戏开发相关知识节点，支持阅读后跳转到 AI Coach 测试。",
     href: "/knowledge/"
   },
   {
     title: "AI 对话测试",
-    status: "原型",
-    body: "通过模拟对话、追问和反馈面板，预演后续接入真实 AI 的知识点测试流程。",
+    status: "已启动",
+    body: "使用自定义 API 与模型，围绕当前知识点生成问题、分析回答并继续追问。",
     href: "/coach/"
   },
   {
-    title: "多维测评",
-    status: "预留",
-    body: "围绕知识点提问、回答和反馈，逐步扩展更完整的测试形式。",
-    href: "#modules"
-  },
-  {
     title: "WebGL 实验",
-    status: "预留",
+    status: "待完成",
     body: "保留图形编程、Shader、渲染管线和可视化小实验的入口。",
-    href: "#modules"
-  },
-  {
-    title: "UE Lab",
-    status: "预留",
-    body: "把 Actor、Component、AI、网络和性能分析拆成可执行实验任务。",
-    href: "#modules"
-  },
-  {
-    title: "作品集",
-    status: "预留",
-    body: "记录 Demo 目标、技术亮点、截图视频、复盘和面试可讲的证据。",
-    href: "#modules"
+    href: "/webgl/"
   }
 ];
 ---
@@ -55,48 +27,21 @@ const modules = [
   <section class="workspace-hero">
     <div class="identity-panel">
       <p class="eyebrow">DaydreamerH</p>
-      <h1>UE5 游戏开发训练工作台</h1>
+      <h1>游戏开发训练工作台</h1>
       <p class="hero-text">
-        用知识节点、实践任务、AI 追问和作品集证据，把游戏开发学习推进到能面试、能展示、能复盘的状态。
+        用知识节点、AI 追问和图形实验，把游戏开发学习推进到能理解、能实现、能复盘的状态。
       </p>
       <div class="hero-actions">
         <a class="button primary" href="/knowledge/">打开知识库</a>
         <a class="button" href="#modules">查看模块</a>
       </div>
     </div>
-
-    <aside class="focus-panel" aria-label="当前学习概览">
-      <div class="focus-head">
-        <span>当前焦点</span>
-        <strong>UE Gameplay Programmer</strong>
-      </div>
-      <div class="focus-stats">
-        <div>
-          <span class="metric">{readyDocs.length}</span>
-          <span class="metric-label">知识点</span>
-        </div>
-        <div>
-          <span class="metric">{categories.filter((item) => item.count > 0).length}</span>
-          <span class="metric-label">方向</span>
-        </div>
-      </div>
-      <p>
-        下一阶段优先把 UE C++、Gameplay Framework、实践任务和面试追问串成闭环。
-      </p>
-    </aside>
   </section>
 
   <section class="module-section" id="modules">
-    <div class="section-heading inline-heading">
-      <div>
-        <p class="eyebrow">Modules</p>
-        <h2>能力模块</h2>
-      </div>
-      <p>先运行知识库，其他模块预留入口和信息层级，后续按学习节奏逐步接入。</p>
-    </div>
     <div class="module-grid">
       {modules.map((module) => (
-        <a class={`module-card ${module.status === "预留" ? "is-muted" : ""}`} href={module.href}>
+        <a class={`module-card ${module.status === "待完成" ? "is-muted" : ""}`} href={module.href}>
           <div class="card-meta">
             <span class="pill">{module.status}</span>
           </div>
@@ -107,51 +52,15 @@ const modules = [
     </div>
   </section>
 
-  <section class="section-grid">
-    <div class="section-main">
-      <div class="section-heading">
-        <p class="eyebrow">Knowledge Queue</p>
-        <h2>近期知识队列</h2>
-      </div>
-      <div class="knowledge-list compact">
-        {nextDocs.map((doc) => (
-          <a class="knowledge-row" href={`/knowledge/${doc.slug}/`}>
-            <span>
-              <strong>{doc.data.title}</strong>
-              <small>{doc.data.description}</small>
-            </span>
-            <span class="pill">{doc.data.minutes} min</span>
-          </a>
-        ))}
-      </div>
-    </div>
-
-    <aside class="section-side">
-      <div class="section-heading">
-        <p class="eyebrow">Coverage</p>
-        <h2>内容覆盖</h2>
-      </div>
-      <div class="category-stack">
-        {categories.map((category) => (
-          <div class="category-line">
-            <span>{category.label}</span>
-            <strong>{category.count}</strong>
-          </div>
-        ))}
-      </div>
-    </aside>
-  </section>
-
   <section class="author-section">
     <div class="author-copy">
       <p class="eyebrow">Author</p>
       <h2>DaydreamerH</h2>
       <p>
-        这个工作台会围绕个人学习节奏持续生长：先沉淀知识，再用测试、实验和 AI 追问把知识压实，最后沉淀成能被面试官理解的项目证据。
+        这个工作台会围绕个人学习节奏持续生长：先沉淀知识，再用测试、实验和 AI 追问把知识压实，逐步扩展到更多游戏开发方向。
       </p>
     </div>
     <div class="author-tags">
-      <span>UE5</span>
       <span>C++</span>
       <span>CG</span>
       <span>Gameplay</span>
