@@ -8,7 +8,6 @@ const knowledgeNodes = [
     title: "UE C++ 反射系统",
     description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
     tags: ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"],
-    question: "请用自己的话解释：为什么 UObject 类型成员通常要用 UPROPERTY 标记？",
     feedback: [
       "检查回答是否提到 GC 可达性和 UObject 生命周期。",
       "注意区分反射、编辑器暴露、蓝图调用、序列化和网络复制。",
@@ -21,7 +20,6 @@ const knowledgeNodes = [
     title: "Gameplay Framework 基础",
     description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
     tags: ["GameMode", "GameState", "PlayerController", "Pawn", "Character"],
-    question: "请解释 GameMode、GameState、PlayerController、Pawn 分别适合放什么逻辑。",
     feedback: [
       "检查回答是否区分服务器专属规则与客户端可见状态。",
       "注意 PlayerController、PlayerState、Pawn 的职责边界。",
@@ -34,7 +32,6 @@ const knowledgeNodes = [
     title: "现代 C++ 与 RAII",
     description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
     tags: ["RAII", "unique_ptr", "lifetime", "resource"],
-    question: "请用一个游戏开发中的例子解释 RAII 解决了什么问题。",
     feedback: [
       "检查回答是否落到所有权和生命周期，而不是只说智能指针。",
       "注意区分标准 C++ 对象、UE 非 UObject 对象和 UObject。",
@@ -47,7 +44,6 @@ const knowledgeNodes = [
     title: "UE5 作品 Demo 范围控制",
     description: "把作品集项目控制在能完成、能展示、能被面试深挖的范围内。",
     tags: ["Portfolio", "Demo", "Interview"],
-    question: "如果你要做一个 3 到 5 分钟的 UE5 Demo，你会如何控制功能范围并证明它不是模板拼装？",
     feedback: [
       "检查回答是否包含明确的玩法目标和技术目标。",
       "注意说明可展示证据：源码、视频、性能记录、设计复盘。",
@@ -64,7 +60,7 @@ const activeNode = knowledgeNodes[0];
       <p class="eyebrow">AI Coach</p>
       <h1>知识点提问</h1>
       <p>
-        选择一个知识点，回答当前问题，然后查看反馈摘要。当前流程不保存个人数据，后续再接入真实 AI 生成更细的反馈。
+        选择一个知识点，填写 API 后输入测试内容，由你的模型生成反馈摘要。当前流程不保存个人数据。
       </p>
     </div>
     <div class="coach-status">
@@ -109,25 +105,20 @@ const activeNode = knowledgeNodes[0];
     <section class="chat-panel">
       <div class="chat-toolbar">
         <div>
-          <span>Question</span>
+          <span>Session</span>
           <strong data-session-title>{activeNode.title}</strong>
         </div>
         <button type="button" data-reset>重新开始</button>
       </div>
 
-      <div class="message-list" aria-label="知识点提问" data-message-list>
-        <article class="message from-coach">
-          <span>AI Coach</span>
-          <p>{activeNode.question}</p>
-        </article>
-      </div>
+      <div class="message-list" aria-label="AI 对话" data-message-list></div>
 
       <form class="answer-box" data-answer-form>
-        <label for="answer">你的回答</label>
-        <textarea id="answer" rows="4" data-answer-input placeholder="写下你的理解，提交后查看反馈摘要。"></textarea>
+        <label for="answer">你的输入</label>
+        <textarea id="answer" rows="4" data-answer-input placeholder="填写 API 后，输入你想测试的回答或让模型基于当前知识点提问。"></textarea>
         <div>
-          <span data-answer-hint>回答当前问题，反馈只保留在页面中。</span>
-          <button type="submit">提交回答</button>
+          <span data-answer-hint>先填写右侧 API 信息，再提交你的输入。</span>
+          <button type="submit">提交</button>
         </div>
       </form>
     </section>
@@ -140,7 +131,7 @@ const activeNode = knowledgeNodes[0];
         </div>
         <p class="feedback-source" data-feedback-source>请先填写右侧 API 信息。</p>
         <ul class="feedback-list" data-feedback-list>
-          <li>提交回答后，这里会显示针对当前知识点的反馈要点。</li>
+          <li>提交输入后，这里会显示针对当前知识点的反馈要点。</li>
           <li>不会保存到浏览器存储或任何持久化位置。</li>
         </ul>
       </div>
@@ -181,7 +172,6 @@ const activeNode = knowledgeNodes[0];
         title: "UE C++ 反射系统",
         description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
         tags: ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"],
-        question: "请用自己的话解释：为什么 UObject 类型成员通常要用 UPROPERTY 标记？",
         feedback: [
           "检查回答是否提到 GC 可达性和 UObject 生命周期。",
           "注意区分反射、编辑器暴露、蓝图调用、序列化和网络复制。",
@@ -193,7 +183,6 @@ const activeNode = knowledgeNodes[0];
         title: "Gameplay Framework 基础",
         description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
         tags: ["GameMode", "GameState", "PlayerController", "Pawn", "Character"],
-        question: "请解释 GameMode、GameState、PlayerController、Pawn 分别适合放什么逻辑。",
         feedback: [
           "检查回答是否区分服务器专属规则与客户端可见状态。",
           "注意 PlayerController、PlayerState、Pawn 的职责边界。",
@@ -205,7 +194,6 @@ const activeNode = knowledgeNodes[0];
         title: "现代 C++ 与 RAII",
         description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
         tags: ["RAII", "unique_ptr", "lifetime", "resource"],
-        question: "请用一个游戏开发中的例子解释 RAII 解决了什么问题。",
         feedback: [
           "检查回答是否落到所有权和生命周期，而不是只说智能指针。",
           "注意区分标准 C++ 对象、UE 非 UObject 对象和 UObject。",
@@ -217,7 +205,6 @@ const activeNode = knowledgeNodes[0];
         title: "UE5 作品 Demo 范围控制",
         description: "把作品集项目控制在能完成、能展示、能被面试深挖的范围内。",
         tags: ["Portfolio", "Demo", "Interview"],
-        question: "如果你要做一个 3 到 5 分钟的 UE5 Demo，你会如何控制功能范围并证明它不是模板拼装？",
         feedback: [
           "检查回答是否包含明确的玩法目标和技术目标。",
           "注意说明可展示证据：源码、视频、性能记录、设计复盘。",
@@ -288,17 +275,21 @@ const activeNode = knowledgeNodes[0];
       });
     }
 
-    function resetQuestion() {
+    function resetSession() {
       const node = nodes[state.node];
       renderContext();
-      messageList.replaceChildren(createMessage("coach", "AI Coach", node.question));
-      renderFeedback("等待回答", [
-        "填写右侧 API 信息后提交回答，这里会显示 AI 反馈摘要。",
+      messageList.replaceChildren(createMessage(
+        "coach",
+        "AI Coach",
+        "请先在右侧填写 Endpoint、API Key 和 Model。配置完成后，输入你的回答或测试需求，我会基于当前知识点调用模型生成反馈。"
+      ));
+      renderFeedback("等待 API", [
+        "填写右侧 API 信息后提交内容，这里会显示 AI 反馈摘要。",
         "不会保存到浏览器存储或任何持久化位置。"
       ]);
       setFeedbackSource("请先填写右侧 API 信息。");
       answerInput.value = "";
-      answerHint.textContent = "回答当前问题，反馈只保留在页面中。";
+      answerHint.textContent = "先填写右侧 API 信息，再提交你的输入。";
     }
 
     function normalizeEndpoint(value) {
@@ -330,7 +321,8 @@ const activeNode = knowledgeNodes[0];
               content: [
                 "你是一个面向 UE5 游戏开发学习的知识点测试教练。",
                 "请只输出简洁的中文反馈摘要，不要继续追问，不要评分，不要保存或索要个人信息。",
-                "反馈必须以 3 到 5 个短要点呈现，每个要点单独一行。"
+                "如果用户要求出题，请先给出一个围绕知识点的问题；如果用户提交了回答，请给出反馈摘要。",
+                "输出必须简洁，使用 3 到 5 个短要点，每个要点单独一行。"
               ].join("\n")
             },
             {
@@ -338,9 +330,8 @@ const activeNode = knowledgeNodes[0];
               content: [
                 `知识点：${node.title}`,
                 `知识点说明：${node.description}`,
-                `当前问题：${node.question}`,
-                `用户回答：${answer}`,
-                "请指出回答中正确的部分、遗漏的关键概念和建议补充的表达。"
+                `用户输入：${answer}`,
+                "请基于当前知识点处理用户输入。"
               ].join("\n\n")
             }
           ]
@@ -367,13 +358,12 @@ const activeNode = knowledgeNodes[0];
       event.preventDefault();
       const answer = answerInput.value.trim();
       if (!answer) {
-        answerHint.textContent = "先写下你的回答，再提交。";
+        answerHint.textContent = "先写下你的输入，再提交。";
         answerInput.focus();
         return;
       }
 
       const node = nodes[state.node];
-      messageList.append(createMessage("user", "DaydreamerH", answer));
       if (!hasApiConfig()) {
         messageList.append(createMessage(
           "coach",
@@ -391,6 +381,7 @@ const activeNode = knowledgeNodes[0];
         return;
       }
 
+      messageList.append(createMessage("user", "DaydreamerH", answer));
       renderFeedback("生成中", ["正在请求 AI 生成反馈摘要..."]);
       setFeedbackSource("使用你填写的 API 生成反馈。");
       answerForm.querySelector("button").disabled = true;
@@ -398,12 +389,14 @@ const activeNode = knowledgeNodes[0];
       try {
         const aiFeedback = await requestAiFeedback(node, answer);
         renderFeedback("AI 反馈摘要", aiFeedback);
+        messageList.append(createMessage("coach", "AI Coach", aiFeedback.join("\n")));
         setFeedbackSource("来自当前页面填写的模型配置。", "success");
       } catch (error) {
         renderFeedback("API 调用失败", [
           error.message,
           "请检查 Endpoint 是否为 OpenAI-compatible Chat Completions 地址，模型名是否正确，以及服务商是否允许浏览器跨域请求。"
         ]);
+        messageList.append(createMessage("coach", "AI Coach", "API 调用失败，请检查右侧配置后再次提交。"));
         setFeedbackSource("已停止本次 API 调用，未保存任何配置。", "error");
       } finally {
         answerForm.querySelector("button").disabled = false;
@@ -420,11 +413,11 @@ const activeNode = knowledgeNodes[0];
         const url = new URL(window.location.href);
         url.searchParams.set("node", state.node);
         history.replaceState(null, "", url);
-        resetQuestion();
+        resetSession();
       });
     });
 
-    document.querySelector("[data-reset]").addEventListener("click", resetQuestion);
-    resetQuestion();
+    document.querySelector("[data-reset]").addEventListener("click", resetSession);
+    resetSession();
   </script>
 </BaseLayout>
