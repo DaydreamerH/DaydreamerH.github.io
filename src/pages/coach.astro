@@ -139,7 +139,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
             <input
               data-api-endpoint
               type="url"
-              placeholder="https://api.openai.com/v1/chat/completions"
+              placeholder="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+              value="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
               autocomplete="off"
             />
           </label>
@@ -149,8 +150,9 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           </label>
           <label>
             <span>Model</span>
-            <input data-api-model type="text" placeholder="填写你的模型名" autocomplete="off" />
+            <input data-api-model type="text" value="gemini-2.5-flash" placeholder="gemini-2.5-flash" autocomplete="off" />
           </label>
+          <button class="api-start" type="button" data-start-question>确认 API 并生成第一题</button>
         </form>
         <p class="api-note">密钥只保存在当前页面内存中，刷新后清空。浏览器直连 API 需要服务商允许 CORS。</p>
       </div>
@@ -180,6 +182,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const apiEndpointInput = document.querySelector("[data-api-endpoint]");
     const apiKeyInput = document.querySelector("[data-api-key]");
     const apiModelInput = document.querySelector("[data-api-model]");
+    const startQuestionButton = document.querySelector("[data-start-question]");
     const categorySelect = document.querySelector("[data-category-select]");
     const nodeList = document.querySelector("[data-node-list]");
 
@@ -264,6 +267,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       const trimmed = value.trim().replace(/\/+$/, "");
       if (!trimmed) return "";
       if (trimmed.endsWith("/chat/completions")) return trimmed;
+      if (trimmed.endsWith("/openai")) return `${trimmed}/chat/completions`;
       if (trimmed.endsWith("/v1")) return `${trimmed}/chat/completions`;
       return `${trimmed}/v1/chat/completions`;
     }
@@ -272,9 +276,39 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       return apiEndpointInput.value.trim() && apiKeyInput.value.trim() && apiModelInput.value.trim();
     }
 
-    async function requestAiFeedback(node, answer) {
-      const endpoint = normalizeEndpoint(apiEndpointInput.value);
-      const knowledgeContext = [
+    function focusMissingApiField() {
+      if (!apiEndpointInput.value.trim()) {
+        apiEndpointInput.focus();
+        return;
+      }
+      if (!apiKeyInput.value.trim()) {
+        apiKeyInput.focus();
+        return;
+      }
+      if (!apiModelInput.value.trim()) {
+        apiModelInput.focus();
+      }
+    }
+
+    function renderApiRequired() {
+      messageList.append(createMessage(
+        "coach",
+        "AI Coach",
+        "请先在右侧填写 Endpoint、API Key 和 Model。填写完成后可以直接点击“确认 API 并生成第一题”。"
+      ));
+      renderFeedback("需要 API 信息", [
+        "Endpoint、API Key 和 Model 都是必填项。",
+        "配置只在当前页面内存中使用，刷新后清空。",
+        "如果服务商不允许浏览器跨域请求，需要后续增加代理层。"
+      ]);
+      setFeedbackSource("尚未调用模型。", "error");
+      answerHint.textContent = "填写右侧 API 信息后，可以先生成第一题。";
+      messageList.scrollTop = messageList.scrollHeight;
+      focusMissingApiField();
+    }
+
+    function buildKnowledgeContext(node) {
+      return [
         `标题：${node.title}`,
         `方向：${node.track}`,
         `分类：${node.category}`,
@@ -286,7 +320,35 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         "正文：",
         node.body
       ].join("\n");
+    }
 
+    function parseApiError(status, detail) {
+      let message = detail.slice(0, 220);
+      try {
+        const parsed = JSON.parse(detail);
+        message = parsed?.error?.message || message;
+      } catch {
+        // Keep the raw preview when the provider does not return JSON.
+      }
+
+      if (status === 401 || status === 403) {
+        return `API 认证失败：请检查 API Key 是否有效，或当前 Key 是否有权限调用这个模型。${message}`;
+      }
+      if (status === 404) {
+        return `模型或接口不存在：请检查 Endpoint 和 Model 名称。${message}`;
+      }
+      if (status === 429) {
+        return `API 配额或频率受限：当前 Key 可能已经达到免费额度、频率上限或项目额度限制。${message}`;
+      }
+      if (status === 503) {
+        return `模型服务繁忙：服务商当前负载较高，可以稍后重试，或切换到其他可用模型。${message}`;
+      }
+      return `API 请求失败：${status} ${message}`;
+    }
+
+    async function requestAiFeedback(node, answer) {
+      const endpoint = normalizeEndpoint(apiEndpointInput.value);
+      const knowledgeContext = buildKnowledgeContext(node);
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -324,7 +386,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
       if (!response.ok) {
         const detail = await response.text();
-        throw new Error(`API 请求失败：${response.status} ${detail.slice(0, 180)}`);
+        throw new Error(parseApiError(response.status, detail));
       }
 
       const data = await response.json();
@@ -338,6 +400,46 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         .filter(Boolean);
     }
 
+    async function generateFirstQuestion() {
+      const node = nodes[state.node];
+      if (!hasApiConfig()) {
+        renderApiRequired();
+        return;
+      }
+
+      messageList.append(createMessage("coach", "AI Coach", `正在基于「${node.title}」生成第一题...`));
+      renderFeedback("生成第一题", ["正在确认 API 并请求模型生成测试问题。"]);
+      setFeedbackSource("使用你填写的 API 生成第一题。");
+      startQuestionButton.disabled = true;
+      answerForm.querySelector("button").disabled = true;
+
+      try {
+        const question = await requestAiFeedback(
+          node,
+          "请基于当前知识点提出第一道测试题。只提出问题和一句答题关注点，不要给答案。"
+        );
+        messageList.append(createMessage("coach", "AI Coach", question.join("\n")));
+        renderFeedback("第一题已生成", [
+          "API 配置可用，题目已发送到对话区。",
+          "在输入框回答这道题后提交，我会基于同一知识点上下文给出反馈摘要。"
+        ]);
+        setFeedbackSource("来自当前页面填写的模型配置。", "success");
+        answerHint.textContent = "回答上方题目后提交，获取反馈摘要。";
+        answerInput.focus();
+      } catch (error) {
+        renderFeedback("API 调用失败", [
+          error.message,
+          "如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。"
+        ]);
+        messageList.append(createMessage("coach", "AI Coach", "API 调用失败，请检查右侧配置后再次确认。"));
+        setFeedbackSource("已停止本次 API 调用，未保存任何配置。", "error");
+      } finally {
+        startQuestionButton.disabled = false;
+        answerForm.querySelector("button").disabled = false;
+        messageList.scrollTop = messageList.scrollHeight;
+      }
+    }
+
     answerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const answer = answerInput.value.trim();
@@ -349,19 +451,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
       const node = nodes[state.node];
       if (!hasApiConfig()) {
-        messageList.append(createMessage(
-          "coach",
-          "AI Coach",
-          "请先在右侧填写 Endpoint、API Key 和 Model。填写完成后再次提交，我会用你的模型生成反馈摘要。"
-        ));
-        renderFeedback("需要 API 信息", [
-          "Endpoint、API Key 和 Model 都是必填项。",
-          "配置只在当前页面内存中使用，刷新后清空。",
-          "如果服务商不允许浏览器跨域请求，需要后续增加代理层。"
-        ]);
-        setFeedbackSource("尚未调用模型。", "error");
-        answerHint.textContent = "填写右侧 API 信息后再次提交。";
-        messageList.scrollTop = messageList.scrollHeight;
+        renderApiRequired();
         return;
       }
 
@@ -378,7 +468,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       } catch (error) {
         renderFeedback("API 调用失败", [
           error.message,
-          "请检查 Endpoint 是否为 OpenAI-compatible Chat Completions 地址，模型名是否正确，以及服务商是否允许浏览器跨域请求。"
+          "如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。"
         ]);
         messageList.append(createMessage("coach", "AI Coach", "API 调用失败，请检查右侧配置后再次提交。"));
         setFeedbackSource("已停止本次 API 调用，未保存任何配置。", "error");
@@ -390,6 +480,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       answerHint.textContent = "可以修改答案后再次提交，或切换知识点。";
       messageList.scrollTop = messageList.scrollHeight;
     });
+
+    startQuestionButton.addEventListener("click", generateFirstQuestion);
 
     function selectNode(id) {
       state.node = id;
