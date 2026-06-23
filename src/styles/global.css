@@ -48,7 +48,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -798,11 +799,33 @@ h3 {
 }
 
 .panel-heading span,
-.chat-toolbar span,
-.answer-box label,
-.answer-box span {
+.chat-toolbar span {
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.answer-box span {
+  color: color-mix(in srgb, var(--muted) 78%, #ffffff);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.answer-box [data-answer-hint],
+.composer-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.answer-box [data-answer-hint] {
+  overflow: hidden;
+}
+
+.answer-box [data-answer-hint] > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .node-list,
@@ -1600,6 +1623,18 @@ h3 {
   overflow: hidden;
 }
 
+.coach-layout > .chat-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 780px;
+}
+
+.coach-layout > .chat-panel .message-list {
+  flex: 1 1 auto;
+  min-height: 520px;
+  max-height: none;
+}
+
 .chat-toolbar {
   display: flex;
   align-items: center;
@@ -1744,36 +1779,102 @@ h3 {
 
 .answer-box {
   display: grid;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding: 16px;
+  gap: 8px;
+  margin: 14px 16px 16px;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, #ffffff);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, #ffffff, color-mix(in srgb, #ffffff 88%, var(--panel-strong))),
+    var(--panel);
+  padding: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 28px rgba(34, 40, 49, 0.05);
+  transition:
+    border-color var(--motion),
+    background-color var(--motion),
+    box-shadow var(--motion);
+}
+
+.answer-box:focus-within {
+  border-color: color-mix(in srgb, var(--line-strong) 36%, var(--line));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 12px 34px rgba(34, 40, 49, 0.08);
 }
 
 .answer-box textarea {
   width: 100%;
-  resize: vertical;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
+  min-height: 86px;
+  resize: none;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
   color: var(--text);
-  padding: 12px;
+  padding: 8px 8px 4px;
+  font-size: 0.98rem;
+  font-weight: 520;
+  line-height: 1.65;
+  letter-spacing: 0;
+  caret-color: var(--accent);
+  box-shadow: none;
 }
 
-.answer-box > div {
+.answer-box textarea:focus,
+.answer-box textarea:hover {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.answer-box textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 58%, #ffffff);
+  font-weight: 480;
+}
+
+.answer-box > div,
+.composer-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  min-height: 42px;
+  min-width: 0;
 }
 
 .answer-box button {
-  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
   white-space: nowrap;
+}
+
+.composer-send {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border-color: var(--muted);
+  background: var(--muted);
+  color: #eeeeee;
+  padding: 0;
+}
+
+.composer-send:hover {
+  border-color: var(--text);
+  background: var(--text);
+  transform: translateY(-1px);
+}
+
+.composer-send:active {
+  transform: translateY(0);
 }
 
 .answer-box button:disabled {
   cursor: wait;
   opacity: 0.68;
+  transform: none;
 }
 
 .lab-guide-workspace .chat-panel {
@@ -1838,26 +1939,38 @@ h3 {
 
 .lab-guide-workspace .answer-box {
   flex: 0 0 auto;
-  grid-template-rows: auto 104px auto;
-  gap: 10px;
-  background: var(--panel);
-  padding: 14px 16px 16px;
+  grid-template-rows: auto auto;
+  margin: 14px 16px 16px;
+  padding: 14px;
 }
 
 .lab-guide-workspace .answer-box textarea {
-  height: 104px;
-  min-height: 104px;
-  max-height: 104px;
+  height: 86px;
+  min-height: 86px;
+  max-height: 86px;
   resize: none;
-  background: #ffffff;
-  line-height: 1.55;
 }
 
 .lab-guide-workspace .answer-box > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 38px;
+  display: flex;
+  min-height: 42px;
   align-items: center;
+}
+
+.lab-guide-workspace .guide-actions button {
+  gap: 7px;
+  min-height: 36px;
+  border-color: transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-strong) 72%, #ffffff);
+  color: var(--text);
+  padding: 0 12px;
+  font-weight: 760;
+}
+
+.lab-guide-workspace .guide-actions button:hover {
+  border-color: var(--line-strong);
+  background: #ffffff;
 }
 
 .lab-guide-workspace .guide-setup[hidden],

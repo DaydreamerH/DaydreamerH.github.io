@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen } from "@lucide/astro";
+import { ArrowUp, ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Sparkles } from "@lucide/astro";
 import { getCategoryLabel, getLevelLabel } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
@@ -145,11 +145,15 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       <div class="message-list" aria-label="AI 对话" data-message-list></div>
 
       <form class="answer-box" data-answer-form>
-        <label for="answer">你的输入</label>
         <textarea id="answer" rows="4" data-answer-input placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"></textarea>
-        <div>
-          <span data-answer-hint>填写左侧 API 后，可先生成第一题。</span>
-          <button type="submit">提交</button>
+        <div class="composer-toolbar">
+          <span data-answer-hint>
+            <Sparkles size={15} aria-hidden="true" />
+            <span data-answer-hint-text>填写左侧 API 后，可先生成第一题。</span>
+          </span>
+          <button class="composer-send" type="submit" aria-label="提交">
+            <ArrowUp size={19} aria-hidden="true" />
+          </button>
         </div>
       </form>
     </section>
@@ -173,6 +177,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const answerForm = document.querySelector("[data-answer-form]");
     const answerInput = document.querySelector("[data-answer-input]");
     const answerHint = document.querySelector("[data-answer-hint]");
+    const answerHintText = document.querySelector("[data-answer-hint-text]");
     const chatAlert = document.querySelector("[data-chat-alert]");
     const chatStatus = document.querySelector("[data-chat-status]");
     const apiEndpointInput = document.querySelector("[data-api-endpoint]");
@@ -368,7 +373,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       clearAlert();
       setStatus("");
       answerInput.value = "";
-      answerHint.textContent = "填写左侧 API 后，可先生成第一题。";
+      answerHintText.textContent = "填写左侧 API 后，可先生成第一题。";
     }
 
     function normalizeEndpoint(value) {
@@ -400,7 +405,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
     function renderApiRequired() {
       showAlert("请先填写 Endpoint、API Key 和 Model，然后点击“确认 API 并生成第一题”。");
-      answerHint.textContent = "补全左侧 API 信息后再开始。";
+      answerHintText.textContent = "补全左侧 API 信息后再开始。";
       focusMissingApiField();
     }
 
@@ -517,7 +522,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           "question"
         );
         messageList.append(createMessage("coach", "AI Coach", question));
-        answerHint.textContent = "回答上方题目后提交，获取反馈并进入下一题。";
+        answerHintText.textContent = "回答上方题目后提交，获取反馈并进入下一题。";
         answerInput.focus();
       } catch (error) {
         showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
@@ -533,7 +538,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       event.preventDefault();
       const answer = answerInput.value.trim();
       if (!answer) {
-        answerHint.textContent = "先写下你的输入，再提交。";
+        answerHintText.textContent = "先写下内容，再提交。";
         answerInput.focus();
         return;
       }
@@ -562,7 +567,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       }
 
       answerInput.value = "";
-      answerHint.textContent = "继续回答最新问题。Ctrl + Enter 提交。";
+      answerHintText.textContent = "继续回答最新问题。Ctrl + Enter 提交。";
       messageList.scrollTop = messageList.scrollHeight;
     });
 
