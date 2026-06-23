@@ -123,7 +123,7 @@ const fallbackLesson: GraphicsLesson = {
   title: "Hello Triangle",
   category: "CG 实验",
   level: "intro",
-  createdAt: "2026.6.23",
+  createdAt: "2026-06-23",
   description: "在浏览器中补全一个基础三角形渲染实验。",
   source: "inline",
   runtime: "three-shader-material",

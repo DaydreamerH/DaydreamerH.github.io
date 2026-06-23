@@ -1,12 +1,14 @@
-# DaydreamerH UE5 Training Desk
+# DaydreamerH Game Dev Training Desk
 
-面向 UE5 游戏行业求职准备的个人训练工作台。当前版本先聚焦知识库模块，后续可以继续扩展测验、实验任务、AI 对话和作品集追踪。
+面向游戏开发学习与求职准备的个人训练工作台。当前包含知识库、AI 辅助问答与 CG/WebGL 实验模块，内容以静态文件维护，便于长期扩展与 Git 管理。
 
 ## 技术选择
 
-- Astro：生成纯静态页面，适合文档型知识库。
-- Markdown/MDX Content Collection：知识点以文件形式维护，便于 Git 管理和长期扩展。
-- 原生前端筛选：当前无需后端，也无需数据库。
+- Astro：生成静态页面，适合文档型知识库与实验索引。
+- Markdown/MDX Content Collection：知识文章以文件形式维护。
+- Three.js：承载浏览器中的 CG/WebGL 实验。
+- CodeMirror：提供实验代码编辑体验。
+- 本地课程包：AI 负责提问、判断与解释，代码推进优先使用本地预设 patch。
 
 ## 常用命令
 
@@ -14,12 +16,13 @@
 npm install
 npm run dev -- --port 4321
 npm run build
+npm run test:graphics-lab
 npm run preview
 ```
 
-## 新增知识点
+## 新增知识文章
 
-在 `src/content/knowledge` 下新增 Markdown 文件，并补充 frontmatter：
+在 `src/content/knowledge` 下新增 Markdown 或 MDX 文件，并补充 frontmatter。字段约束见 `src/content/config.ts`，分类显示名称见 `src/data/navigation.ts`。
 
 ```md
 ---
@@ -35,9 +38,54 @@ prerequisites: ["前置知识"]
 tags: ["UE", "C++"]
 ---
 
-## 为什么重要
-
 正文内容。
 ```
 
-`category`、`track`、`level` 等字段的合法值定义在 `src/content/config.ts`。分类显示名称位于 `src/data/navigation.ts`。
+## CG 实验课程包
+
+CG 实验课程放在：
+
+```text
+src/graphics-lessons/
+```
+
+每个课程包通常包含：
+
+```text
+manifest.json
+lesson.md
+starter/
+patches/
+reference/
+```
+
+新增或批量生成课程前，先阅读完整规范：
+
+```text
+docs/graphics-lesson-pipeline.md
+```
+
+当前参考课程：
+
+```text
+src/graphics-lessons/hello-triangle/
+```
+
+当前样例生成器：
+
+```bash
+node scripts/generate-graphics-lesson.mjs
+```
+
+这个生成器目前仍是 Hello Triangle 专用脚本。后续做批量生成时，应升级为可接受源码目录与输出目录的通用脚本，例如：
+
+```bash
+node scripts/generate-graphics-lesson.mjs --source-root OpenGLProject/src --out-root src/graphics-lessons --all --draft
+```
+
+生成或修改课程包后，运行：
+
+```bash
+npm run build
+npm run test:graphics-lab
+```

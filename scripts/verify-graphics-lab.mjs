@@ -2,12 +2,17 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const webglHtmlPath = join(root, "dist", "webgl", "index.html");
+const webglIndexPath = join(root, "dist", "webgl", "index.html");
+const webglLessonPath = join(root, "dist", "webgl", "hello-triangle", "index.html");
 
 const checks = [
   {
-    name: "built WebGL page",
-    test: () => existsSync(webglHtmlPath)
+    name: "built WebGL lesson index",
+    test: () => existsSync(webglIndexPath)
+  },
+  {
+    name: "built WebGL lesson page",
+    test: () => existsSync(webglLessonPath)
   },
   {
     name: "graphics lab mount",
@@ -37,13 +42,17 @@ const checks = [
   },
   {
     name: "runtime script",
-    test: (html) => /<script[^>]+type="module"[^>]+src="\/_astro\/webgl\./.test(html)
+    test: () => Boolean(matchedRuntime)
   }
 ];
 
-const html = existsSync(webglHtmlPath) ? readFileSync(webglHtmlPath, "utf8") : "";
+const html = existsSync(webglLessonPath) ? readFileSync(webglLessonPath, "utf8") : "";
 const runtimeMatch = html.match(/<script[^>]+type="module"[^>]+src="\/(_astro\/webgl\.[^"]+\.js)"/);
-const runtimeScriptPath = runtimeMatch ? join(root, "dist", runtimeMatch[1]) : "";
+const lessonRuntimeMatch = html.match(
+  /<script[^>]+type="module"[^>]+src="\/(_astro\/_lessonId_[^"]+\.js)"/
+);
+const matchedRuntime = runtimeMatch?.[1] ?? lessonRuntimeMatch?.[1] ?? "";
+const runtimeScriptPath = matchedRuntime ? join(root, "dist", matchedRuntime) : "";
 const runtimeScript = runtimeScriptPath && existsSync(runtimeScriptPath)
   ? readFileSync(runtimeScriptPath, "utf8")
   : "";
