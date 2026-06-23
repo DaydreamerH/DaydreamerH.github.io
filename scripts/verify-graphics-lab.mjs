@@ -23,7 +23,10 @@ const checks = [
   },
   {
     name: "AI guide panel",
-    test: (html) => html.includes("data-guide-log") && html.includes("data-guide-start")
+    test: (html) =>
+      html.includes("data-guide-tab") &&
+      html.includes("data-guide-workspace") &&
+      html.includes("data-guide-start")
   },
   {
     name: "runtime script",

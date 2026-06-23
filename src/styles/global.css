@@ -951,10 +951,7 @@ h3 {
 }
 
 .lab-preview-panel,
-.lab-editor-panel,
-.lab-ai-panel,
-.lab-ai-main,
-.lab-ai-config {
+.lab-editor-panel {
   display: grid;
   min-height: 0;
   min-width: 0;
@@ -970,22 +967,6 @@ h3 {
 
 .lab-editor-panel {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
-}
-
-.lab-ai-panel {
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 14px;
-  align-items: stretch;
-}
-
-.lab-ai-main {
-  grid-template-rows: auto minmax(220px, 1fr) auto;
-}
-
-.lab-ai-config {
-  align-content: start;
-  gap: 12px;
-  padding: 14px;
 }
 
 .lab-panel-head {
@@ -1108,6 +1089,26 @@ h3 {
   padding: 0 11px;
 }
 
+.lab-toolbar .lab-expand-toggle {
+  display: inline-grid;
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  place-items: center;
+}
+
+.lab-expand-toggle .icon-contract-workspace {
+  display: none;
+}
+
+.graphics-lab.is-editor-expanded .lab-expand-toggle .icon-expand-workspace {
+  display: none;
+}
+
+.graphics-lab.is-editor-expanded .lab-expand-toggle .icon-contract-workspace {
+  display: block;
+}
+
 .lab-toolbar button:hover,
 .lab-file-tabs button:hover {
   border-color: var(--line-strong);
@@ -1141,6 +1142,10 @@ h3 {
 }
 
 .lab-file-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0 12px;
   font-size: 0.82rem;
 }
@@ -1152,6 +1157,7 @@ h3 {
 }
 
 .lab-editor-shell {
+  position: relative;
   min-height: 0;
   overflow: hidden;
 }
@@ -1159,6 +1165,93 @@ h3 {
 .lab-editor-host {
   height: 100%;
   min-height: 0;
+}
+
+.lab-editor-host[hidden],
+.lab-guide-workspace[hidden],
+.guide-setup[hidden],
+.guide-conversation[hidden] {
+  display: none;
+}
+
+.lab-guide-workspace {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  background: var(--panel);
+}
+
+.guide-setup,
+.guide-conversation {
+  display: grid;
+  min-height: 0;
+}
+
+.guide-setup {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.guide-conversation {
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+.guide-panel-head {
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-setup-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.guide-rule-card,
+.guide-alert {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
+  padding: 13px;
+}
+
+.guide-rule-card {
+  display: grid;
+  gap: 5px;
+}
+
+.guide-rule-card strong {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.guide-alert {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.guide-actions button,
+.lab-ai-config button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.lab-ai-config {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
 }
 
 .lab-hints {
@@ -1238,12 +1331,6 @@ h3 {
   padding: 10px 12px;
 }
 
-.guide-input-row div {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-}
-
 .guide-input-row button,
 .lab-ai-config input {
   border: 1px solid var(--line);
@@ -1258,7 +1345,9 @@ h3 {
   cursor: pointer;
 }
 
-.guide-input-row button:hover {
+.guide-input-row button:hover,
+.guide-actions button:hover,
+.lab-ai-config button:hover {
   border-color: var(--line-strong);
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
@@ -1274,6 +1363,14 @@ h3 {
   width: 100%;
   min-height: 38px;
   padding: 0 10px;
+}
+
+.lab-ai-config button {
+  justify-self: start;
+  border-color: var(--text);
+  background: var(--text);
+  color: #eeeeee;
+  font-weight: 750;
 }
 
 .graphics-lab.is-editor-expanded {
@@ -1982,7 +2079,6 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .lab-ai-panel,
   .guide-input-row {
     grid-template-columns: 1fr;
   }

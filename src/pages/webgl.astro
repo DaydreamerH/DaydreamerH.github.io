@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
 ---
 
 <BaseLayout title="Graphics Lab" description="WebGL 与 shader 实验编辑器。">
@@ -37,7 +38,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             </label>
             <button type="button" data-run>运行</button>
             <button type="button" data-reset-lab>重置</button>
-            <button type="button" data-expand-editor aria-pressed="false">展开编辑器</button>
+            <button
+              class="lab-expand-toggle"
+              type="button"
+              data-expand-editor
+              aria-label="展开工作区"
+              title="展开工作区"
+              aria-pressed="false"
+            >
+              <Maximize2 class="toggle-icon icon-expand-workspace" size={17} aria-hidden="true" />
+              <Minimize2 class="toggle-icon icon-contract-workspace" size={17} aria-hidden="true" />
+            </button>
           </div>
         </div>
 
@@ -51,10 +62,73 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
             fragment.glsl
           </button>
+          <button class="lab-ai-tab" type="button" role="tab" data-guide-tab aria-selected="false">
+            <Bot size={16} aria-hidden="true" />
+            <span>AI</span>
+          </button>
         </div>
 
         <div class="lab-editor-shell">
           <div class="lab-editor-host" data-editor-host></div>
+          <section class="lab-guide-workspace" data-guide-workspace hidden aria-label="AI 图形学实验教练">
+            <div class="guide-setup" data-guide-setup>
+              <div class="lab-panel-head guide-panel-head">
+                <div>
+                  <span>AI Guide</span>
+                  <strong>LearnOpenGL Shader Primer</strong>
+                </div>
+                <span class="lab-guide-state" data-guide-state>等待 API</span>
+              </div>
+
+              <div class="guide-setup-body">
+                <div class="guide-rule-card">
+                  <strong>开始前</strong>
+                  <p>填写 OpenAI-compatible API 后生成第一问。AI 会先围绕 shader 原理提问，通过后再返回受控代码修改。</p>
+                </div>
+
+                <div class="guide-alert" data-guide-alert hidden></div>
+
+                <div class="lab-ai-config">
+                  <label>
+                    <span>Endpoint</span>
+                    <input data-guide-endpoint type="url" value="https://api.deepseek.com/chat/completions" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>API Key</span>
+                    <input data-guide-key type="password" placeholder="sk-..." autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>Model</span>
+                    <input data-guide-model type="text" value="deepseek-v4-flash" autocomplete="off" />
+                  </label>
+                  <button type="button" data-guide-start>生成第一问</button>
+                  <button type="button" data-guide-return hidden>返回对话</button>
+                  <p>密钥只保存在当前页面内存中。AI 只能修改 main.js、vertex.glsl、fragment.glsl。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="guide-conversation" data-guide-conversation hidden>
+              <div class="lab-panel-head guide-panel-head">
+                <div>
+                  <span>AI Guide</span>
+                  <strong>LearnOpenGL Shader Primer</strong>
+                </div>
+                <div class="guide-actions">
+                  <span class="lab-guide-state" data-guide-state-mirror>等待回答</span>
+                  <button type="button" data-guide-configure>API</button>
+                  <button type="button" data-guide-debug>调试错误</button>
+                </div>
+              </div>
+
+              <div class="guide-alert" data-guide-chat-alert hidden></div>
+              <div class="guide-log" data-guide-log></div>
+              <form class="guide-input-row" data-guide-form>
+                <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你想测试的 shader 概念。Ctrl + Enter 提交。"></textarea>
+                <button type="submit">提交</button>
+              </form>
+            </div>
+          </section>
         </div>
 
         <div class="lab-hints">
@@ -64,52 +138,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </div>
       </aside>
     </div>
-
-    <section class="lab-ai-panel" aria-label="AI 图形学实验教练">
-      <div class="lab-ai-main">
-        <div class="lab-panel-head">
-          <div>
-            <span>AI Guide</span>
-            <strong>LearnOpenGL Shader Primer</strong>
-          </div>
-          <span class="lab-guide-state" data-guide-state>等待 API</span>
-        </div>
-        <div class="guide-log" data-guide-log>
-          <article>
-            <strong>实验规则</strong>
-            <p>AI 会围绕着色器、GLSL、uniform、顶点到片段的数据传递逐步提问。回答通过后，AI 才会返回受控代码修改，并由页面应用到当前实验。</p>
-          </article>
-        </div>
-        <form class="guide-input-row" data-guide-form>
-          <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你想测试的 shader 概念。Ctrl + Enter 提交。"></textarea>
-          <div>
-            <button type="button" data-guide-start>生成第一问</button>
-            <button type="submit">提交回答</button>
-            <button type="button" data-guide-debug>调试运行错误</button>
-          </div>
-        </form>
-      </div>
-
-      <aside class="lab-ai-config">
-        <div class="panel-heading">
-          <span>AI API</span>
-          <strong>OpenAI-compatible</strong>
-        </div>
-        <label>
-          <span>Endpoint</span>
-          <input data-guide-endpoint type="url" value="https://api.deepseek.com/chat/completions" autocomplete="off" />
-        </label>
-        <label>
-          <span>API Key</span>
-          <input data-guide-key type="password" placeholder="sk-..." autocomplete="off" />
-        </label>
-        <label>
-          <span>Model</span>
-          <input data-guide-model type="text" value="deepseek-v4-flash" autocomplete="off" />
-        </label>
-        <p>密钥只保存在当前页面内存中。AI 只能修改 main.js、vertex.glsl、fragment.glsl。</p>
-      </aside>
-    </section>
   </section>
 
   <script>

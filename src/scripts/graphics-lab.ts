@@ -21,6 +21,7 @@ import {
 } from "@codemirror/view";
 
 type LabFileName = "main.js" | "vertex.glsl" | "fragment.glsl";
+type WorkspaceTab = LabFileName | "ai";
 
 type LabFile = {
   label: string;
@@ -411,6 +412,13 @@ function initGraphicsLab(root: HTMLElement) {
   const canvas = root.querySelector<HTMLCanvasElement>("[data-lab-canvas]");
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
   const fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
+  const guideTab = root.querySelector<HTMLButtonElement>("[data-guide-tab]");
+  const guideWorkspace = root.querySelector<HTMLElement>("[data-guide-workspace]");
+  const guideSetup = root.querySelector<HTMLElement>("[data-guide-setup]");
+  const guideConversation = root.querySelector<HTMLElement>("[data-guide-conversation]");
+  const guideAlert = root.querySelector<HTMLElement>("[data-guide-alert]");
+  const guideChatAlert = root.querySelector<HTMLElement>("[data-guide-chat-alert]");
+  const guideConfigureButton = root.querySelector<HTMLButtonElement>("[data-guide-configure]");
   const runButton = root.querySelector<HTMLButtonElement>("[data-run]");
   const resetButton = root.querySelector<HTMLButtonElement>("[data-reset-lab]");
   const expandButton = root.querySelector<HTMLButtonElement>("[data-expand-editor]");
@@ -419,11 +427,13 @@ function initGraphicsLab(root: HTMLElement) {
   const errorBox = root.querySelector<HTMLElement>("[data-lab-errors]");
   const autoRunToggle = root.querySelector<HTMLInputElement>("[data-auto-run]");
   const guideState = root.querySelector<HTMLElement>("[data-guide-state]");
+  const guideStateMirror = root.querySelector<HTMLElement>("[data-guide-state-mirror]");
   const guideLog = root.querySelector<HTMLElement>("[data-guide-log]");
   const guideForm = root.querySelector<HTMLFormElement>("[data-guide-form]");
   const guideInput = root.querySelector<HTMLTextAreaElement>("[data-guide-input]");
   const guideStartButton = root.querySelector<HTMLButtonElement>("[data-guide-start]");
   const guideDebugButton = root.querySelector<HTMLButtonElement>("[data-guide-debug]");
+  const guideReturnButton = root.querySelector<HTMLButtonElement>("[data-guide-return]");
   const guideEndpointInput = root.querySelector<HTMLInputElement>("[data-guide-endpoint]");
   const guideKeyInput = root.querySelector<HTMLInputElement>("[data-guide-key]");
   const guideModelInput = root.querySelector<HTMLInputElement>("[data-guide-model]");
@@ -434,6 +444,8 @@ function initGraphicsLab(root: HTMLElement) {
 
   let files = loadFiles();
   let activeFile: LabFileName = "main.js";
+  let activeWorkspaceTab: WorkspaceTab = "main.js";
+  let guideConversationStarted = false;
   let cleanup: RuntimeCleanup | undefined;
   let runTimer = 0;
   let saveTimer = 0;
@@ -455,7 +467,24 @@ function initGraphicsLab(root: HTMLElement) {
 
   const setGuideState = (text: string) => {
     if (guideState) guideState.textContent = text;
+    if (guideStateMirror) guideStateMirror.textContent = text;
     root.dataset.guideState = text;
+  };
+
+  const setGuideAlert = (message = "") => {
+    [guideAlert, guideChatAlert].forEach((alert) => {
+      if (!alert) return;
+      alert.textContent = message;
+      alert.hidden = !message;
+    });
+  };
+
+  const setGuidePhase = (phase: "setup" | "conversation") => {
+    guideConversationStarted = phase === "conversation";
+    if (guideSetup) guideSetup.hidden = phase !== "setup";
+    if (guideConversation) guideConversation.hidden = phase !== "conversation";
+    if (guideReturnButton) guideReturnButton.hidden = !guideConversationStarted || phase !== "setup";
+    root.dataset.guidePhase = phase;
   };
 
   const appendGuideEntry = (
@@ -505,14 +534,19 @@ function initGraphicsLab(root: HTMLElement) {
 
   const syncTabs = () => {
     fileTabs.forEach((tab) => {
-      const isActive = tab.dataset.file === activeFile;
+      const isActive = activeWorkspaceTab !== "ai" && tab.dataset.file === activeFile;
       tab.classList.toggle("is-active", isActive);
       tab.setAttribute("aria-selected", String(isActive));
     });
+    guideTab?.classList.toggle("is-active", activeWorkspaceTab === "ai");
+    guideTab?.setAttribute("aria-selected", String(activeWorkspaceTab === "ai"));
   };
 
   const switchFile = (fileName: LabFileName) => {
+    activeWorkspaceTab = fileName;
     activeFile = fileName;
+    editorHost.hidden = false;
+    if (guideWorkspace) guideWorkspace.hidden = true;
     editor.setState(
       createEditorState(files[activeFile].source, activeFile, (source) => {
         files[activeFile].source = source;
@@ -520,6 +554,14 @@ function initGraphicsLab(root: HTMLElement) {
         scheduleRun();
       })
     );
+    syncTabs();
+  };
+
+  const switchGuide = () => {
+    activeWorkspaceTab = "ai";
+    editorHost.hidden = true;
+    if (guideWorkspace) guideWorkspace.hidden = false;
+    setGuidePhase(guideConversationStarted ? "conversation" : "setup");
     syncTabs();
   };
 
@@ -616,11 +658,12 @@ ${getFilesSnapshot()}`;
 
   const requestGuide = async (mode: "start" | "answer" | "debug", userText = "") => {
     if (!guideEndpointInput?.value || !guideKeyInput?.value || !guideModelInput?.value) {
-      appendGuideEntry("system", "需要 API", "请先填写 Endpoint、API Key 和 Model。");
+      setGuideAlert("请先填写 Endpoint、API Key 和 Model。");
       setGuideState("等待 API");
       return;
     }
 
+    setGuideAlert();
     setGuideState("AI 思考中");
 
     const response = await fetch(guideEndpointInput.value.trim(), {
@@ -654,6 +697,9 @@ ${getFilesSnapshot()}`;
     const parsed = normalizeGuideResponse(extractJsonObject(content));
     const patches = parsed.patches ?? [];
 
+    if (mode === "start") {
+      setGuidePhase("conversation");
+    }
     if (parsed.message) appendGuideEntry("assistant", "AI 反馈", parsed.message);
     if (parsed.question) appendGuideEntry("assistant", "下一问", parsed.question);
 
@@ -748,6 +794,8 @@ ${getFilesSnapshot()}`;
     });
   });
 
+  guideTab?.addEventListener("click", switchGuide);
+
   runButton.addEventListener("click", () => {
     persistFiles(files);
     void runProgram();
@@ -757,7 +805,8 @@ ${getFilesSnapshot()}`;
 
   expandButton.addEventListener("click", () => {
     const isExpanded = labWorkspace.classList.toggle("is-editor-expanded");
-    expandButton.textContent = isExpanded ? "回到预览" : "展开编辑器";
+    expandButton.setAttribute("aria-label", isExpanded ? "恢复预览" : "展开工作区");
+    expandButton.setAttribute("title", isExpanded ? "恢复预览" : "展开工作区");
     expandButton.setAttribute("aria-pressed", String(isExpanded));
     editor.requestMeasure();
   });
@@ -766,7 +815,7 @@ ${getFilesSnapshot()}`;
     void requestGuide("start").catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       setGuideState("API 错误");
-      appendGuideEntry("system", "API 错误", message);
+      setGuideAlert(message);
     });
   });
 
@@ -774,8 +823,16 @@ ${getFilesSnapshot()}`;
     void requestGuide("debug", "请根据当前运行错误给出最小修复。").catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       setGuideState("API 错误");
-      appendGuideEntry("system", "API 错误", message);
+      setGuideAlert(message);
     });
+  });
+
+  guideConfigureButton?.addEventListener("click", () => {
+    setGuidePhase("setup");
+  });
+
+  guideReturnButton?.addEventListener("click", () => {
+    setGuidePhase("conversation");
   });
 
   guideForm?.addEventListener("submit", (event) => {
@@ -787,7 +844,7 @@ ${getFilesSnapshot()}`;
     void requestGuide("answer", userText).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       setGuideState("API 错误");
-      appendGuideEntry("system", "API 错误", message);
+      setGuideAlert(message);
     });
   });
 
@@ -803,6 +860,10 @@ ${getFilesSnapshot()}`;
 
     if (event.key === "Enter") {
       event.preventDefault();
+      if (activeWorkspaceTab === "ai") {
+        guideForm?.requestSubmit();
+        return;
+      }
       persistFiles(files);
       void runProgram();
     }
@@ -873,7 +934,9 @@ void main() {
   root.dataset.labReady = "true";
   root.dataset.guideReady = "true";
 
+  if (guideWorkspace) guideWorkspace.hidden = true;
   syncTabs();
+  setGuidePhase("setup");
   setGuideState("等待 API");
   void runProgram();
 }
