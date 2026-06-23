@@ -425,6 +425,10 @@ h3 {
   padding-bottom: 72px;
 }
 
+.coach-layout.compact {
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+}
+
 .coach-sidebar,
 .feedback-panel {
   display: grid;
@@ -443,28 +447,22 @@ h3 {
 
 .panel-heading span,
 .chat-toolbar span,
-.score-card span,
-.score-card small,
 .answer-box label,
 .answer-box span {
   color: var(--muted);
   font-size: 0.82rem;
 }
 
-.mode-list,
 .node-list,
 .link-stack,
-.action-stack {
+.card-actions {
   display: grid;
   gap: 8px;
 }
 
-.mode-list button,
 .node-list button,
 .chat-toolbar button,
-.answer-box button,
-.action-stack button,
-.action-stack a {
+.answer-box button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -476,18 +474,12 @@ h3 {
   cursor: pointer;
 }
 
-.mode-list button {
-  text-align: left;
-  padding: 0 12px;
-}
-
 .node-list button {
   justify-content: flex-start;
   padding: 0 12px;
   text-align: left;
 }
 
-.mode-list button.is-active,
 .node-list button.is-active,
 .answer-box button {
   border-color: var(--accent);
@@ -527,15 +519,17 @@ h3 {
 
 .message-list {
   display: grid;
+  justify-items: start;
   gap: 14px;
-  min-height: 390px;
-  max-height: 440px;
+  min-height: 320px;
+  max-height: 420px;
   overflow: auto;
   padding: 18px;
 }
 
 .message {
-  width: min(78%, 680px);
+  width: fit-content;
+  max-width: min(78%, 680px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 14px;
@@ -594,21 +588,6 @@ h3 {
 
 .feedback-panel {
   padding: 12px;
-}
-
-.score-card {
-  display: grid;
-  gap: 4px;
-  border: 1px solid rgba(76, 201, 167, 0.38);
-  border-radius: var(--radius);
-  background: rgba(76, 201, 167, 0.1);
-  padding: 16px;
-}
-
-.score-card strong {
-  color: var(--accent-strong);
-  font-size: 2.45rem;
-  line-height: 1;
 }
 
 .feedback-list {
@@ -709,6 +688,22 @@ h3 {
 
 .knowledge-card h2 a {
   color: var(--text);
+}
+
+.card-actions {
+  margin-top: 16px;
+}
+
+.card-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid rgba(76, 201, 167, 0.38);
+  border-radius: var(--radius);
+  color: var(--accent-strong);
+  background: rgba(76, 201, 167, 0.08);
+  padding: 0 12px;
 }
 
 .tag-row span,
