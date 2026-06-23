@@ -4,14 +4,19 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  coachHref?: string;
 }
 
-const { title, description = "DaydreamerH 的游戏开发学习记录与测试页面。" } = Astro.props;
+const {
+  title,
+  description = "DaydreamerH 的游戏开发学习记录与测试页面。",
+  coachHref = "/coach/"
+} = Astro.props;
 const currentPath = Astro.url.pathname;
 const navItems = [
   { href: "/", label: "工作台", active: currentPath === "/" },
   { href: "/knowledge/", label: "知识库", active: currentPath.startsWith("/knowledge") },
-  { href: "/coach/", label: "AI Coach", active: currentPath.startsWith("/coach") },
+  { href: coachHref, label: "AI Coach", active: currentPath.startsWith("/coach") },
   { href: "/webgl/", label: "WebGL 实验", active: currentPath.startsWith("/webgl") }
 ];
 ---

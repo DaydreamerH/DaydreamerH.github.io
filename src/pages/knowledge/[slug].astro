@@ -26,7 +26,7 @@ const bannerPath = doc.data.photos
 const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
 ---
 
-<BaseLayout title={doc.data.title} description={doc.data.description}>
+<BaseLayout title={doc.data.title} description={doc.data.description} coachHref={`/coach/?node=${doc.slug}`}>
   <article class="article-layout">
     {banner && (
       <img class="article-banner" src={banner.src} alt="" loading="eager" />
