@@ -139,8 +139,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
             <input
               data-api-endpoint
               type="url"
-              placeholder="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-              value="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+              placeholder="https://api.deepseek.com/chat/completions"
+              value="https://api.deepseek.com/chat/completions"
               autocomplete="off"
             />
           </label>
@@ -150,7 +150,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           </label>
           <label>
             <span>Model</span>
-            <input data-api-model type="text" value="gemini-2.5-flash" placeholder="gemini-2.5-flash" autocomplete="off" />
+            <input data-api-model type="text" value="deepseek-v4-flash" placeholder="deepseek-v4-flash" autocomplete="off" />
           </label>
           <button class="api-start" type="button" data-start-question>确认 API 并生成第一题</button>
         </form>
