@@ -1,22 +1,22 @@
 :root {
   color-scheme: light;
-  --bg: #f7f7f5;
+  --bg: #f8f8f8;
   --panel: #ffffff;
-  --panel-strong: #f1f2ef;
-  --text: #111315;
-  --muted: #626a72;
-  --soft: #8b949e;
-  --line: #d9ddd8;
-  --line-strong: #111315;
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
-  --accent-soft: #eff5ff;
-  --success: #0f766e;
-  --danger: #b42318;
-  --warn: #b45309;
+  --panel-strong: #eeeeee;
+  --text: #222831;
+  --muted: #393e46;
+  --soft: #393e46;
+  --line: color-mix(in srgb, #393e46 18%, #ffffff);
+  --line-strong: #222831;
+  --accent: #00adb5;
+  --accent-strong: #00adb5;
+  --accent-soft: color-mix(in srgb, #00adb5 9%, #ffffff);
+  --success: #00adb5;
+  --danger: #222831;
+  --warn: #393e46;
   --radius: 8px;
-  --shadow: 0 18px 44px rgba(17, 19, 21, 0.08);
-  --shadow-hover: 0 20px 48px rgba(17, 19, 21, 0.12);
+  --shadow: 0 18px 44px rgba(34, 40, 49, 0.08);
+  --shadow-hover: 0 20px 48px rgba(34, 40, 49, 0.12);
   --motion-fast: 140ms ease;
   --motion: 220ms cubic-bezier(0.22, 1, 0.36, 1);
   --motion-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -93,7 +93,7 @@ textarea {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--text);
-  color: #ffffff;
+  color: #eeeeee;
   font-weight: 800;
 }
 
@@ -132,7 +132,7 @@ textarea {
 
 .main-nav a.is-active {
   background: var(--text);
-  color: #ffffff;
+  color: #eeeeee;
 }
 
 .button {
@@ -144,7 +144,7 @@ textarea {
 
 .button.primary {
   background: var(--text);
-  color: #ffffff;
+  color: #eeeeee;
   border-color: var(--text);
   font-weight: 700;
 }
@@ -366,7 +366,7 @@ h3 {
 .pill {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #c9d6ff;
+  border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent-strong);
@@ -431,7 +431,7 @@ h3 {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent, rgba(17, 19, 21, 0.04), transparent);
+  background: linear-gradient(120deg, transparent, rgba(34, 40, 49, 0.04), transparent);
   opacity: 0;
   transform: translateX(-24%);
   transition: opacity var(--motion), transform var(--motion-slow);
@@ -585,7 +585,7 @@ h3 {
 
 .panel-block {
   padding: 16px;
-  box-shadow: 0 1px 0 rgba(17, 19, 21, 0.03);
+  box-shadow: 0 1px 0 rgba(34, 40, 49, 0.03);
   transition:
     border-color var(--motion),
     box-shadow var(--motion),
@@ -594,7 +594,7 @@ h3 {
 }
 
 .panel-block:hover {
-  border-color: #c6cbc4;
+  border-color: var(--line-strong);
   box-shadow: var(--shadow);
 }
 
@@ -710,7 +710,7 @@ h3 {
 .answer-box button {
   border-color: var(--text);
   background: var(--text);
-  color: #ffffff;
+  color: #eeeeee;
   font-weight: 700;
 }
 
@@ -811,19 +811,19 @@ h3 {
 .select-field select:focus {
   outline: 0;
   border-color: var(--line-strong);
-  box-shadow: 0 0 0 3px rgba(17, 19, 21, 0.08);
+  box-shadow: 0 0 0 3px rgba(34, 40, 49, 0.08);
 }
 
 .api-start {
   width: 100%;
   border-color: var(--text);
   background: var(--text);
-  color: #ffffff;
+  color: #eeeeee;
   font-weight: 750;
 }
 
 .api-start:hover {
-  background: #2a2d30;
+  background: #393e46;
 }
 
 .api-start:disabled {
@@ -881,13 +881,13 @@ h3 {
 }
 
 .chat-alert {
-  border: 1px solid #f3b4ad;
-  background: #fff3f1;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, #222831 8%, #eeeeee);
   color: var(--danger);
 }
 
 .chat-status {
-  border: 1px solid #c9d6ff;
+  border: 1px solid var(--accent);
   background: var(--accent-soft);
   color: var(--accent-strong);
 }
@@ -910,7 +910,7 @@ h3 {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 14px;
-  box-shadow: 0 1px 0 rgba(17, 19, 21, 0.03);
+  box-shadow: 0 1px 0 rgba(34, 40, 49, 0.03);
 }
 
 .message span {
@@ -985,7 +985,7 @@ h3 {
 
 .from-user {
   justify-self: end;
-  border-color: #c7d2fe;
+  border-color: var(--accent);
   background: var(--accent-soft);
 }
 

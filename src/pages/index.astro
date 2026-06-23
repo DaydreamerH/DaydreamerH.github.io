@@ -42,29 +42,15 @@ const modules = [
     <div class="module-grid">
       {modules.map((module) => (
         <a class={`module-card ${module.status === "待完成" ? "is-muted" : ""}`} href={module.href}>
-          <div class="card-meta">
-            <span class="pill">{module.status}</span>
-          </div>
+          {module.status === "待完成" && (
+            <div class="card-meta">
+              <span class="pill">{module.status}</span>
+            </div>
+          )}
           <h3>{module.title}</h3>
           <p>{module.body}</p>
         </a>
       ))}
-    </div>
-  </section>
-
-  <section class="author-section">
-    <div class="author-copy">
-      <p class="eyebrow">Author</p>
-      <h2>DaydreamerH</h2>
-      <p>
-        这个工作台会围绕个人学习节奏持续生长：先沉淀知识，再用测试、实验和 AI 追问把知识压实，逐步扩展到更多游戏开发方向。
-      </p>
-    </div>
-    <div class="author-tags">
-      <span>C++</span>
-      <span>CG</span>
-      <span>Gameplay</span>
-      <span>Rendering</span>
     </div>
   </section>
 </BaseLayout>
