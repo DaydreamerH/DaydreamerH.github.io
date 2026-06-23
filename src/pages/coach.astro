@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 const knowledgeNodes = [
   {
     id: "ue-cpp-reflection",
+    category: "UE 核心",
     href: "/knowledge/ue-cpp-reflection/",
     title: "UE C++ 反射系统",
     description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
@@ -16,6 +17,7 @@ const knowledgeNodes = [
   },
   {
     id: "ue-gameplay-framework",
+    category: "Gameplay",
     href: "/knowledge/ue-gameplay-framework/",
     title: "Gameplay Framework 基础",
     description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
@@ -28,6 +30,7 @@ const knowledgeNodes = [
   },
   {
     id: "modern-cpp-raii",
+    category: "C++ 基础",
     href: "/knowledge/modern-cpp-raii/",
     title: "现代 C++ 与 RAII",
     description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
@@ -40,6 +43,7 @@ const knowledgeNodes = [
   },
   {
     id: "portfolio-demo-scope",
+    category: "作品集",
     href: "/knowledge/portfolio-demo-scope/",
     title: "UE5 作品 Demo 范围控制",
     description: "把作品集项目控制在能完成、能展示、能被面试深挖的范围内。",
@@ -52,6 +56,7 @@ const knowledgeNodes = [
   }
 ];
 const activeNode = knowledgeNodes[0];
+const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
 ---
 
 <BaseLayout title="AI Coach" description="DaydreamerH 的 UE5 知识点提问工作区。">
@@ -70,36 +75,42 @@ const activeNode = knowledgeNodes[0];
     </div>
   </section>
 
-  <section class="coach-layout compact" aria-label="AI Coach 知识点提问">
+  <section class="coach-layout compact" data-coach-layout aria-label="AI Coach 知识点提问">
     <aside class="coach-sidebar">
       <div class="panel-block">
         <div class="panel-heading">
-          <span>测试目标</span>
-          <strong>选择知识点</strong>
+          <span>测试目标与上下文</span>
+          <strong><a data-context-link href={`/knowledge/${activeNode.id}/`}>{activeNode.title}</a></strong>
         </div>
-        <div class="node-list">
-          {knowledgeNodes.map((node, index) => (
+        <label class="select-field compact-select">
+          <span>分类</span>
+          <select data-category-select>
+            {categories.map((category) => (
+              <option value={category} selected={category === activeNode.category}>{category}</option>
+            ))}
+          </select>
+        </label>
+        <div class="node-list" data-node-list>
+          {knowledgeNodes
+            .filter((node) => node.category === activeNode.category)
+            .map((node, index) => (
             <button class={index === 0 ? "is-active" : ""} data-node={node.id} type="button">
-              {node.title}
+              <span>{node.title}</span>
+              <small>{node.category}</small>
             </button>
           ))}
-        </div>
-      </div>
-
-      <div class="panel-block">
-        <div class="panel-heading">
-          <span>上下文</span>
-          <strong><a data-context-link href={`/knowledge/${activeNode.id}/`}>{activeNode.title}</a></strong>
         </div>
         <p class="muted-copy" data-context-description>{activeNode.description}</p>
         <div class="tag-row" data-context-tags>
           {activeNode.tags.map((tag) => <span>{tag}</span>)}
         </div>
-        <a class="context-return" data-context-return href={`/knowledge/${activeNode.id}/`}>
-          返回知识详情
-        </a>
+        <div class="context-actions">
+          <a class="context-return" data-context-return href={`/knowledge/${activeNode.id}/`}>
+            返回知识详情
+          </a>
+          <a class="context-return" href="/knowledge/">返回知识库</a>
+        </div>
       </div>
-
     </aside>
 
     <section class="chat-panel">
@@ -108,7 +119,11 @@ const activeNode = knowledgeNodes[0];
           <span>Session</span>
           <strong data-session-title>{activeNode.title}</strong>
         </div>
-        <button type="button" data-reset>重新开始</button>
+        <div class="toolbar-actions">
+          <button type="button" data-toggle-left>折叠左侧</button>
+          <button type="button" data-toggle-right>折叠右侧</button>
+          <button type="button" data-reset>重新开始</button>
+        </div>
       </div>
 
       <div class="message-list" aria-label="AI 对话" data-message-list></div>
@@ -168,6 +183,7 @@ const activeNode = knowledgeNodes[0];
   <script>
     const nodes = {
       "ue-cpp-reflection": {
+        category: "UE 核心",
         href: "/knowledge/ue-cpp-reflection/",
         title: "UE C++ 反射系统",
         description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
@@ -179,6 +195,7 @@ const activeNode = knowledgeNodes[0];
         ]
       },
       "ue-gameplay-framework": {
+        category: "Gameplay",
         href: "/knowledge/ue-gameplay-framework/",
         title: "Gameplay Framework 基础",
         description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
@@ -190,6 +207,7 @@ const activeNode = knowledgeNodes[0];
         ]
       },
       "modern-cpp-raii": {
+        category: "C++ 基础",
         href: "/knowledge/modern-cpp-raii/",
         title: "现代 C++ 与 RAII",
         description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
@@ -201,6 +219,7 @@ const activeNode = knowledgeNodes[0];
         ]
       },
       "portfolio-demo-scope": {
+        category: "作品集",
         href: "/knowledge/portfolio-demo-scope/",
         title: "UE5 作品 Demo 范围控制",
         description: "把作品集项目控制在能完成、能展示、能被面试深挖的范围内。",
@@ -214,10 +233,13 @@ const activeNode = knowledgeNodes[0];
     };
 
     const params = new URLSearchParams(window.location.search);
+    const categories = [...new Set(Object.values(nodes).map((node) => node.category))];
     const state = {
-      node: nodes[params.get("node")] ? params.get("node") : "ue-cpp-reflection"
+      node: nodes[params.get("node")] ? params.get("node") : "ue-cpp-reflection",
+      category: nodes[params.get("node")]?.category || "UE 核心"
     };
 
+    const layout = document.querySelector("[data-coach-layout]");
     const messageList = document.querySelector("[data-message-list]");
     const answerForm = document.querySelector("[data-answer-form]");
     const answerInput = document.querySelector("[data-answer-input]");
@@ -228,6 +250,8 @@ const activeNode = knowledgeNodes[0];
     const apiEndpointInput = document.querySelector("[data-api-endpoint]");
     const apiKeyInput = document.querySelector("[data-api-key]");
     const apiModelInput = document.querySelector("[data-api-model]");
+    const categorySelect = document.querySelector("[data-category-select]");
+    const nodeList = document.querySelector("[data-node-list]");
 
     function createMessage(role, label, body) {
       const article = document.createElement("article");
@@ -270,9 +294,23 @@ const activeNode = knowledgeNodes[0];
         return span;
       }));
 
-      document.querySelectorAll("[data-node]").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.node === state.node);
-      });
+      categorySelect.value = state.category;
+      renderNodeList();
+    }
+
+    function renderNodeList() {
+      const entries = Object.entries(nodes).filter(([, node]) => node.category === state.category);
+      nodeList.replaceChildren(...entries.map(([id, node]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.node = id;
+        button.classList.toggle("is-active", id === state.node);
+        button.innerHTML = "<span></span><small></small>";
+        button.querySelector("span").textContent = node.title;
+        button.querySelector("small").textContent = node.category;
+        button.addEventListener("click", () => selectNode(id));
+        return button;
+      }));
     }
 
     function resetSession() {
@@ -407,14 +445,29 @@ const activeNode = knowledgeNodes[0];
       messageList.scrollTop = messageList.scrollHeight;
     });
 
-    document.querySelectorAll("[data-node]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.node = button.dataset.node;
-        const url = new URL(window.location.href);
-        url.searchParams.set("node", state.node);
-        history.replaceState(null, "", url);
-        resetSession();
-      });
+    function selectNode(id) {
+      state.node = id;
+      state.category = nodes[id].category;
+      const url = new URL(window.location.href);
+      url.searchParams.set("node", state.node);
+      history.replaceState(null, "", url);
+      resetSession();
+    }
+
+    categorySelect.addEventListener("change", () => {
+      state.category = categorySelect.value;
+      const firstNode = Object.entries(nodes).find(([, node]) => node.category === state.category)?.[0];
+      if (firstNode) selectNode(firstNode);
+    });
+
+    document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
+      layout.classList.toggle("is-left-collapsed");
+      event.currentTarget.textContent = layout.classList.contains("is-left-collapsed") ? "展开左侧" : "折叠左侧";
+    });
+
+    document.querySelector("[data-toggle-right]").addEventListener("click", (event) => {
+      layout.classList.toggle("is-right-collapsed");
+      event.currentTarget.textContent = layout.classList.contains("is-right-collapsed") ? "展开右侧" : "折叠右侧";
     });
 
     document.querySelector("[data-reset]").addEventListener("click", resetSession);

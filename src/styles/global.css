@@ -429,6 +429,27 @@ h3 {
   grid-template-columns: 280px minmax(0, 1fr) 300px;
 }
 
+.coach-layout.is-left-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 300px;
+}
+
+.coach-layout.is-right-collapsed {
+  grid-template-columns: 280px minmax(0, 1fr) 0;
+}
+
+.coach-layout.is-left-collapsed.is-right-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+.coach-layout.is-left-collapsed .coach-sidebar,
+.coach-layout.is-right-collapsed .feedback-panel {
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .coach-sidebar,
 .feedback-panel {
   display: grid;
@@ -474,9 +495,17 @@ h3 {
 }
 
 .node-list button {
+  display: grid;
+  gap: 2px;
   justify-content: flex-start;
-  padding: 0 12px;
+  padding: 8px 12px;
   text-align: left;
+}
+
+.node-list button small {
+  color: inherit;
+  font-size: 0.74rem;
+  opacity: 0.72;
 }
 
 .node-list button.is-active,
@@ -496,6 +525,20 @@ h3 {
 .panel-heading a,
 .context-return {
   color: var(--accent-strong);
+}
+
+.compact-select {
+  margin-bottom: 12px;
+}
+
+.compact-select select {
+  min-height: 38px;
+}
+
+.context-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .api-config {
@@ -560,6 +603,13 @@ h3 {
   gap: 12px;
   border-bottom: 1px solid var(--line);
   padding: 14px 16px;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .chat-toolbar > div {
@@ -858,6 +908,7 @@ h3 {
   .workspace-hero,
   .coach-head,
   .coach-layout,
+  .coach-layout.compact,
   .section-grid,
   .toolbar,
   .author-section {
@@ -891,6 +942,17 @@ h3 {
 
   .chat-panel {
     min-height: auto;
+  }
+
+  .coach-layout.is-left-collapsed,
+  .coach-layout.is-right-collapsed,
+  .coach-layout.is-left-collapsed.is-right-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .coach-layout.is-left-collapsed .coach-sidebar,
+  .coach-layout.is-right-collapsed .feedback-panel {
+    display: none;
   }
 
   .message {
