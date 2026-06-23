@@ -50,9 +50,6 @@ const docs = (await getCollection("knowledge"))
         <div class="tag-row">
           {doc.data.tags.map((tag) => <span>{tag}</span>)}
         </div>
-        <div class="card-actions">
-          <a href={`/coach/?node=${doc.slug}`}>测试这个知识点</a>
-        </div>
       </article>
     ))}
   </section>

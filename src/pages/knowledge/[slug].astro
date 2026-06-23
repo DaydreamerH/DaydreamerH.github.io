@@ -41,5 +41,14 @@ const { Content } = await render(doc);
     <div class="article-content">
       <Content />
     </div>
+
+    <section class="article-cta">
+      <div>
+        <p class="eyebrow">Coach</p>
+        <h2>阅读完成后测试这个知识点</h2>
+        <p>用一个简短问题检查自己是否真正理解了当前内容，提交后查看反馈摘要。</p>
+      </div>
+      <a class="button primary" href={`/coach/?node=${doc.slug}`}>开始测试</a>
+    </section>
   </article>
 </BaseLayout>
