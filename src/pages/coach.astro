@@ -534,10 +534,25 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     });
 
     document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
-      layout.classList.toggle("is-left-collapsed");
-      const isCollapsed = layout.classList.contains("is-left-collapsed");
-      event.currentTarget.setAttribute("aria-label", isCollapsed ? "展开左侧面板" : "折叠左侧面板");
-      event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
+      const willExpand = layout.classList.contains("is-left-collapsed");
+      layout.classList.remove("is-left-collapsing", "is-left-expanding");
+
+      if (willExpand) {
+        layout.classList.remove("is-left-collapsed");
+        layout.classList.add("is-left-expanding");
+        event.currentTarget.setAttribute("aria-label", "折叠左侧面板");
+        event.currentTarget.setAttribute("aria-expanded", "true");
+        window.setTimeout(() => layout.classList.remove("is-left-expanding"), 360);
+        return;
+      }
+
+      layout.classList.add("is-left-collapsing");
+      event.currentTarget.setAttribute("aria-label", "展开左侧面板");
+      event.currentTarget.setAttribute("aria-expanded", "false");
+      window.setTimeout(() => {
+        layout.classList.remove("is-left-collapsing");
+        layout.classList.add("is-left-collapsed");
+      }, 180);
     });
 
     document.querySelector("[data-reset]").addEventListener("click", resetSession);
