@@ -452,6 +452,7 @@ h3 {
 }
 
 .mode-list,
+.node-list,
 .link-stack,
 .action-stack {
   display: grid;
@@ -459,9 +460,14 @@ h3 {
 }
 
 .mode-list button,
+.node-list button,
 .chat-toolbar button,
 .answer-box button,
-.action-stack button {
+.action-stack button,
+.action-stack a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 38px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -475,7 +481,14 @@ h3 {
   padding: 0 12px;
 }
 
+.node-list button {
+  justify-content: flex-start;
+  padding: 0 12px;
+  text-align: left;
+}
+
 .mode-list button.is-active,
+.node-list button.is-active,
 .answer-box button {
   border-color: var(--accent);
   background: var(--accent);
@@ -516,6 +529,8 @@ h3 {
   display: grid;
   gap: 14px;
   min-height: 390px;
+  max-height: 440px;
+  overflow: auto;
   padding: 18px;
 }
 

@@ -1,9 +1,35 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const modes = ["概念测试", "深度追问", "代码阅读", "项目面试"];
-const contextTags = ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"];
-const relatedNodes = ["现代 C++ 与 RAII", "Gameplay Framework 基础", "Actor 生命周期"];
+const modes = [
+  { id: "concept", label: "概念测试" },
+  { id: "followup", label: "深度追问" },
+  { id: "code", label: "代码阅读" },
+  { id: "project", label: "项目面试" }
+];
+const knowledgeNodes = [
+  {
+    id: "reflection",
+    title: "UE C++ 反射系统",
+    description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
+    tags: ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"],
+    related: ["现代 C++ 与 RAII", "Gameplay Framework 基础", "Actor 生命周期"]
+  },
+  {
+    id: "gameplay",
+    title: "Gameplay Framework 基础",
+    description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
+    tags: ["GameMode", "GameState", "PlayerController", "Pawn", "Character"],
+    related: ["UE C++ 反射系统", "Actor 生命周期", "网络复制基础"]
+  },
+  {
+    id: "raii",
+    title: "现代 C++ 与 RAII",
+    description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
+    tags: ["RAII", "unique_ptr", "lifetime", "resource"],
+    related: ["UE C++ 反射系统", "智能指针", "异常安全"]
+  }
+];
 const messages = [
   {
     role: "coach",
@@ -26,6 +52,7 @@ const feedbackItems = [
   "需要补充：反射、序列化、编辑器暴露和网络复制并不是同一个概念。",
   "下一题建议追问 UObject 生命周期与普通 C++ 对象的区别。"
 ];
+const activeNode = knowledgeNodes[0];
 ---
 
 <BaseLayout title="AI Coach" description="DaydreamerH 的 UE5 知识测试与 AI 追问工作区。">
@@ -39,7 +66,7 @@ const feedbackItems = [
     </div>
     <div class="coach-status">
       <span class="pill">原型</span>
-      <strong>UE C++ 反射系统</strong>
+      <strong data-current-node-title>{activeNode.title}</strong>
       <small>当前测试节点</small>
     </div>
   </section>
@@ -49,11 +76,27 @@ const feedbackItems = [
       <div class="panel-block">
         <div class="panel-heading">
           <span>测试模式</span>
-          <strong>概念测试</strong>
+          <strong data-current-mode>概念测试</strong>
         </div>
         <div class="mode-list">
           {modes.map((mode, index) => (
-            <button class={index === 0 ? "is-active" : ""} type="button">{mode}</button>
+            <button class={index === 0 ? "is-active" : ""} data-mode={mode.id} type="button">
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-heading">
+          <span>知识节点</span>
+          <strong>选择测试目标</strong>
+        </div>
+        <div class="node-list">
+          {knowledgeNodes.map((node, index) => (
+            <button class={index === 0 ? "is-active" : ""} data-node={node.id} type="button">
+              {node.title}
+            </button>
           ))}
         </div>
       </div>
@@ -61,13 +104,11 @@ const feedbackItems = [
       <div class="panel-block">
         <div class="panel-heading">
           <span>上下文</span>
-          <strong>UE C++ 反射系统</strong>
+          <strong data-context-title>{activeNode.title}</strong>
         </div>
-        <p class="muted-copy">
-          理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。
-        </p>
-        <div class="tag-row">
-          {contextTags.map((tag) => <span>{tag}</span>)}
+        <p class="muted-copy" data-context-description>{activeNode.description}</p>
+        <div class="tag-row" data-context-tags>
+          {activeNode.tags.map((tag) => <span>{tag}</span>)}
         </div>
       </div>
 
@@ -76,8 +117,8 @@ const feedbackItems = [
           <span>关联节点</span>
           <strong>追问范围</strong>
         </div>
-        <div class="link-stack">
-          {relatedNodes.map((node) => <a href="/knowledge/">{node}</a>)}
+        <div class="link-stack" data-related-nodes>
+          {activeNode.related.map((node) => <a href="/knowledge/">{node}</a>)}
         </div>
       </div>
     </aside>
@@ -86,12 +127,12 @@ const feedbackItems = [
       <div class="chat-toolbar">
         <div>
           <span>Session</span>
-          <strong>Reflection Drill 01</strong>
+          <strong data-session-title>Reflection Drill 01</strong>
         </div>
-        <button type="button">重新开始</button>
+        <button type="button" data-reset>重新开始</button>
       </div>
 
-      <div class="message-list" aria-label="模拟对话">
+      <div class="message-list" aria-label="模拟对话" data-message-list>
         {messages.map((message) => (
           <article class={`message ${message.role === "user" ? "from-user" : "from-coach"}`}>
             <span>{message.label}</span>
@@ -100,12 +141,12 @@ const feedbackItems = [
         ))}
       </div>
 
-      <form class="answer-box">
+      <form class="answer-box" data-answer-form>
         <label for="answer">你的回答</label>
-        <textarea id="answer" rows="4" placeholder="写下你的理解，后续这里会接入 AI 评分与追问。"></textarea>
+        <textarea id="answer" rows="4" data-answer-input placeholder="写下你的理解，提交后会生成模拟评分与追问。"></textarea>
         <div>
-          <span>下一步：提交回答后生成评分、遗漏点和追问。</span>
-          <button type="button">提交回答</button>
+          <span data-answer-hint>下一步：提交回答后生成评分、遗漏点和追问。</span>
+          <button type="submit">提交回答</button>
         </div>
       </form>
     </section>
@@ -113,16 +154,16 @@ const feedbackItems = [
     <aside class="feedback-panel">
       <div class="score-card">
         <span>本轮掌握度</span>
-        <strong>72</strong>
-        <small>需要一次深度追问</small>
+        <strong data-score-value>72</strong>
+        <small data-score-note>需要一次深度追问</small>
       </div>
 
       <div class="panel-block">
         <div class="panel-heading">
           <span>反馈摘要</span>
-          <strong>待补齐点</strong>
+          <strong data-feedback-title>待补齐点</strong>
         </div>
-        <ul class="feedback-list">
+        <ul class="feedback-list" data-feedback-list>
           {feedbackItems.map((item) => <li>{item}</li>)}
         </ul>
       </div>
@@ -133,11 +174,227 @@ const feedbackItems = [
           <strong>下一步</strong>
         </div>
         <div class="action-stack">
-          <button type="button">继续追问</button>
-          <button type="button">加入错题本</button>
-          <button type="button">复习关联节点</button>
+          <button type="button" data-continue>继续追问</button>
+          <button type="button" data-new-question>换一道题</button>
+          <a href="/knowledge/">复习关联节点</a>
         </div>
       </div>
     </aside>
   </section>
+
+  <script>
+    const nodes = {
+      reflection: {
+        title: "UE C++ 反射系统",
+        session: "Reflection Drill 01",
+        description: "理解 UCLASS、UPROPERTY、UFUNCTION 如何把 C++ 类型暴露给编辑器、蓝图、序列化和 GC。",
+        tags: ["UObject", "Reflection", "UPROPERTY", "GC", "Blueprint"],
+        related: ["现代 C++ 与 RAII", "Gameplay Framework 基础", "Actor 生命周期"],
+        prompts: {
+          concept: "我们先测 UE C++ 反射系统。请用自己的话解释：为什么 UObject 类型成员通常要用 UPROPERTY 标记？",
+          followup: "我们做深度追问：UPROPERTY 只和 GC 有关吗？请说明它还可能影响哪些引擎系统。",
+          code: "阅读场景：AActor 中有一个 UObject* RuntimeConfig 成员，但没有 UPROPERTY。你会重点检查哪些风险？",
+          project: "如果你的 UE5 Demo 中有武器配置对象，你会如何解释为什么要把它接入反射系统？"
+        },
+        followups: {
+          concept: "继续追问：如果一个 AActor 里保存了 UObject*，但没有 UPROPERTY，可能出现什么生命周期问题？",
+          followup: "再往下挖：编辑器暴露、序列化、蓝图调用和网络复制分别需要哪些标记或设计？",
+          code: "进一步看代码：如果 RuntimeConfig 在运行时被替换，你会如何避免悬空引用或意外回收？",
+          project: "面试官继续问：为什么不用普通 C++ 对象保存这些配置？你会怎么回答？"
+        },
+        feedback: [
+          "重点检查是否说明了 GC 可达性。",
+          "容易混淆反射、序列化、蓝图暴露和网络复制，需要拆开表述。",
+          "回答最好能补充 UObject 生命周期与普通 C++ 对象不同。"
+        ]
+      },
+      gameplay: {
+        title: "Gameplay Framework 基础",
+        session: "Gameplay Drill 01",
+        description: "掌握 GameMode、GameState、PlayerController、Pawn、Character 等核心类的职责边界。",
+        tags: ["GameMode", "GameState", "PlayerController", "Pawn", "Character"],
+        related: ["UE C++ 反射系统", "Actor 生命周期", "网络复制基础"],
+        prompts: {
+          concept: "请解释 GameMode、GameState、PlayerController、Pawn 分别适合放什么逻辑。",
+          followup: "如果一个对局规则需要所有客户端知道，为什么不能只放在 GameMode？",
+          code: "阅读场景：分数逻辑写在 PlayerController 中。多人游戏下可能出现什么问题？",
+          project: "介绍你的 Demo 架构时，你会如何说明 Character、Controller 和 GameMode 的职责划分？"
+        },
+        followups: {
+          concept: "继续追问：GameMode 和 GameState 在多人游戏中的存在位置有什么区别？",
+          followup: "再问细一点：PlayerState 和 Pawn 的数据边界如何划分？",
+          code: "如果要修这个设计，你会把分数移动到哪里，并如何同步？",
+          project: "如果角色死亡后重新生成，哪些数据不应该放在 Character 上？"
+        },
+        feedback: [
+          "需要明确服务器专属与客户端可见状态的区别。",
+          "PlayerController、PlayerState、Pawn 的职责边界要说清楚。",
+          "项目回答最好能结合重生、观战、分数或队伍状态。"
+        ]
+      },
+      raii: {
+        title: "现代 C++ 与 RAII",
+        session: "C++ Drill 01",
+        description: "用资源获取即初始化的思路管理内存、文件句柄、锁和临时对象，减少生命周期错误。",
+        tags: ["RAII", "unique_ptr", "lifetime", "resource"],
+        related: ["UE C++ 反射系统", "智能指针", "异常安全"],
+        prompts: {
+          concept: "请用一个游戏开发中的例子解释 RAII 解决了什么问题。",
+          followup: "为什么 unique_ptr 适合表达独占所有权？它不能拷贝是优点还是限制？",
+          code: "阅读场景：函数中手动 new 资源，多个 early return 分支都要 delete。你会如何重构？",
+          project: "如果面试官问你 UE 的 UObject 是否适合用 shared_ptr 管理，你会怎么回答？"
+        },
+        followups: {
+          concept: "继续追问：RAII 和异常安全、提前返回之间有什么关系？",
+          followup: "再问：shared_ptr 的循环引用为什么危险，weak_ptr 解决了哪部分问题？",
+          code: "如果这个资源还涉及锁或文件句柄，你会如何保证释放顺序？",
+          project: "UE 的 GC、TSharedPtr、std::unique_ptr 分别适合什么对象？"
+        },
+        feedback: [
+          "回答要落到所有权和生命周期，而不是只说智能指针。",
+          "需要区分标准 C++ 对象、UE 非 UObject 对象和 UObject。",
+          "项目回答最好能说出为什么某类对象不交给 GC。"
+        ]
+      }
+    };
+
+    const modes = {
+      concept: "概念测试",
+      followup: "深度追问",
+      code: "代码阅读",
+      project: "项目面试"
+    };
+
+    const state = {
+      mode: "concept",
+      node: "reflection",
+      turn: 0
+    };
+
+    const messageList = document.querySelector("[data-message-list]");
+    const answerForm = document.querySelector("[data-answer-form]");
+    const answerInput = document.querySelector("[data-answer-input]");
+    const answerHint = document.querySelector("[data-answer-hint]");
+    const scoreValue = document.querySelector("[data-score-value]");
+    const scoreNote = document.querySelector("[data-score-note]");
+    const feedbackTitle = document.querySelector("[data-feedback-title]");
+    const feedbackList = document.querySelector("[data-feedback-list]");
+
+    function createMessage(role, label, body) {
+      const article = document.createElement("article");
+      article.className = `message ${role === "user" ? "from-user" : "from-coach"}`;
+      article.innerHTML = `<span></span><p></p>`;
+      article.querySelector("span").textContent = label;
+      article.querySelector("p").textContent = body;
+      return article;
+    }
+
+    function renderFeedback(score, note, items, title = "反馈摘要") {
+      scoreValue.textContent = String(score);
+      scoreNote.textContent = note;
+      feedbackTitle.textContent = title;
+      feedbackList.replaceChildren(...items.map((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        return li;
+      }));
+    }
+
+    function renderContext() {
+      const node = nodes[state.node];
+      document.querySelector("[data-current-node-title]").textContent = node.title;
+      document.querySelector("[data-context-title]").textContent = node.title;
+      document.querySelector("[data-context-description]").textContent = node.description;
+      document.querySelector("[data-session-title]").textContent = node.session;
+      document.querySelector("[data-current-mode]").textContent = modes[state.mode];
+
+      document.querySelector("[data-context-tags]").replaceChildren(...node.tags.map((tag) => {
+        const span = document.createElement("span");
+        span.textContent = tag;
+        return span;
+      }));
+
+      document.querySelector("[data-related-nodes]").replaceChildren(...node.related.map((item) => {
+        const link = document.createElement("a");
+        link.href = "/knowledge/";
+        link.textContent = item;
+        return link;
+      }));
+
+      document.querySelectorAll("[data-mode]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.mode === state.mode);
+      });
+      document.querySelectorAll("[data-node]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.node === state.node);
+      });
+    }
+
+    function resetSession() {
+      const node = nodes[state.node];
+      state.turn = 0;
+      renderContext();
+      messageList.replaceChildren(createMessage("coach", "AI Coach", node.prompts[state.mode]));
+      renderFeedback(0, "等待你的第一轮回答", [
+        "提交回答后会生成模拟评分。",
+        "反馈只保留在当前页面，不会写入任何持久化数据。",
+        "可以切换模式或知识点重新开始。"
+      ], "准备开始");
+      answerInput.value = "";
+      answerHint.textContent = "下一步：提交回答后生成评分、遗漏点和追问。";
+    }
+
+    function scoreAnswer(answer) {
+      const lengthScore = Math.min(28, Math.floor(answer.length / 5));
+      const keywordScore = ["因为", "生命周期", "GC", "职责", "所有权", "同步", "蓝图", "反射"]
+        .filter((word) => answer.includes(word)).length * 6;
+      return Math.max(42, Math.min(92, 48 + lengthScore + keywordScore));
+    }
+
+    answerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const answer = answerInput.value.trim();
+      if (!answer) {
+        answerHint.textContent = "先写下你的回答，再提交。";
+        answerInput.focus();
+        return;
+      }
+
+      const node = nodes[state.node];
+      const score = scoreAnswer(answer);
+      state.turn += 1;
+      messageList.append(
+        createMessage("user", "DaydreamerH", answer),
+        createMessage("coach", "AI Coach", node.followups[state.mode])
+      );
+      renderFeedback(score, score >= 78 ? "可以进入下一层追问" : "建议补齐关键概念后继续", node.feedback);
+      answerInput.value = "";
+      answerHint.textContent = "可以继续回答追问，或换一道题。";
+      messageList.scrollTop = messageList.scrollHeight;
+    });
+
+    document.querySelectorAll("[data-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.mode = button.dataset.mode;
+        resetSession();
+      });
+    });
+
+    document.querySelectorAll("[data-node]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.node = button.dataset.node;
+        resetSession();
+      });
+    });
+
+    document.querySelector("[data-reset]").addEventListener("click", resetSession);
+    document.querySelector("[data-new-question]").addEventListener("click", resetSession);
+    document.querySelector("[data-continue]").addEventListener("click", () => {
+      const node = nodes[state.node];
+      messageList.append(createMessage("coach", "AI Coach", node.followups[state.mode]));
+      answerHint.textContent = "继续回答当前追问。";
+      messageList.scrollTop = messageList.scrollHeight;
+    });
+
+    resetSession();
+  </script>
 </BaseLayout>
