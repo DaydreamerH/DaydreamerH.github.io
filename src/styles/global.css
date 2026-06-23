@@ -498,6 +498,49 @@ h3 {
   color: var(--accent-strong);
 }
 
+.api-config {
+  display: grid;
+  gap: 10px;
+}
+
+.api-config label {
+  display: grid;
+  gap: 6px;
+}
+
+.api-config span,
+.api-note,
+.feedback-source {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.api-config input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 10px;
+}
+
+.api-note {
+  margin: 12px 0 0;
+}
+
+.feedback-source {
+  margin: -2px 0 12px;
+}
+
+.feedback-source[data-tone="success"] {
+  color: var(--accent-strong);
+}
+
+.feedback-source[data-tone="error"] {
+  color: #ffb4a8;
+}
+
 .context-return {
   display: inline-flex;
   margin-top: 14px;
@@ -595,6 +638,11 @@ h3 {
 .answer-box button {
   padding: 0 14px;
   white-space: nowrap;
+}
+
+.answer-box button:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .feedback-panel {
