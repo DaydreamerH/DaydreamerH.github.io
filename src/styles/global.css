@@ -721,6 +721,7 @@ h3 {
 
 .message-list {
   display: grid;
+  align-content: start;
   justify-items: start;
   gap: 14px;
   min-height: 420px;
@@ -732,6 +733,7 @@ h3 {
 .message {
   width: fit-content;
   max-width: min(78%, 680px);
+  align-self: start;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 14px;
@@ -745,7 +747,61 @@ h3 {
   margin-bottom: 6px;
 }
 
-.message p {
+.message-body {
+  display: grid;
+  gap: 8px;
+}
+
+.message-body > * {
+  margin: 0;
+}
+
+.message-body h3,
+.message-body h4,
+.message-body h5 {
+  color: var(--text);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.message-body ul {
+  padding-left: 18px;
+}
+
+.message-body li + li {
+  margin-top: 5px;
+}
+
+.message-body blockquote {
+  border-left: 3px solid rgba(76, 201, 167, 0.5);
+  color: var(--muted);
+  padding-left: 10px;
+}
+
+.message-body code {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--accent-strong);
+  padding: 1px 5px;
+}
+
+.message-body pre {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+}
+
+.message-body pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.message-body p {
   margin: 0;
 }
 
