@@ -78,9 +78,12 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
   <section class="coach-layout compact" data-coach-layout aria-label="AI Coach 知识点提问">
     <aside class="coach-sidebar">
       <div class="panel-block">
-        <div class="panel-heading">
-          <span>测试目标与上下文</span>
-          <strong><a data-context-link href={`/knowledge/${activeNode.id}/`}>{activeNode.title}</a></strong>
+        <div class="panel-heading panel-heading-row">
+          <div>
+            <span>测试目标与上下文</span>
+            <strong><a data-context-link href={`/knowledge/${activeNode.id}/`}>{activeNode.title}</a></strong>
+          </div>
+          <button class="side-toggle" type="button" data-toggle-left aria-expanded="true">折叠</button>
         </div>
         <label class="select-field compact-select">
           <span>分类</span>
@@ -120,8 +123,6 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
           <strong data-session-title>{activeNode.title}</strong>
         </div>
         <div class="toolbar-actions">
-          <button type="button" data-toggle-left>折叠左侧</button>
-          <button type="button" data-toggle-right>折叠右侧</button>
           <button type="button" data-reset>重新开始</button>
         </div>
       </div>
@@ -140,9 +141,12 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
 
     <aside class="feedback-panel">
       <div class="panel-block feedback-summary">
-        <div class="panel-heading">
-          <span>反馈摘要</span>
-          <strong data-feedback-title>等待回答</strong>
+        <div class="panel-heading panel-heading-row">
+          <div>
+            <span>反馈摘要</span>
+            <strong data-feedback-title>等待回答</strong>
+          </div>
+          <button class="side-toggle" type="button" data-toggle-right aria-expanded="true">折叠</button>
         </div>
         <p class="feedback-source" data-feedback-source>请先填写右侧 API 信息。</p>
         <ul class="feedback-list" data-feedback-list>
@@ -462,12 +466,16 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
 
     document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
       layout.classList.toggle("is-left-collapsed");
-      event.currentTarget.textContent = layout.classList.contains("is-left-collapsed") ? "展开左侧" : "折叠左侧";
+      const isCollapsed = layout.classList.contains("is-left-collapsed");
+      event.currentTarget.textContent = isCollapsed ? "展开" : "折叠";
+      event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
     });
 
     document.querySelector("[data-toggle-right]").addEventListener("click", (event) => {
       layout.classList.toggle("is-right-collapsed");
-      event.currentTarget.textContent = layout.classList.contains("is-right-collapsed") ? "展开右侧" : "折叠右侧";
+      const isCollapsed = layout.classList.contains("is-right-collapsed");
+      event.currentTarget.textContent = isCollapsed ? "展开" : "折叠";
+      event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
     });
 
     document.querySelector("[data-reset]").addEventListener("click", resetSession);

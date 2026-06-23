@@ -430,24 +430,44 @@ h3 {
 }
 
 .coach-layout.is-left-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr) 300px;
+  grid-template-columns: 48px minmax(0, 1fr) 300px;
 }
 
 .coach-layout.is-right-collapsed {
-  grid-template-columns: 280px minmax(0, 1fr) 0;
+  grid-template-columns: 280px minmax(0, 1fr) 48px;
 }
 
 .coach-layout.is-left-collapsed.is-right-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr) 0;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
 }
 
 .coach-layout.is-left-collapsed .coach-sidebar,
 .coach-layout.is-right-collapsed .feedback-panel {
-  border: 0;
-  padding: 0;
   overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
+}
+
+.coach-layout.is-left-collapsed .coach-sidebar .panel-block > :not(.panel-heading),
+.coach-layout.is-right-collapsed .feedback-panel .panel-block > :not(.panel-heading),
+.coach-layout.is-right-collapsed .feedback-panel .panel-block:not(.feedback-summary) {
+  display: none;
+}
+
+.coach-layout.is-left-collapsed .coach-sidebar .panel-block,
+.coach-layout.is-right-collapsed .feedback-panel .feedback-summary {
+  min-height: 240px;
+  padding: 10px;
+}
+
+.coach-layout.is-left-collapsed .coach-sidebar .panel-heading,
+.coach-layout.is-right-collapsed .feedback-panel .panel-heading {
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.coach-layout.is-left-collapsed .coach-sidebar .panel-heading > div,
+.coach-layout.is-right-collapsed .feedback-panel .panel-heading > div {
+  display: none;
 }
 
 .coach-sidebar,
@@ -466,6 +486,18 @@ h3 {
   margin-bottom: 12px;
 }
 
+.panel-heading-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.panel-heading-row > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
 .panel-heading span,
 .chat-toolbar span,
 .answer-box label,
@@ -482,7 +514,8 @@ h3 {
 
 .node-list button,
 .chat-toolbar button,
-.answer-box button {
+.answer-box button,
+.side-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -492,6 +525,21 @@ h3 {
   background: rgba(255, 255, 255, 0.04);
   color: var(--muted);
   cursor: pointer;
+}
+
+.side-toggle {
+  min-width: 38px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left],
+.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] {
+  width: 28px;
+  min-width: 28px;
+  min-height: 140px;
+  padding: 8px 0;
+  writing-mode: vertical-rl;
 }
 
 .node-list button {
