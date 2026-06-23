@@ -14,7 +14,7 @@ const { lesson } = Astro.props;
 const lessonPayload = JSON.stringify(lesson);
 ---
 
-<BaseLayout title={`${lesson.title} - WebGL 实验`} description={lesson.aiBrief}>
+<BaseLayout title={`${lesson.title} - CG 实验`} description={lesson.description}>
   <section
     class="graphics-lab-page wide-surface"
     data-graphics-lab
@@ -100,7 +100,7 @@ const lessonPayload = JSON.stringify(lesson);
               <div class="guide-setup-body">
                 <div class="guide-rule-card">
                   <strong>当前实验</strong>
-                  <p>{lesson.aiBrief}</p>
+                  <p>{lesson.description}</p>
                 </div>
 
                 <div class="guide-alert" data-guide-alert hidden></div>

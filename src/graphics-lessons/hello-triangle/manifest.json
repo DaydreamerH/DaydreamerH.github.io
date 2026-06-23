@@ -1,12 +1,14 @@
 {
   "id": "hello-triangle",
   "title": "Hello Triangle",
-  "category": "OpenGL 基础",
+  "category": "CG 实验",
   "level": "intro",
+  "createdAt": "2026.6.23",
+  "description": "在浏览器中补全一个基础三角形渲染实验，理解顶点数据、片元颜色和顶点颜色插值。",
   "source": "OpenGLProject/src/02_hello_triangle",
   "runtime": "three-shader-material",
   "previewTitle": "Hello Triangle",
-  "aiBrief": "本实验把 OpenGL hello_triangle 转写为浏览器中的 Three.js ShaderMaterial 实验。AI 需要按 checkpoint 提问，确认用户理解后只返回预设 patchId，不要自由生成完整课程。",
+  "aiBrief": "面向 AI 的课程说明：本实验以 hello_triangle 为参考，在浏览器中通过 Three.js ShaderMaterial 推进。按 checkpoint 提问，确认用户理解后优先返回预设 patchId；不要一次性生成完整课程。",
   "referenceBrief": [
     "OpenGL 版本中，顶点数据通过 VBO 上传，并由 VAO 记录顶点属性解释方式。",
     "glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0) 表示 location 0 每个顶点读取 3 个 float。",

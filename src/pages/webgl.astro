@@ -11,7 +11,7 @@ const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.ca
   <section class="toolbar" aria-label="WebGL 实验筛选">
     <label class="search-field">
       <span>搜索</span>
-      <input id="lesson-search" type="search" placeholder="输入 shader、triangle、OpenGL..." />
+      <input id="lesson-search" type="search" placeholder="输入 shader、triangle、插值..." />
     </label>
     <label class="select-field">
       <span>分类</span>
@@ -28,19 +28,19 @@ const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.ca
     {graphicsLessonSummaries.map((lesson, index) => (
       <article
         class="lesson-library-card"
-        data-title={`${lesson.title} ${lesson.aiBrief}`.toLowerCase()}
+        data-title={`${lesson.title} ${lesson.description}`.toLowerCase()}
         data-category={lesson.category}
         data-index={index}
       >
         <div class="card-meta">
           <span class="pill">{lesson.category}</span>
-          <span>{lesson.level} · {lesson.checkpointCount} checkpoints</span>
+          <span>{lesson.createdAt}</span>
         </div>
         <h2><a href={`/webgl/${lesson.id}/`}>{lesson.title}</a></h2>
-        <p>{lesson.aiBrief}</p>
+        <p>{lesson.description}</p>
         <div class="tag-row">
-          <span>{lesson.runtime}</span>
-          <span>{lesson.source}</span>
+          <span>{lesson.level}</span>
+          <span>{lesson.checkpointCount} checkpoints</span>
         </div>
       </article>
     ))}

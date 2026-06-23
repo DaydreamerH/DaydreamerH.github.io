@@ -74,6 +74,8 @@ type GraphicsLesson = {
   title: string;
   category: string;
   level: string;
+  createdAt: string;
+  description: string;
   source: string;
   runtime: string;
   previewTitle: string;
@@ -119,8 +121,10 @@ const STORAGE_KEY_PREFIX = "daydreamerh.graphics-lab.lesson";
 const fallbackLesson: GraphicsLesson = {
   id: "fallback",
   title: "Hello Triangle",
-  category: "OpenGL 基础",
+  category: "CG 实验",
   level: "intro",
+  createdAt: "2026.6.23",
+  description: "在浏览器中补全一个基础三角形渲染实验。",
   source: "inline",
   runtime: "three-shader-material",
   previewTitle: "Hello Triangle",
@@ -833,9 +837,11 @@ JSON schema:
 
     const lessonPrompt = `课程：${lesson.title}
 类别：${lesson.category}
-来源：${lesson.source}
-运行环境：${lesson.runtime}
-课程摘要：${lesson.aiBrief}
+用户可见描述：${lesson.description}
+创建时间：${lesson.createdAt}
+内部参考来源：${lesson.source}
+内部运行环境：${lesson.runtime}
+AI 教学摘要：${lesson.aiBrief}
 参考要点：
 ${lesson.referenceBrief.map((item) => `- ${item}`).join("\n")}
 参考源码摘录：

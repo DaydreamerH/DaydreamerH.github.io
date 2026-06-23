@@ -25,6 +25,8 @@ export type GraphicsLesson = {
   title: string;
   category: string;
   level: string;
+  createdAt: string;
+  description: string;
   source: string;
   runtime: string;
   previewTitle: string;
@@ -52,7 +54,7 @@ export type GraphicsLesson = {
 
 export type GraphicsLessonSummary = Pick<
   GraphicsLesson,
-  "id" | "title" | "category" | "level" | "source" | "runtime" | "previewTitle" | "aiBrief"
+  "id" | "title" | "category" | "level" | "createdAt" | "description" | "previewTitle"
 > & {
   checkpointCount: number;
 };
@@ -87,10 +89,9 @@ export const graphicsLessonSummaries: GraphicsLessonSummary[] = graphicsLessons.
   title: lesson.title,
   category: lesson.category,
   level: lesson.level,
-  source: lesson.source,
-  runtime: lesson.runtime,
+  createdAt: lesson.createdAt,
+  description: lesson.description,
   previewTitle: lesson.previewTitle,
-  aiBrief: lesson.aiBrief,
   checkpointCount: lesson.checkpoints.length
 }));
 
