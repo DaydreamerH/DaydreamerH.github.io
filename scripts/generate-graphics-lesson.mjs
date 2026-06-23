@@ -1,294 +1,537 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from "node:fs";
+import { dirname, extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = dirname(fileURLToPath(import.meta.url));
-const workspace = join(root, "..");
-const lessonRoot = join(workspace, "src", "graphics-lessons", "hello-triangle");
-const sourceRoot = join(workspace, "OpenGLProject", "src", "02_hello_triangle");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const workspace = join(scriptDir, "..");
+const args = process.argv.slice(2);
 
-const write = (relativePath, content) => {
-  const target = join(lessonRoot, relativePath);
+const fileNames = ["main.js", "vertex.glsl", "fragment.glsl"];
+const defaultTeachingRules = [
+  "每轮只提出一个问题。",
+  "先判断用户回答，再决定是否应用 patch。",
+  "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+  "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+  "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+  "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+];
+
+function readOption(name, fallback = "") {
+  const index = args.findIndex((arg) => arg === `--${name}`);
+  if (index === -1) return fallback;
+  const value = args[index + 1];
+  return value && !value.startsWith("--") ? value : fallback;
+}
+
+function hasFlag(name) {
+  return args.includes(`--${name}`);
+}
+
+function toPosixPath(path) {
+  return path.replace(/\\/g, "/");
+}
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function writeFile(root, relativePath, content) {
+  const target = join(root, relativePath);
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, `${content.trim()}\n`, "utf8");
-};
+  writeFileSync(target, `${String(content).trim()}\n`, "utf8");
+}
 
-const originalMain = readFileSync(join(sourceRoot, "main.cpp"), "utf8");
-const originalCmake = readFileSync(join(sourceRoot, "CMakeLists.txt"), "utf8");
-const hasIndexedDraw = originalMain.includes("glDrawElements");
-const hasShaderProgram = originalMain.includes("glCreateProgram");
-const hasVertexAttribPointer = originalMain.includes("glVertexAttribPointer");
+function stableJson(value) {
+  return JSON.stringify(value, null, 2);
+}
 
-rmSync(lessonRoot, { recursive: true, force: true });
-mkdirSync(lessonRoot, { recursive: true });
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-write(
-  "manifest.json",
-  JSON.stringify(
-    {
-      id: "hello-triangle",
-      title: "Hello Triangle",
-      category: "OpenGL 基础",
-      level: "intro",
-      source: "OpenGLProject/src/02_hello_triangle",
-      runtime: "three-shader-material",
-      previewTitle: "Hello Triangle",
-      aiBrief:
-        "本实验把 OpenGL hello_triangle 转写为浏览器中的 Three.js ShaderMaterial 实验。AI 需要按 checkpoint 提问，确认用户理解后只返回预设 patchId，不要自由生成完整课程。",
-      referenceBrief: [
-        "OpenGL 版本中，顶点数据通过 VBO 上传，并由 VAO 记录顶点属性解释方式。",
-        "glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0) 表示 location 0 每个顶点读取 3 个 float。",
-        "顶点着色器把 aPos 写入 gl_Position，片元着色器输出固定颜色。",
-        "WebGL 实验中用 Three.js BufferGeometry 对应顶点缓冲，用 ShaderMaterial 承载 vertex.glsl 与 fragment.glsl。",
-        "课程包包含 reference/main.cpp，AI 可以参考它理解 OpenGL 原始任务，但不应要求用户在网页中编译 C++。"
-      ],
-      referenceFiles: [
-        {
-          path: "reference/main.cpp",
-          role: "OpenGL 原始 hello_triangle 代码"
-        },
-        {
-          path: "reference/CMakeLists.txt",
-          role: "原始章节构建入口"
-        }
-      ],
-      teachingRules: [
-        "每轮只提出一个问题。",
-        "先判断用户回答，再决定是否应用 patch。",
-        "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-        "回答不完整时给一个提示，不要应用 patch。",
-        "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
-      ],
-      checkpoints: [
-        {
-          id: "triangle-vertices",
-          title: "定义三角形的三个顶点",
-          concept:
-            "三角形由三个顶点组成。OpenGL 中 VBO 保存顶点数组，WebGL 实验中 BufferGeometry 的 position attribute 承担同样角色。",
-          question:
-            "如果一个顶点属性 location 每次读取 3 个 float，那么画一个三角形至少需要多少个 float？为什么？",
-          expectedKeywords: ["3", "顶点", "float", "位置", "x", "y", "z"],
-          hint: "先数三角形有几个顶点，再看每个顶点的位置由几个分量组成。",
-          patchId: "01-triangle-vertices",
-          expectedObservation: "预览中出现一个居中的深色三角形。"
-        },
-        {
-          id: "fragment-color",
-          title: "让片元着色器输出颜色",
-          concept:
-            "顶点着色器决定顶点位置，片元着色器决定最终像素颜色。固定颜色输出是理解 fragment shader 的第一步。",
-          question:
-            "顶点着色器已经决定了三角形的位置，为什么还需要片元着色器输出颜色？",
-          expectedKeywords: ["片元", "像素", "颜色", "fragment", "FragColor", "gl_FragColor"],
-          hint: "屏幕上每个被三角形覆盖的片元，都需要知道自己应该显示什么颜色。",
-          patchId: "02-fragment-color",
-          expectedObservation: "三角形变为接近 LearnOpenGL 示例的橙色。"
-        },
-        {
-          id: "vertex-colors",
-          title: "把每个顶点的颜色传给片元",
-          concept:
-            "顶点属性不只可以保存位置，也可以保存颜色。varying 会在光栅化阶段被插值后传入片元着色器。",
-          question:
-            "如果三个顶点分别有不同颜色，三角形内部的渐变颜色通常是在哪个阶段产生的？",
-          expectedKeywords: ["光栅化", "插值", "varying", "顶点", "片元"],
-          hint: "片元不是顶点，但它会收到由顶点数据插值得到的值。",
-          patchId: "03-vertex-colors",
-          expectedObservation: "三角形显示为由三个顶点颜色插值得到的渐变。"
-        }
-      ]
-    },
-    null,
-    2
-  )
-);
+function listRecipeFiles(recipeRoot) {
+  if (!existsSync(recipeRoot)) return [];
+  return readdirSync(recipeRoot)
+    .map((entry) => join(recipeRoot, entry, "recipe.json"))
+    .filter((path) => existsSync(path));
+}
 
-write(
-  "lesson.md",
-  `
-# Hello Triangle
+function copyReferenceFiles(sourceDir, outDir) {
+  const referenceDir = join(outDir, "reference");
+  mkdirSync(referenceDir, { recursive: true });
+  const copied = [];
+  const allowed = new Set([".cpp", ".h", ".hpp", ".vs", ".fs", ".glsl", ".txt", ".md", ".cmake"]);
 
-这个实验从 OpenGLProject 的 \`src/02_hello_triangle\` 提取。网页中不直接运行 C++/OpenGL 代码，而是用 Three.js 和 WebGL shader 表达同样的图形学概念。
+  for (const entry of readdirSync(sourceDir)) {
+    const source = join(sourceDir, entry);
+    if (!statSync(source).isFile()) continue;
 
-目标：
+    const extension = extname(entry).toLowerCase();
+    if (entry === "CMakeLists.txt" || allowed.has(extension)) {
+      copyFileSync(source, join(referenceDir, entry));
+      copied.push(entry);
+    }
+  }
 
-- 理解三角形顶点数据的组织方式。
-- 理解顶点着色器与片元着色器的职责。
-- 理解顶点属性如何扩展到颜色，并通过 varying 传递到片元阶段。
+  return copied;
+}
 
-AI 教学只负责提问、判断和解释；代码修改由本课程包内的预设 patch 完成。
-`
-);
+function colorLiteral(value, fallback) {
+  const items = Array.isArray(value) ? value : fallback;
+  return `new THREE.Color(${items.map((item) => Number(item).toFixed(3)).join(", ")})`;
+}
 
-write(
-  "starter/main.js",
-  `
-// Hello Triangle starter
-// 可用对象：THREE, canvas, vertexShader, fragmentShader, report
+function vectorLiteral(value, fallback) {
+  const items = Array.isArray(value) ? value : fallback;
+  return `new THREE.Vector3(${items.map((item) => Number(item).toFixed(3)).join(", ")})`;
+}
 
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true
-});
+function buildGeometry(state) {
+  if (state.shape === "quad") {
+    return `const geometry = new THREE.BufferGeometry();
+geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
+  -0.7,  0.7, 0.0,
+   0.7,  0.7, 0.0,
+  -0.7, -0.7, 0.0,
+   0.7, -0.7, 0.0
+]), 3));
+geometry.setAttribute("uv", new THREE.BufferAttribute(new Float32Array([
+  0.0, 1.0,
+  1.0, 1.0,
+  0.0, 0.0,
+  1.0, 0.0
+]), 2));
+geometry.setIndex([0, 2, 1, 1, 2, 3]);`;
+  }
 
+  if (state.shape === "cube") {
+    return "const geometry = new THREE.BoxGeometry(1, 1, 1);";
+  }
+
+  const colorAttribute =
+    state.mode === "vertex-color"
+      ? `
+geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array([
+  1.0, 0.2, 0.1,
+  0.0, 0.68, 0.71,
+  0.13, 0.16, 0.19
+]), 3));`
+      : "";
+
+  return `const geometry = new THREE.BufferGeometry();
+geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
+   0.0,  0.6, 0.0,
+  -0.6, -0.5, 0.0,
+   0.6, -0.5, 0.0
+]), 3));${colorAttribute}`;
+}
+
+function buildUniforms(state) {
+  return `const uniforms = {
+  uColor: { value: ${colorLiteral(state.color, [0.13, 0.16, 0.19])} },
+  uAccentColor: { value: ${colorLiteral(state.accentColor, [0.42, 0.48, 0.52])} },
+  uObjectColor: { value: ${colorLiteral(state.objectColor, [0.95, 0.48, 0.2])} },
+  uLightColor: { value: ${colorLiteral(state.lightColor, [1, 1, 1])} },
+  uLightPos: { value: ${vectorLiteral(state.lightPos, [1.5, 1.8, 2.2])} },
+  uViewPos: { value: camera.position },
+  uMixAmount: { value: ${Number(state.mixAmount ?? 0.35).toFixed(2)} },
+  uAmbientStrength: { value: ${Number(state.ambientStrength ?? 0.18).toFixed(2)} },
+  uSpecularStrength: { value: ${Number(state.specularStrength ?? 0.45).toFixed(2)} },
+  uShininess: { value: ${Number(state.shininess ?? 32).toFixed(1)} }
+};`;
+}
+
+function buildMain(state = {}) {
+  const shape = state.shape ?? "triangle";
+  const cameraType = state.camera ?? (shape === "cube" ? "perspective" : "orthographic");
+  const objectCount = Math.max(1, Number(state.objectCount ?? 1));
+  const rotation = state.rotation ?? (shape === "cube" ? [0.35, 0.55, 0] : [0, 0, 0]);
+  const cameraPosition = state.cameraPosition ?? (cameraType === "perspective" ? [2.4, 1.8, 4.2] : [0, 0, 3]);
+  const cameraCode =
+    cameraType === "perspective"
+      ? `const camera = new THREE.PerspectiveCamera(${Number(state.fov ?? 45).toFixed(1)}, 1, 0.1, 100);`
+      : "const camera = new THREE.OrthographicCamera(-1.4, 1.4, 1.1, -1.1, 0.1, 20);";
+
+  return `// Generated CG experiment runtime
+// Available objects: THREE, canvas, vertexShader, fragmentShader, report
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0xf8f8f8, 1);
 
 const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-camera.position.z = 1;
+${cameraCode}
+camera.position.set(${cameraPosition.map((item) => Number(item).toFixed(3)).join(", ")});
+camera.lookAt(0, 0, 0);
 
-const positions = new Float32Array([
-  // TODO: 三角形需要 3 个顶点，每个顶点 3 个 float。
-]);
+${buildGeometry({ ...state, shape })}
 
-const geometry = new THREE.BufferGeometry();
-geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+${buildUniforms(state)}
 
 const material = new THREE.ShaderMaterial({
   vertexShader,
   fragmentShader,
+  uniforms,
   side: THREE.DoubleSide
 });
 
-const triangle = new THREE.Mesh(geometry, material);
-scene.add(triangle);
+const meshes = [];
+for (let index = 0; index < ${objectCount}; index += 1) {
+  const mesh = new THREE.Mesh(geometry, material);
+  const offset = index - (${objectCount} - 1) / 2;
+  mesh.position.set(offset * 1.45, 0, ${objectCount > 1 ? "-Math.abs(offset) * 0.35" : "0"});
+  mesh.rotation.set(${rotation.map((item) => Number(item).toFixed(3)).join(", ")});
+  mesh.scale.setScalar(${Number(state.scale ?? 1).toFixed(2)});
+  scene.add(mesh);
+  meshes.push(mesh);
+}
+
+${state.showLight ? `const lightMarker = new THREE.Mesh(
+  new THREE.SphereGeometry(0.08, 16, 16),
+  new THREE.MeshBasicMaterial({ color: uniforms.uLightColor.value })
+);
+lightMarker.position.copy(uniforms.uLightPos.value);
+scene.add(lightMarker);` : ""}
+
+let animationFrame = 0;
 
 function resize() {
   const bounds = canvas.parentElement.getBoundingClientRect();
   const width = Math.max(1, Math.floor(bounds.width));
   const height = Math.max(1, Math.floor(bounds.height));
   renderer.setSize(width, height, false);
+  if (camera.isPerspectiveCamera) {
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
 }
 
-function render() {
+function render(time = 0) {
   resize();
+  const seconds = time * 0.001;
+  ${state.animated ? "meshes.forEach((mesh, index) => { mesh.rotation.y = seconds * 0.75 + index * 0.4; mesh.rotation.x = 0.35; });" : ""}
   renderer.render(scene, camera);
-  report({ vertices: positions.length / 3 });
+  report({ shape: "${shape}", mode: "${state.mode ?? "solid"}", objects: meshes.length });
+  ${state.animated ? "animationFrame = requestAnimationFrame(render);" : ""}
 }
 
-window.addEventListener("resize", render);
-render();
+${state.animated ? "animationFrame = requestAnimationFrame(render);" : "render();"}
 
 return () => {
-  window.removeEventListener("resize", render);
+  if (animationFrame) cancelAnimationFrame(animationFrame);
   geometry.dispose();
   material.dispose();
   renderer.dispose();
-};
-`
-);
-
-write(
-  "starter/vertex.glsl",
-  `
-void main() {
-  gl_Position = vec4(position, 1.0);
+};`;
 }
-`
-);
 
-write(
-  "starter/fragment.glsl",
-  `
+function buildVertex(state = {}) {
+  const mode = state.mode ?? "solid";
+  if (mode === "vertex-color") {
+    return `attribute vec3 color;
+varying vec3 vColor;
+
 void main() {
-  gl_FragColor = vec4(0.13, 0.16, 0.19, 1.0);
+  vColor = color;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+  }
+  if (["uv-gradient", "checker", "texture-mix"].includes(mode)) {
+    return `varying vec2 vUv;
+
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+  }
+  if (["ambient", "diffuse", "phong", "material"].includes(mode)) {
+    return `varying vec3 vNormal;
+varying vec3 vWorldPosition;
+
+void main() {
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
+  vNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
+}`;
+  }
+  return `void main() {
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
 }
-`
-);
 
-write(
-  "patches/01-triangle-vertices.json",
-  JSON.stringify(
-    {
-      id: "01-triangle-vertices",
-      description: "写入三个裁剪空间顶点，形成一个基础三角形。",
-      changes: [
-        {
-          file: "main.js",
-          operation: "replace",
-          target:
-            "const positions = new Float32Array([\n  // TODO: 三角形需要 3 个顶点，每个顶点 3 个 float。\n]);",
-          content:
-            "const positions = new Float32Array([\n   0.0,  0.6, 0.0,\n  -0.6, -0.5, 0.0,\n   0.6, -0.5, 0.0\n]);"
-        }
-      ]
-    },
-    null,
-    2
-  )
-);
+function buildFragment(state = {}) {
+  const mode = state.mode ?? "solid";
+  if (mode === "vertex-color") {
+    return `varying vec3 vColor;
 
-write(
-  "patches/02-fragment-color.json",
-  JSON.stringify(
-    {
-      id: "02-fragment-color",
-      description: "让片元着色器输出固定橙色。",
-      changes: [
-        {
-          file: "fragment.glsl",
-          operation: "replace_all",
-          content:
-            "void main() {\n  gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n}"
-        }
-      ]
-    },
-    null,
-    2
-  )
-);
+void main() {
+  gl_FragColor = vec4(vColor, 1.0);
+}`;
+  }
+  if (mode === "uv-gradient") {
+    return `varying vec2 vUv;
 
-write(
-  "patches/03-vertex-colors.json",
-  JSON.stringify(
-    {
-      id: "03-vertex-colors",
-      description: "加入颜色 attribute，并通过 varying 传入 fragment shader。",
-      changes: [
-        {
-          file: "main.js",
-          operation: "replace",
-          target:
-            "const geometry = new THREE.BufferGeometry();\ngeometry.setAttribute(\"position\", new THREE.BufferAttribute(positions, 3));",
-          content:
-            "const colors = new Float32Array([\n  1.0, 0.2, 0.1,\n  0.0, 0.68, 0.71,\n  0.13, 0.16, 0.19\n]);\n\nconst geometry = new THREE.BufferGeometry();\ngeometry.setAttribute(\"position\", new THREE.BufferAttribute(positions, 3));\ngeometry.setAttribute(\"color\", new THREE.BufferAttribute(colors, 3));"
-        },
-        {
-          file: "vertex.glsl",
-          operation: "replace_all",
-          content:
-            "varying vec3 vColor;\n\nvoid main() {\n  vColor = color;\n  gl_Position = vec4(position, 1.0);\n}"
-        },
-        {
-          file: "fragment.glsl",
-          operation: "replace_all",
-          content:
-            "varying vec3 vColor;\n\nvoid main() {\n  gl_FragColor = vec4(vColor, 1.0);\n}"
-        }
-      ]
-    },
-    null,
-    2
-  )
-);
+void main() {
+  gl_FragColor = vec4(vUv, 1.0 - vUv.x, 1.0);
+}`;
+  }
+  if (mode === "checker") {
+    return `varying vec2 vUv;
+uniform vec3 uColor;
+uniform vec3 uAccentColor;
 
-write("reference/main.cpp", originalMain);
-write("reference/CMakeLists.txt", originalCmake);
-write(
-  "reference/source-notes.md",
-  `
-# OpenGL Source Notes
+void main() {
+  vec2 grid = floor(vUv * 4.0);
+  float mask = mod(grid.x + grid.y, 2.0);
+  vec3 calmBase = mix(uColor, vec3(0.88), 0.18);
+  vec3 calmAccent = mix(uColor, uAccentColor, 0.32);
+  gl_FragColor = vec4(mix(calmBase, calmAccent, mask), 1.0);
+}`;
+  }
+  if (mode === "texture-mix") {
+    return `varying vec2 vUv;
+uniform vec3 uColor;
+uniform vec3 uAccentColor;
+uniform float uMixAmount;
 
-- 原始入口：\`OpenGLProject/src/02_hello_triangle/main.cpp\`
-- 提取状态：${hasShaderProgram ? "包含 shader program 创建与链接" : "未检测到 shader program"}
-- 顶点属性：${hasVertexAttribPointer ? "检测到 glVertexAttribPointer，适合讲解 position attribute" : "未检测到 glVertexAttribPointer"}
-- 绘制方式：${hasIndexedDraw ? "原始代码使用索引绘制，第一课先压缩为单三角形" : "原始代码未检测到索引绘制"}
-- WebGL 实验保留的核心概念：顶点数组、shader program、顶点着色器、片元着色器、draw call。
-- WebGL 实验不复刻 GLFW、GLAD、VAO/VBO/EBO 的完整 API，只用 Three.js 提供画布、渲染器和 BufferGeometry。
-- 原始代码当前使用 \`glDrawElements(GL_TRIANGLES, 6, ...)\` 绘制矩形；本课程第一课先压缩为一个三角形，后续可以再扩展到 EBO/索引绘制。
- - 本文件只保留教学摘要，不复制 private OpenGL 仓库的完整源码。
-`
-);
+void main() {
+  vec3 textureA = vec3(vUv, 1.0 - vUv.x);
+  vec3 textureB = mix(uAccentColor, uColor, smoothstep(0.15, 0.85, vUv.y));
+  gl_FragColor = vec4(mix(textureA, textureB, uMixAmount), 1.0);
+}`;
+  }
+  if (mode === "color-multiply") {
+    return `uniform vec3 uObjectColor;
+uniform vec3 uLightColor;
 
-console.log(`Generated graphics lesson: ${lessonRoot}`);
+void main() {
+  gl_FragColor = vec4(uObjectColor * uLightColor, 1.0);
+}`;
+  }
+  if (mode === "ambient") {
+    return `uniform vec3 uObjectColor;
+uniform vec3 uLightColor;
+uniform float uAmbientStrength;
+
+void main() {
+  vec3 ambient = uAmbientStrength * uLightColor;
+  gl_FragColor = vec4(ambient * uObjectColor, 1.0);
+}`;
+  }
+  if (mode === "diffuse") {
+    return `varying vec3 vNormal;
+varying vec3 vWorldPosition;
+uniform vec3 uObjectColor;
+uniform vec3 uLightColor;
+uniform vec3 uLightPos;
+uniform float uAmbientStrength;
+
+void main() {
+  vec3 ambient = uAmbientStrength * uLightColor;
+  vec3 normal = normalize(vNormal);
+  vec3 lightDir = normalize(uLightPos - vWorldPosition);
+  float diff = max(dot(normal, lightDir), 0.0);
+  vec3 diffuse = diff * uLightColor;
+  gl_FragColor = vec4((ambient + diffuse) * uObjectColor, 1.0);
+}`;
+  }
+  if (mode === "phong" || mode === "material") {
+    return `varying vec3 vNormal;
+varying vec3 vWorldPosition;
+uniform vec3 uObjectColor;
+uniform vec3 uLightColor;
+uniform vec3 uLightPos;
+uniform vec3 uViewPos;
+uniform float uAmbientStrength;
+uniform float uSpecularStrength;
+uniform float uShininess;
+
+void main() {
+  vec3 normal = normalize(vNormal);
+  vec3 lightDir = normalize(uLightPos - vWorldPosition);
+  vec3 viewDir = normalize(uViewPos - vWorldPosition);
+  vec3 reflectDir = reflect(-lightDir, normal);
+
+  vec3 ambient = uAmbientStrength * uLightColor;
+  float diff = max(dot(normal, lightDir), 0.0);
+  vec3 diffuse = diff * uLightColor;
+  float spec = pow(max(dot(viewDir, reflectDir), 0.0), uShininess);
+  vec3 specular = uSpecularStrength * spec * uLightColor;
+
+  gl_FragColor = vec4((ambient + diffuse + specular) * uObjectColor, 1.0);
+}`;
+  }
+  return `uniform vec3 uColor;
+
+void main() {
+  gl_FragColor = vec4(uColor, 1.0);
+}`;
+}
+
+function filesFromState(state) {
+  return {
+    "main.js": buildMain(state),
+    "vertex.glsl": buildVertex(state),
+    "fragment.glsl": buildFragment(state)
+  };
+}
+
+function buildPatch(checkpoint) {
+  if (!checkpoint.patchId || !checkpoint.state) {
+    throw new Error(`Checkpoint ${checkpoint.id} cannot build patch without patchId and state.`);
+  }
+  const files = filesFromState(checkpoint.state);
+  return {
+    id: checkpoint.patchId,
+    description: checkpoint.expectedObservation,
+    changes: fileNames.map((file) => ({
+      file,
+      operation: "replace_all",
+      content: files[file]
+    }))
+  };
+}
+
+function validateRecipe(recipe) {
+  const required = ["id", "title", "source", "description", "starterState", "checkpoints"];
+  for (const key of required) {
+    if (!recipe[key]) throw new Error(`Recipe ${recipe.id ?? "(unknown)"} is missing ${key}.`);
+  }
+  for (const checkpoint of recipe.checkpoints) {
+    if (!checkpoint.question.includes("？") && !checkpoint.question.includes("?")) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} must ask one question.`);
+    }
+    if (checkpoint.patchId && !checkpoint.state) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has patchId but is missing state.`);
+    }
+    if (!checkpoint.patchId && checkpoint.state) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has state but is missing patchId.`);
+    }
+  }
+}
+
+function generateLesson(recipe, options) {
+  validateRecipe(recipe);
+
+  const sourceDir = join(options.sourceRoot, recipe.source);
+  if (!existsSync(sourceDir)) {
+    throw new Error(`Missing source directory for ${recipe.id}: ${sourceDir}`);
+  }
+
+  const outDir = join(options.outRoot, recipe.id);
+  if (recipe.preserveExisting && existsSync(outDir) && !options.force) {
+    return { recipe, sourceDir, outDir, preserved: true };
+  }
+
+  rmSync(outDir, { recursive: true, force: true });
+  mkdirSync(outDir, { recursive: true });
+
+  const copiedFiles = copyReferenceFiles(sourceDir, outDir);
+  const manifest = {
+    id: recipe.id,
+    title: recipe.title,
+    category: recipe.category ?? "CG 实验",
+    series: recipe.series,
+    order: recipe.order,
+    level: recipe.level ?? "intro",
+    createdAt: recipe.createdAt ?? options.createdAt,
+    description: recipe.description,
+    source: toPosixPath(relative(workspace, sourceDir)),
+    runtime: "three-shader-material",
+    previewTitle: recipe.previewTitle ?? recipe.title,
+    draft: Boolean(recipe.draft ?? options.draft),
+    aiBrief: recipe.aiBrief,
+    referenceBrief: recipe.referenceBrief ?? [],
+    referenceFiles: copiedFiles.map((file) => ({
+      path: `reference/${file}`,
+      role: file === "CMakeLists.txt" ? "原始章节构建入口" : "原始课程参考文件"
+    })),
+    teachingRules: recipe.teachingRules ?? defaultTeachingRules,
+    checkpoints: recipe.checkpoints.map((checkpoint) => ({
+      id: checkpoint.id,
+      title: checkpoint.title,
+      concept: checkpoint.concept,
+      question: checkpoint.question,
+      expectedKeywords: checkpoint.expectedKeywords ?? [],
+      hint: checkpoint.hint,
+      patchId: checkpoint.patchId,
+      expectedObservation: checkpoint.expectedObservation
+    }))
+  };
+
+  writeFile(outDir, "manifest.json", stableJson(manifest));
+  writeFile(outDir, "lesson.md", `# ${recipe.title}\n\n${recipe.lesson ?? recipe.description}`);
+
+  const starterFiles = filesFromState(recipe.starterState);
+  for (const [file, content] of Object.entries(starterFiles)) {
+    writeFile(outDir, `starter/${file}`, content);
+  }
+
+  for (const checkpoint of recipe.checkpoints.filter((item) => item.patchId)) {
+    const patch = buildPatch(checkpoint);
+    writeFile(outDir, `patches/${patch.id}.json`, stableJson(patch));
+  }
+
+  writeFile(
+    outDir,
+    "reference/source-notes.md",
+    `# Source Notes
+
+- Source entry: \`${toPosixPath(relative(workspace, sourceDir))}\`
+- Generated lesson id: \`${recipe.id}\`
+- Checkpoint count: ${recipe.checkpoints.length}
+- Browser runtime: Three.js BufferGeometry + ShaderMaterial
+- Reference files: ${copiedFiles.join(", ") || "none"}
+- Source projects are reference material. The browser experiment uses generated WebGL-facing files.`
+  );
+
+  return { recipe, sourceDir, outDir, preserved: false };
+}
+
+const recipeRoot = join(workspace, readOption("recipe-root", "src/graphics-lesson-recipes"));
+const sourceRoot = join(workspace, readOption("source-root", "OpenGLProject/src"));
+const outRoot = join(workspace, readOption("out-root", "src/graphics-lessons"));
+const requestedId = readOption("id");
+const requestedSource = readOption("source");
+const createdAt = readOption("date", getLocalDateString());
+const dryRun = hasFlag("dry-run");
+const draft = hasFlag("draft");
+const force = hasFlag("force");
+
+const recipes = listRecipeFiles(recipeRoot).map(readJson);
+const selectedRecipes = recipes.filter((recipe) => {
+  if (requestedId) return recipe.id === requestedId;
+  if (requestedSource) return recipe.source === requestedSource;
+  return true;
+});
+
+if (!selectedRecipes.length) {
+  throw new Error("No graphics lesson recipes matched the requested selection.");
+}
+
+for (const recipe of selectedRecipes) {
+  const sourceDir = join(sourceRoot, recipe.source);
+  const outDir = join(outRoot, recipe.id);
+  if (dryRun) {
+    console.log(`Would generate ${recipe.id}: ${toPosixPath(relative(workspace, sourceDir))} -> ${toPosixPath(relative(workspace, outDir))}`);
+    continue;
+  }
+
+  const result = generateLesson(recipe, { sourceRoot, outRoot, createdAt, draft, force });
+  console.log(
+    `${result.preserved ? "Preserved" : "Generated"} ${recipe.id}: ${toPosixPath(relative(workspace, sourceDir))} -> ${toPosixPath(relative(workspace, outDir))}`
+  );
+}

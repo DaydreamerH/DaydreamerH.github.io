@@ -1,0 +1,174 @@
+{
+  "id": "camera",
+  "title": "Camera",
+  "category": "空间变换",
+  "series": "LearnOpenGL 基础",
+  "order": 7,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "观察相机位置、观察方向和视锥参数对画面的影响。",
+  "source": "OpenGLProject/src/07_camera",
+  "runtime": "three-shader-material",
+  "previewTitle": "Camera",
+  "draft": false,
+  "aiBrief": "围绕 view matrix、lookAt 基、FOV 视锥和 delta time 组织提问。",
+  "referenceBrief": [
+    "相机并不移动模型顶点本身，而是通过视图矩阵把世界空间转换到观察空间。",
+    "lookAt 通常由相机位置、目标点和 up 向量构造观察坐标系。",
+    "FOV 改变透视投影视锥，会影响屏幕空间中的尺度感和可见范围。",
+    "delta time 用真实时间归一化每帧更新，避免帧率改变运动速度。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/camera.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/camera.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/camera_control.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "view-matrix-formula",
+      "title": "视图矩阵的含义",
+      "concept": "view matrix 可以理解为相机世界变换的逆矩阵，用 p_view = V * p_world 把世界点转到相机坐标系。",
+      "question": "若相机世界位置为 eye，世界点为 p_world，为什么观察空间坐标可以理解为先计算 p_world - eye，再投到相机的右、上、前向基上？",
+      "expectedKeywords": [
+        "p_world",
+        "eye",
+        "视图矩阵",
+        "逆矩阵",
+        "基向量",
+        "点积"
+      ],
+      "hint": "先把相机当作新坐标系原点，再用点积求点在相机局部轴上的坐标。"
+    },
+    {
+      "id": "camera-position",
+      "title": "相机位置与屏幕尺度",
+      "concept": "相机位置改变会改变点的观察空间 z 值，透视投影会让屏幕尺度与深度相关。",
+      "question": "在透视投影近似 y_ndc = y_view / (-z_view * tan(fov / 2)) 中，为什么相机远离物体时物体会变小？",
+      "expectedKeywords": [
+        "z_view",
+        "透视投影",
+        "除法",
+        "fov",
+        "NDC",
+        "变小"
+      ],
+      "hint": "相机远离后，物体在观察空间中的深度绝对值通常变大，分母变大。 ",
+      "patchId": "01-camera-position",
+      "expectedObservation": "立方体从正面被观察。"
+    },
+    {
+      "id": "lookat-basis",
+      "title": "lookAt 观察基",
+      "concept": "lookAt 通常由 f = normalize(target - eye)、r = normalize(cross(f, up))、u = cross(r, f) 构造相机坐标基。",
+      "question": "为什么只知道 eye 不能确定 view matrix，还必须通过 target 和 up 构造 f、r、u 三个相机基向量？",
+      "expectedKeywords": [
+        "eye",
+        "target",
+        "up",
+        "cross",
+        "normalize",
+        "基向量"
+      ],
+      "hint": "位置只决定坐标系原点，view matrix 还需要知道相机局部坐标轴的方向。"
+    },
+    {
+      "id": "look-direction",
+      "title": "观察方向与构图",
+      "concept": "改变 lookAt 方向会改变世界点投到相机右、上、前向基后的坐标。",
+      "question": "当相机位置相同但 target 改变时，为什么物体在屏幕上的左右、上下位置会变化？",
+      "expectedKeywords": [
+        "target",
+        "基向量",
+        "投影",
+        "观察空间",
+        "方向"
+      ],
+      "hint": "target 改变会重建相机坐标基，同一个世界点在新基上的坐标会变化。",
+      "patchId": "02-look-direction",
+      "expectedObservation": "立方体从斜上方被观察。"
+    },
+    {
+      "id": "projection-scale",
+      "title": "FOV 与投影缩放",
+      "concept": "透视投影矩阵中常见缩放项为 f = 1 / tan(fov / 2)，FOV 越大，f 越小。",
+      "question": "从 f = 1 / tan(fov / 2) 出发，为什么 FOV 增大后同一个 y_view 会映射到更小的 NDC 位移？",
+      "expectedKeywords": [
+        "tan",
+        "fov",
+        "NDC",
+        "缩放",
+        "投影矩阵",
+        "变小"
+      ],
+      "hint": "FOV 变大时 tan(fov / 2) 变大，所以投影缩放系数 f 变小。"
+    },
+    {
+      "id": "fov",
+      "title": "视锥与可见范围",
+      "concept": "FOV 决定视锥开角，改变同一屏幕范围内能容纳的观察空间范围。",
+      "question": "为什么 FOV 变大时画面能容纳更多物体，但边缘物体的透视拉伸也更明显？",
+      "expectedKeywords": [
+        "视锥",
+        "边缘",
+        "透视",
+        "投影",
+        "范围"
+      ],
+      "hint": "更宽的视锥会把更大的观察空间压到同一个屏幕矩形里。",
+      "patchId": "03-fov",
+      "expectedObservation": "多个立方体进入视野。"
+    },
+    {
+      "id": "time-integration",
+      "title": "速度与时间积分",
+      "concept": "稳定动画应使用 theta(t + dt) = theta(t) + omega * dt，把角速度按真实时间积分。",
+      "question": "如果角速度是 omega rad/s，为什么每帧更新应写成 angle += omega * deltaTime，而不是 angle += 常数？",
+      "expectedKeywords": [
+        "omega",
+        "deltaTime",
+        "积分",
+        "帧率",
+        "rad/s",
+        "常数"
+      ],
+      "hint": "deltaTime 表示这一帧覆盖的真实时间长度，乘上角速度才得到这一帧应增加的角度。"
+    },
+    {
+      "id": "delta-time",
+      "title": "时间步长与帧率",
+      "concept": "实时渲染中每帧更新应按时间积分，而不是假设每帧耗时相同。",
+      "question": "为什么使用 deltaTime 后，30 FPS 和 144 FPS 下同一个旋转动画仍能保持接近相同的每秒速率？",
+      "expectedKeywords": [
+        "帧率",
+        "时间",
+        "速度",
+        "deltaTime",
+        "积分"
+      ],
+      "hint": "高帧率每帧 deltaTime 更小，低帧率每帧 deltaTime 更大，总和仍接近真实经过时间。",
+      "patchId": "04-delta-time",
+      "expectedObservation": "场景持续旋转，便于观察相机下的空间变化。"
+    }
+  ]
+}

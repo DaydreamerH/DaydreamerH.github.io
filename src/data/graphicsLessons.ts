@@ -1,12 +1,3 @@
-import helloTriangleManifestRaw from "../graphics-lessons/hello-triangle/manifest.json?raw";
-import helloTriangleMain from "../graphics-lessons/hello-triangle/starter/main.js?raw";
-import helloTriangleVertex from "../graphics-lessons/hello-triangle/starter/vertex.glsl?raw";
-import helloTriangleFragment from "../graphics-lessons/hello-triangle/starter/fragment.glsl?raw";
-import helloTrianglePatch01Raw from "../graphics-lessons/hello-triangle/patches/01-triangle-vertices.json?raw";
-import helloTrianglePatch02Raw from "../graphics-lessons/hello-triangle/patches/02-fragment-color.json?raw";
-import helloTrianglePatch03Raw from "../graphics-lessons/hello-triangle/patches/03-vertex-colors.json?raw";
-import helloTriangleReferenceMain from "../graphics-lessons/hello-triangle/reference/main.cpp?raw";
-
 export type GraphicsLabFileName = "main.js" | "vertex.glsl" | "fragment.glsl";
 
 export type GraphicsLessonPatch = {
@@ -24,6 +15,8 @@ export type GraphicsLesson = {
   id: string;
   title: string;
   category: string;
+  series?: string;
+  order?: number;
   level: string;
   createdAt: string;
   description: string;
@@ -59,30 +52,89 @@ export type GraphicsLessonSummary = Pick<
   checkpointCount: number;
 };
 
-const parseJson = <T>(raw: string): T => JSON.parse(raw) as T;
+const manifestModules = import.meta.glob("../graphics-lessons/*/manifest.json", {
+  query: "?raw",
+  import: "default",
+  eager: true
+});
 
-const helloTriangleManifest = parseJson<Omit<GraphicsLesson, "starterFiles" | "patches">>(
-  helloTriangleManifestRaw
-);
+const starterModules = import.meta.glob("../graphics-lessons/*/starter/*", {
+  query: "?raw",
+  import: "default",
+  eager: true
+});
 
-const helloTrianglePatches = [
-  parseJson<GraphicsLessonPatch>(helloTrianglePatch01Raw),
-  parseJson<GraphicsLessonPatch>(helloTrianglePatch02Raw),
-  parseJson<GraphicsLessonPatch>(helloTrianglePatch03Raw)
-];
+const patchModules = import.meta.glob("../graphics-lessons/*/patches/*.json", {
+  query: "?raw",
+  import: "default",
+  eager: true
+});
 
-export const graphicsLessons: GraphicsLesson[] = [
-  {
-    ...helloTriangleManifest,
-    starterFiles: {
-      "main.js": helloTriangleMain.trim(),
-      "vertex.glsl": helloTriangleVertex.trim(),
-      "fragment.glsl": helloTriangleFragment.trim()
-    },
-    referenceCode: helloTriangleReferenceMain.trim(),
-    patches: Object.fromEntries(helloTrianglePatches.map((patch) => [patch.id, patch]))
+const referenceModules = import.meta.glob("../graphics-lessons/*/reference/main.cpp", {
+  query: "?raw",
+  import: "default",
+  eager: true
+});
+
+const parseJson = <T>(raw: unknown): T => JSON.parse(String(raw)) as T;
+
+const getLessonIdFromPath = (path: string) => {
+  const match = path.match(/graphics-lessons\/([^/]+)\//);
+  if (!match) throw new Error(`Cannot resolve graphics lesson id from path: ${path}`);
+  return match[1];
+};
+
+const getStarterFileName = (path: string): GraphicsLabFileName | null => {
+  const fileName = path.split("/").at(-1);
+  if (fileName === "main.js" || fileName === "vertex.glsl" || fileName === "fragment.glsl") {
+    return fileName;
   }
-];
+  return null;
+};
+
+const lessonsById = new Map<string, GraphicsLesson>();
+
+for (const [path, raw] of Object.entries(manifestModules)) {
+  const manifest = parseJson<Omit<GraphicsLesson, "starterFiles" | "patches">>(raw);
+  lessonsById.set(manifest.id, {
+    ...manifest,
+    starterFiles: {
+      "main.js": "",
+      "vertex.glsl": "",
+      "fragment.glsl": ""
+    },
+    patches: {}
+  });
+}
+
+for (const [path, raw] of Object.entries(starterModules)) {
+  const lesson = lessonsById.get(getLessonIdFromPath(path));
+  const fileName = getStarterFileName(path);
+  if (lesson && fileName) {
+    lesson.starterFiles[fileName] = String(raw).trim();
+  }
+}
+
+for (const [path, raw] of Object.entries(patchModules)) {
+  const lesson = lessonsById.get(getLessonIdFromPath(path));
+  if (lesson) {
+    const patch = parseJson<GraphicsLessonPatch>(raw);
+    lesson.patches[patch.id] = patch;
+  }
+}
+
+for (const [path, raw] of Object.entries(referenceModules)) {
+  const lesson = lessonsById.get(getLessonIdFromPath(path));
+  if (lesson) {
+    lesson.referenceCode = String(raw).trim();
+  }
+}
+
+export const graphicsLessons: GraphicsLesson[] = [...lessonsById.values()].sort((a, b) => {
+  const dateCompare = b.createdAt.localeCompare(a.createdAt);
+  if (dateCompare !== 0) return dateCompare;
+  return a.title.localeCompare(b.title);
+});
 
 export const graphicsLessonSummaries: GraphicsLessonSummary[] = graphicsLessons.map((lesson) => ({
   id: lesson.id,

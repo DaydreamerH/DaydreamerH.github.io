@@ -58,8 +58,8 @@ type LessonCheckpoint = {
   question: string;
   expectedKeywords: string[];
   hint: string;
-  patchId: string;
-  expectedObservation: string;
+  patchId?: string;
+  expectedObservation?: string;
 };
 
 type CheckpointAdvanceResult = {
@@ -741,15 +741,18 @@ function initGraphicsLab(root: HTMLElement) {
     const patchCheckpointIndex = patchId
       ? lesson.checkpoints.findIndex((checkpoint) => checkpoint.patchId === patchId)
       : -1;
-    const isLastPatch = patchCheckpointIndex === lesson.checkpoints.length - 1;
+    const patchIndex = patchCheckpointIndex >= 0 ? patchCheckpointIndex : currentCheckpointIndex;
+    const isLastStep = patchIndex === lesson.checkpoints.length - 1;
 
     if (nextCheckpointId) {
       const found = lesson.checkpoints.findIndex((checkpoint) => checkpoint.id === nextCheckpointId);
       if (found >= 0) currentCheckpointIndex = found;
-    } else if (patchCheckpointIndex >= 0 && !isLastPatch) {
+    } else if (patchCheckpointIndex >= 0 && !isLastStep) {
       currentCheckpointIndex = patchCheckpointIndex + 1;
     } else if (patchId && currentCheckpoint()?.patchId === patchId) {
       currentCheckpointIndex = Math.min(currentCheckpointIndex + 1, lesson.checkpoints.length - 1);
+    } else if (!patchId && currentCheckpointIndex < lesson.checkpoints.length - 1) {
+      currentCheckpointIndex += 1;
     }
 
     const currentId = currentCheckpoint()?.id ?? "";
@@ -758,7 +761,7 @@ function initGraphicsLab(root: HTMLElement) {
       previousId,
       currentId,
       moved: Boolean(currentId && currentId !== previousId),
-      completed: Boolean(patchId && isLastPatch)
+      completed: Boolean((patchId || !nextCheckpointId) && isLastStep)
     };
   };
 
@@ -815,14 +818,16 @@ function initGraphicsLab(root: HTMLElement) {
 必须遵守：
 1. 每轮最多提出一个问题。
 2. 不要一次性讲完整教程，不要输出长篇代码。
-3. 预设课程推进模式下，用户回答正确或基本正确时，优先返回 patchId，让网页应用本地预设 patch。
-4. 预设课程推进模式下，用户回答不完整时，只给简短反馈和一个提示，不要返回 patchId。
-5. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
-6. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-7. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
-8. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
-9. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
-10. 只返回 JSON，不返回 Markdown。
+3. 预设课程推进模式下，当前 checkpoint 有 patchId 且用户回答正确或基本正确时，返回该 patchId，让网页应用本地预设 patch。
+4. 预设课程推进模式下，当前 checkpoint 没有 patchId 且用户回答正确或基本正确时，不要返回 patches；只返回 nextCheckpointId 指向下一个 checkpoint。
+5. 预设课程推进模式下，用户只回答“不知道”或类似表达时，给一个更具体的递进提示，并重复当前 checkpoint.question；不要返回旧问题、patchId 或 nextCheckpointId。
+6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
+7. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
+8. 只允许修改 main.js、vertex.glsl、fragment.glsl。
+9. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
+10. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
+11. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
+12. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
@@ -848,10 +853,14 @@ ${lesson.referenceBrief.map((item) => `- ${item}`).join("\n")}
 ${compactReferenceCode(lesson.referenceCode)}
 教学规则：
 ${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
+checkpoint 序列：
+${lesson.checkpoints
+  .map((item, index) => `${index + 1}. ${item.id} | ${item.title} | ${item.patchId ? `patchId=${item.patchId}` : "concept-only"}`)
+  .join("\n")}
 当前 checkpoint：
 ${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
 已完成 patchId：${[...completedPatches].join(", ") || "(无)"}
-当前阶段：${lessonFreeMode ? "自由实验模式，用户可以要求解释或修改代码；如果用户要求改变效果，优先返回 patches 让网页直接应用。" : "预设课程推进模式，优先使用本地 patchId。"}`;
+当前阶段：${lessonFreeMode ? "自由实验模式，用户可以要求解释或修改代码；如果用户要求改变效果，优先返回 patches 让网页直接应用。" : "预设课程推进模式。概念 checkpoint 用 nextCheckpointId 推进；代码 checkpoint 用本地 patchId 推进。"}`;
 
     const userPrompt = `模式：${mode}
 用户输入：${userText || "(无)"}
@@ -929,24 +938,42 @@ ${getFilesSnapshot()}`;
       changedFiles = applyGuidePatches(directPatches);
       const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
       checkpointMoved = advanceResult.moved;
+    } else if (parsed.nextCheckpointId) {
+      const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
+      checkpointMoved = advanceResult.moved;
+      lessonCompleted = advanceResult.completed;
+      if (lessonCompleted) lessonFreeMode = true;
     }
 
     const shouldAskNextQuestion =
-      Boolean(changedFiles.length) &&
+      (Boolean(changedFiles.length) || Boolean(parsed.nextCheckpointId)) &&
       checkpointMoved &&
       Boolean(currentCheckpoint()) &&
       !parsed.question;
-    const parsedQuestion = lessonCompleted ? "" : parsed.question;
+    const shouldRepeatCurrentQuestion =
+      mode === "answer" &&
+      !lessonCompleted &&
+      !checkpointMoved &&
+      !changedFiles.length &&
+      !directPatches.length &&
+      Boolean(currentCheckpoint());
+    const parsedQuestion =
+      lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode) ? "" : parsed.question;
     const displayedQuestion =
       parsedQuestion ||
       (mode === "start" && parsed.type === "question" ? currentCheckpoint()?.question : "") ||
-      (shouldAskNextQuestion ? currentCheckpoint()?.question : "");
+      (shouldAskNextQuestion ? currentCheckpoint()?.question : "") ||
+      (shouldRepeatCurrentQuestion ? currentCheckpoint()?.question : "");
     const displayedMessage = removeQuestionSentences(parsed.message ?? "", displayedQuestion ?? "");
+    const retryMessage =
+      shouldRepeatCurrentQuestion && !displayedMessage
+        ? "再想一下这个关键点。可以结合提示重新回答。"
+        : "";
     const completionMessage =
       lessonCompleted && !displayedQuestion
         ? "预设实验已完成。你可以继续让 AI 解释当前代码，也可以直接要求它修改代码、shader 或画面效果。"
         : "";
-    const aiText = [displayedMessage, displayedQuestion ?? "", completionMessage]
+    const aiText = [displayedMessage, retryMessage, displayedQuestion ?? "", completionMessage]
       .filter(Boolean)
       .join("\n\n");
     if (aiText) appendGuideEntry("assistant", "AI Guide", aiText);
@@ -1131,8 +1158,8 @@ ${getFilesSnapshot()}`;
   };
 
   const guideSmokeTest = async () => {
-    const checkpoint = currentCheckpoint();
-    if (!checkpoint) throw new Error("课程没有 checkpoint。");
+    const checkpoint = lesson.checkpoints.find((item) => item.patchId);
+    if (!checkpoint?.patchId) throw new Error("课程没有可应用 patch 的 checkpoint。");
     const result = applyLessonPatch(checkpoint.patchId);
     advanceCheckpoint(checkpoint.patchId);
     await runProgram();

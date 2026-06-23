@@ -1,0 +1,170 @@
+{
+  "id": "transformations",
+  "title": "Transformations",
+  "category": "空间变换",
+  "series": "LearnOpenGL 基础",
+  "order": 5,
+  "level": "foundation",
+  "createdAt": "2026-06-24",
+  "description": "观察平移、旋转和缩放如何改变物体在画面中的位置与姿态。",
+  "source": "OpenGLProject/src/05_transformations",
+  "runtime": "three-shader-material",
+  "previewTitle": "Transformations",
+  "draft": false,
+  "aiBrief": "围绕矩阵乘法顺序、局部轴、缩放和动画时间组织提问。",
+  "referenceBrief": [
+    "模型矩阵组合平移、旋转、缩放。",
+    "矩阵乘法通常不满足交换律，变换顺序会影响最终姿态。",
+    "旋转改变方向基，缩放改变坐标相对原点的距离。",
+    "动画本质是每帧根据时间更新变换参数。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/transform.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/transform.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/transform.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "homogeneous-coordinate",
+      "title": "齐次坐标与平移",
+      "concept": "二维或三维平移通常借助齐次坐标写入矩阵，例如 vec4(position, 1.0) 让平移列参与计算。",
+      "question": "为什么普通 3x3 线性变换不能直接表达三维平移，而 4x4 齐次矩阵可以？",
+      "expectedKeywords": [
+        "齐次坐标",
+        "4x4",
+        "平移",
+        "w",
+        "矩阵"
+      ],
+      "hint": "线性变换会保持原点不动，平移需要额外的常数项。"
+    },
+    {
+      "id": "model-transform",
+      "title": "模型矩阵",
+      "concept": "模型矩阵把局部坐标变换到世界空间，并可组合平移、旋转、缩放。",
+      "question": "若顶点 p_local 通过 p_world = M * p_local 进入世界空间，为什么同一组顶点可以被不同 M 复用成多个实例？",
+      "expectedKeywords": [
+        "p_world",
+        "M",
+        "局部",
+        "世界",
+        "实例"
+      ],
+      "hint": "顶点数据只描述自身形状，矩阵决定这份形状在世界中的位置和姿态。",
+      "patchId": "01-model-transform",
+      "expectedObservation": "矩形被放置到一个稳定的观察角度。"
+    },
+    {
+      "id": "matrix-order",
+      "title": "矩阵乘法顺序",
+      "concept": "矩阵乘法通常不满足交换律，T * R * p 和 R * T * p 表示先后顺序不同的变换链。",
+      "question": "从 T * R * p 与 R * T * p 出发，为什么先旋转再平移和先平移再旋转会得到不同位置？",
+      "expectedKeywords": [
+        "矩阵乘法",
+        "顺序",
+        "T",
+        "R",
+        "原点"
+      ],
+      "hint": "旋转会围绕当前坐标系原点发生，而平移会改变点相对原点的位置。"
+    },
+    {
+      "id": "rotation",
+      "title": "旋转与变换顺序",
+      "concept": "旋转改变局部坐标轴方向，和其它变换组合时顺序会影响结果。",
+      "question": "为什么旋转矩阵不仅改变顶点位置，也可以理解为改变物体局部坐标轴在世界中的方向？",
+      "expectedKeywords": [
+        "旋转矩阵",
+        "局部轴",
+        "方向",
+        "基向量",
+        "姿态"
+      ],
+      "hint": "矩阵的列或行可以看作变换后的坐标基，旋转会改变这些基向量方向。",
+      "patchId": "02-rotation",
+      "expectedObservation": "矩形以更明显角度显示。"
+    },
+    {
+      "id": "scale-matrix",
+      "title": "缩放矩阵",
+      "concept": "缩放矩阵会对坐标分量逐轴乘以缩放系数，非等比缩放会改变形状比例和法线处理。",
+      "question": "如果缩放矩阵为 diag(sx, sy, sz, 1)，为什么顶点的 x、y、z 分量会分别按 sx、sy、sz 改变？",
+      "expectedKeywords": [
+        "diag",
+        "sx",
+        "sy",
+        "sz",
+        "分量",
+        "缩放"
+      ],
+      "hint": "对角矩阵会把每个坐标分量乘以对应对角线元素。"
+    },
+    {
+      "id": "scale",
+      "title": "缩放与坐标距离",
+      "concept": "缩放会改变顶点坐标相对原点的距离，非等比缩放还会改变形状比例。",
+      "question": "为什么围绕原点缩放时，离原点越远的顶点产生的位移通常越大？",
+      "expectedKeywords": [
+        "原点",
+        "比例",
+        "距离",
+        "顶点",
+        "缩放"
+      ],
+      "hint": "缩放是把坐标乘以比例，坐标绝对值越大，变化量越大。",
+      "patchId": "03-scale",
+      "expectedObservation": "矩形尺寸改变，UV 渐变仍保持在表面上。"
+    },
+    {
+      "id": "time-integration-transform",
+      "title": "按时间积分",
+      "concept": "动画参数应按真实时间积分，例如 angle(t + dt) = angle(t) + omega * dt。",
+      "question": "如果角速度 omega 单位是 rad/s，为什么一帧内增加的角度应是 omega * deltaTime？",
+      "expectedKeywords": [
+        "omega",
+        "deltaTime",
+        "rad/s",
+        "积分",
+        "角度"
+      ],
+      "hint": "速度乘以时间才是这一段时间内累计的变化量。"
+    },
+    {
+      "id": "animated-transform",
+      "title": "按时间更新变换",
+      "concept": "动画是随时间改变变换参数，并在每帧重新渲染。",
+      "question": "为什么用 elapsed time 或 deltaTime 驱动旋转，能让不同刷新率设备上的动画速度更一致？",
+      "expectedKeywords": [
+        "时间",
+        "帧率",
+        "deltaTime",
+        "速度",
+        "一致"
+      ],
+      "hint": "不同设备每秒帧数不同，但同一秒内累计的真实时间相同。",
+      "patchId": "04-animated-transform",
+      "expectedObservation": "矩形持续旋转。"
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "id": "shaders",
+  "title": "Shaders",
+  "category": "Shader 基础",
+  "series": "LearnOpenGL 基础",
+  "order": 3,
+  "level": "intro",
+  "createdAt": "2026-06-24",
+  "description": "观察顶点属性、varying 和 uniform 如何影响 shader 输出。",
+  "source": "OpenGLProject/src/03_shaders",
+  "runtime": "three-shader-material",
+  "previewTitle": "Shader Attributes",
+  "draft": false,
+  "aiBrief": "围绕 shader stage、attribute、varying、uniform 和 GPU 并行执行组织提问。",
+  "referenceBrief": [
+    "顶点属性是每个顶点一份的数据输入。",
+    "varying 会在光栅化阶段插值后传入 fragment shader。",
+    "uniform 适合表达一次 draw call 内保持一致的参数。",
+    "shader 的关键不只是语法，而是数据在哪个阶段、以什么频率变化。"
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/shader_uniform.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/vertex_attributes.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "先判断用户回答，再决定是否应用 patch。",
+    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
+    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "stage-frequency",
+      "title": "执行频率",
+      "concept": "vertex shader 按顶点执行，fragment shader 按片元执行；一个三角形通常只有 3 次顶点执行，却可能覆盖成千上万个片元。",
+      "question": "如果一个三角形覆盖了 8000 个片元，为什么把逐像素颜色计算放在 vertex shader 中会丢失很多屏幕细节？",
+      "expectedKeywords": [
+        "执行频率",
+        "顶点",
+        "片元",
+        "逐像素",
+        "细节"
+      ],
+      "hint": "顶点阶段只有少量采样点，片元阶段才对应屏幕覆盖区域中的大量位置。"
+    },
+    {
+      "id": "shader-stage-role",
+      "title": "区分 shader 阶段",
+      "concept": "vertex shader 负责产生裁剪空间位置，fragment shader 负责为光栅化得到的片元输出颜色。",
+      "question": "为什么 gl_Position 必须在 vertex shader 中写出，而 gl_FragColor 或片元输出颜色必须在 fragment shader 中决定？",
+      "expectedKeywords": [
+        "gl_Position",
+        "裁剪空间",
+        "片元",
+        "颜色",
+        "管线"
+      ],
+      "hint": "GPU 需要先知道图元顶点在裁剪空间的位置，才能继续光栅化并产生片元。",
+      "patchId": "01-stage-role",
+      "expectedObservation": "画面显示基础三角形。"
+    },
+    {
+      "id": "attribute-layout",
+      "title": "attribute 数据布局",
+      "concept": "attribute 表示顶点流中的一列数据，size、stride 和 offset 决定 GPU 如何从连续 buffer 中取出每个顶点的属性。",
+      "question": "若每个顶点按 position.xyz + color.rgb 连续存储，为什么 position 和 color 的 stride 都应跨过 6 个 float？",
+      "expectedKeywords": [
+        "stride",
+        "offset",
+        "6",
+        "float",
+        "顶点",
+        "attribute"
+      ],
+      "hint": "stride 描述从一个顶点的同一属性走到下一个顶点同一属性要跨过多少数据。"
+    },
+    {
+      "id": "vertex-attribute-color",
+      "title": "传递顶点颜色",
+      "concept": "颜色如果随顶点变化，应作为 attribute 输入，再交给光栅化阶段插值。",
+      "question": "如果每个顶点都有不同颜色，为什么把颜色写成 attribute 比写死在 fragment shader 中更符合数据变化频率？",
+      "expectedKeywords": [
+        "每顶点",
+        "attribute",
+        "变化频率",
+        "插值",
+        "fragment"
+      ],
+      "hint": "写死的片元颜色对每个片元相同，attribute 才能携带每个顶点自己的颜色。",
+      "patchId": "02-attribute-color",
+      "expectedObservation": "三角形出现顶点颜色渐变。"
+    },
+    {
+      "id": "uniform-frequency",
+      "title": "uniform 的变化频率",
+      "concept": "uniform 在一次 draw call 内保持一致，适合表达时间、相机矩阵、材质常量等全局参数。",
+      "question": "为什么 modelViewProjection 矩阵通常适合作为 uniform，而顶点位置不适合作为 uniform？",
+      "expectedKeywords": [
+        "uniform",
+        "draw call",
+        "矩阵",
+        "共享",
+        "顶点位置"
+      ],
+      "hint": "矩阵通常对同一批顶点共用，顶点位置则每个顶点都不同。"
+    },
+    {
+      "id": "uniform-color",
+      "title": "使用 uniform 控制颜色",
+      "concept": "uniform 表示一次绘制中共享的参数，改变它通常不需要修改顶点缓冲。",
+      "question": "当整个物体颜色统一变化时，为什么修改 uniform 比重建顶点 buffer 更合适？",
+      "expectedKeywords": [
+        "uniform",
+        "共享",
+        "顶点缓冲",
+        "draw call",
+        "成本"
+      ],
+      "hint": "统一颜色不需要为每个顶点重复存一份相同数据。",
+      "patchId": "03-uniform-color",
+      "expectedObservation": "三角形变为统一的蓝绿色。"
+    },
+    {
+      "id": "barycentric-varying",
+      "title": "重心坐标插值",
+      "concept": "光栅化通常用重心坐标插值 varying：v = a * v0 + b * v1 + c * v2，且 a + b + c = 1。",
+      "question": "为什么三角形内部某个片元的 varying 可以写成三个顶点输出的加权和，且权重之和为 1？",
+      "expectedKeywords": [
+        "重心坐标",
+        "插值",
+        "权重",
+        "片元",
+        "a+b+c"
+      ],
+      "hint": "片元位于三角形内部，可用它相对三个顶点的位置比例来混合顶点输出。"
+    },
+    {
+      "id": "varying-interpolation",
+      "title": "观察 varying 插值",
+      "concept": "varying 在图元内部按屏幕空间插值，fragment shader 收到的是片元位置对应的插值结果。",
+      "question": "为什么 varying 从 vertex shader 传到 fragment shader 后，会在三角形内部形成连续渐变，而不是保持三个离散顶点值？",
+      "expectedKeywords": [
+        "插值",
+        "光栅化",
+        "片元",
+        "重心",
+        "连续"
+      ],
+      "hint": "每个片元都有自己的插值权重，因此会得到顶点值之间的连续过渡。",
+      "patchId": "04-varying-interpolation",
+      "expectedObservation": "画面恢复为明显的颜色插值效果。"
+    }
+  ]
+}

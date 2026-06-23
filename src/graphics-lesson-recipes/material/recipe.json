@@ -1,0 +1,200 @@
+{
+  "id": "material",
+  "source": "10_material",
+  "title": "Material",
+  "category": "光照基础",
+  "series": "LearnOpenGL 基础",
+  "order": 10,
+  "level": "intermediate",
+  "createdAt": "2026-06-24",
+  "description": "在基础光照上观察材质参数对环境光、漫反射和高光的影响。",
+  "previewTitle": "Material Response",
+  "lesson": "把材质看成物体对不同光照分量的响应参数，而不是单一颜色。",
+  "aiBrief": "围绕 material ambient/diffuse/specular/shininess 和光照方程组织提问。",
+  "referenceBrief": [
+    "材质参数描述物体如何响应不同光照分量。",
+    "ambient、diffuse、specular 可以分别调节环境光、漫反射和镜面反射贡献。",
+    "shininess 是高光指数，控制高光能量集中程度。",
+    "材质和光源共同决定最终颜色。"
+  ],
+  "starterState": {
+    "shape": "cube",
+    "mode": "ambient",
+    "camera": "perspective",
+    "cameraPosition": [2.4, 1.8, 4.2],
+    "objectColor": [0.95, 0.48, 0.2],
+    "ambientStrength": 0.18
+  },
+  "checkpoints": [
+    {
+      "id": "material-light-separation",
+      "title": "材质与光源分离",
+      "concept": "材质描述表面对光的响应，光源描述入射光；最终结果由二者共同决定。",
+      "question": "为什么同一个 material 在不同 lightColor 下会变，而同一个 lightColor 照不同 material 也会变？",
+      "expectedKeywords": ["material", "lightColor", "响应", "入射光", "共同决定"],
+      "hint": "一个控制物体如何反射，一个控制有什么光进入。"
+    },
+    {
+      "id": "material-role",
+      "title": "材质不是单一颜色",
+      "concept": "材质描述表面对各类光照分量的响应，光源描述照射条件。",
+      "question": "为什么材质参数通常按 ambient、diffuse、specular 分开，而不是只保存一个 baseColor？",
+      "expectedKeywords": ["ambient", "diffuse", "specular", "baseColor", "响应"],
+      "hint": "同一颜色的物体也可能有不同高光强度、环境响应和漫反射表现。",
+      "patchId": "01-material-role",
+      "expectedObservation": "立方体显示基础材质颜色。",
+      "state": {
+        "shape": "cube",
+        "mode": "color-multiply",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightColor": [1, 1, 1]
+      }
+    },
+    {
+      "id": "ambient-bias",
+      "title": "环境项偏置",
+      "concept": "ambient 项会整体抬亮物体，过高时会压低方向光照造成的对比。",
+      "question": "在 color = (ambient + diffuse + specular) * objectColor 中，为什么 ambient 过大会削弱 diffuse 的明暗对比？",
+      "expectedKeywords": ["ambient", "diffuse", "对比", "整体抬亮", "明暗"],
+      "hint": "环境项对各个朝向都加亮，方向差异在总和中占比会变小。"
+    },
+    {
+      "id": "ambient-material",
+      "title": "环境响应",
+      "concept": "ambient 材质分量决定物体在方向无关光照下保留多少基础亮度。",
+      "question": "为什么 ambient 材质分量适合控制暗部可见性，但不适合单独表达物体立体感？",
+      "expectedKeywords": ["ambient", "暗部", "方向无关", "立体感", "可见性"],
+      "hint": "ambient 不随法线方向变化，所以不能提供明确的朝向信息。",
+      "patchId": "02-ambient-material",
+      "expectedObservation": "立方体显示较弱但可见的环境光层次。",
+      "state": {
+        "shape": "cube",
+        "mode": "ambient",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "ambientStrength": 0.18
+      }
+    },
+    {
+      "id": "diffuse-albedo",
+      "title": "漫反射反照率",
+      "concept": "diffuse 材质分量可近似理解为非金属表面的反照率，决定主体颜色如何调制 Lambert 项。",
+      "question": "为什么非金属材质的主体颜色通常主要乘在 diffuse 项上，而不是主要放在 specular 项上？",
+      "expectedKeywords": ["非金属", "diffuse", "specular", "主体颜色", "反照率"],
+      "hint": "非金属表面的镜面反射通常更接近光源颜色，主体颜色来自次表层散射后的漫反射。"
+    },
+    {
+      "id": "diffuse-material",
+      "title": "漫反射响应",
+      "concept": "diffuse 材质分量影响物体在直接光照下的主体颜色。",
+      "question": "从 diffuse = max(dot(N, L), 0) * lightColor 看，为什么 diffuse 材质颜色会影响亮面主体颜色？",
+      "expectedKeywords": ["diffuse", "dot", "lightColor", "材质颜色", "主体颜色"],
+      "hint": "漫反射光照强度先由夹角决定，再由材质反射比例调制。",
+      "patchId": "03-diffuse-material",
+      "expectedObservation": "立方体出现清晰的漫反射明暗。",
+      "state": {
+        "shape": "cube",
+        "mode": "diffuse",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightPos": [1.5, 1.8, 2.2],
+        "ambientStrength": 0.16
+      }
+    },
+    {
+      "id": "specular-locality",
+      "title": "镜面项局部性",
+      "concept": "specular 项由 dot(V, R) 的幂控制，只有视线接近反射方向时才明显。",
+      "question": "为什么提高 specularStrength 主要增强高光区域，而不会像 ambient 那样均匀抬亮所有表面？",
+      "expectedKeywords": ["specularStrength", "dot(V,R)", "高光", "局部", "ambient"],
+      "hint": "specular 项本身只在 V 和 R 接近的区域较大。"
+    },
+    {
+      "id": "specular-material",
+      "title": "镜面响应",
+      "concept": "specular 材质分量控制镜面反射贡献，通常表现为亮斑强度。",
+      "question": "为什么 specular 材质分量改变的是镜面反射能量，而不是直接改变整个物体的基础色？",
+      "expectedKeywords": ["specular", "镜面反射", "能量", "基础色", "高光"],
+      "hint": "基础色更多影响 diffuse，specular 描述反射方向附近的亮斑贡献。",
+      "patchId": "04-specular-material",
+      "expectedObservation": "立方体表面出现更明显的高光。",
+      "state": {
+        "shape": "cube",
+        "mode": "phong",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightPos": [1.5, 1.8, 2.2],
+        "ambientStrength": 0.16,
+        "specularStrength": 0.65,
+        "shininess": 24,
+        "showLight": true
+      }
+    },
+    {
+      "id": "shininess-power",
+      "title": "高光指数曲线",
+      "concept": "shininess 是 specular 幂指数。对 0 到 1 之间的 dot 值，指数越大，除接近 1 的区域外衰减越快。",
+      "question": "如果 dot(V, R) = 0.8，为什么 pow(0.8, 16) 会明显大于 pow(0.8, 96)？",
+      "expectedKeywords": ["pow", "0.8", "shininess", "指数", "衰减"],
+      "hint": "小于 1 的数被反复相乘，指数越大结果越快趋近 0。"
+    },
+    {
+      "id": "shininess",
+      "title": "高光指数",
+      "concept": "shininess 指数控制 specular 曲线衰减速度，值越大高光越集中。",
+      "question": "为什么 shininess 变大时，高光范围会变窄，但中心附近可能更显得锐利？",
+      "expectedKeywords": ["shininess", "pow", "变窄", "锐利", "高光"],
+      "hint": "只有 dot(V,R) 非常接近 1 的片元能在高指数下保留明显强度。",
+      "patchId": "05-shininess",
+      "expectedObservation": "高光范围变得更窄、更集中。",
+      "state": {
+        "shape": "cube",
+        "mode": "material",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightPos": [1.5, 1.8, 2.2],
+        "ambientStrength": 0.12,
+        "specularStrength": 0.85,
+        "shininess": 96,
+        "showLight": true
+      }
+    },
+    {
+      "id": "material-dynamic-check",
+      "title": "动态检查材质",
+      "concept": "动态旋转能持续改变 N、L、V 的夹角，用来检查材质响应是否稳定且方向正确。",
+      "question": "为什么静态截图可能看不出 specular 或 normal 错误，而旋转物体时错误更容易暴露？",
+      "expectedKeywords": ["静态", "旋转", "specular", "normal", "夹角"],
+      "hint": "旋转提供连续变化的观察条件，错误会随时间表现为不自然的高光或明暗运动。"
+    },
+    {
+      "id": "material-motion",
+      "title": "动态观察材质",
+      "concept": "旋转物体可以检查材质响应是否随法线、光照和视线关系正确变化。",
+      "question": "为什么材质实验最后要观察旋转中的高光，而不是只确认一帧画面里有高光？",
+      "expectedKeywords": ["旋转", "高光", "法线", "视线", "动态"],
+      "hint": "正确的高光应该随着表面法线和视线、光照方向的关系连续移动。",
+      "patchId": "06-material-motion",
+      "expectedObservation": "立方体旋转时，高光随表面朝向变化。",
+      "state": {
+        "shape": "cube",
+        "mode": "material",
+        "camera": "perspective",
+        "cameraPosition": [2.4, 1.8, 4.2],
+        "objectColor": [0.95, 0.48, 0.2],
+        "lightPos": [1.5, 1.8, 2.2],
+        "ambientStrength": 0.12,
+        "specularStrength": 0.85,
+        "shininess": 96,
+        "showLight": true,
+        "animated": true
+      }
+    }
+  ]
+}

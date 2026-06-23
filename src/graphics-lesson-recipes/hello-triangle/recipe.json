@@ -1,0 +1,96 @@
+{
+  "id": "hello-triangle",
+  "source": "02_hello_triangle",
+  "title": "Hello Triangle",
+  "category": "图元基础",
+  "series": "LearnOpenGL 基础",
+  "order": 2,
+  "level": "intro",
+  "createdAt": "2026-06-23",
+  "preserveExisting": true,
+  "description": "在浏览器中补全一个基础三角形渲染实验，理解顶点数据、片元颜色和顶点颜色插值。",
+  "previewTitle": "Hello Triangle",
+  "lesson": "从一个空的三角形实验开始，依次补充顶点数据、片元颜色和顶点颜色 attribute。",
+  "aiBrief": "以 OpenGL hello_triangle 为参考，引导用户理解顶点缓冲、shader 阶段和光栅化插值。默认保留手工维护的课程包，不由批量生成器覆盖。",
+  "referenceBrief": [
+    "OpenGL 版本中，顶点数据通过 VBO 上传，并由 VAO 记录顶点属性解释方式。",
+    "glVertexAttribPointer 的 stride 和 size 决定 GPU 如何从连续内存中解释顶点 attribute。",
+    "顶点着色器负责输出裁剪空间位置，片元着色器负责为被图元覆盖的片元输出颜色。",
+    "顶点颜色 attribute 会在光栅化阶段按片元位置插值后传入片元着色器。"
+  ],
+  "starterState": {
+    "shape": "triangle",
+    "mode": "solid",
+    "color": [0.13, 0.16, 0.19]
+  },
+  "checkpoints": [
+    {
+      "id": "vertex-buffer-layout",
+      "title": "顶点缓冲布局",
+      "concept": "顶点缓冲是一段连续内存，attribute 的 size、stride 和 offset 决定 GPU 如何解释这段数据。",
+      "question": "如果 position attribute 的 size 为 3，为什么 GPU 每读取一个顶点位置时会连续取 x、y、z 三个 float？",
+      "expectedKeywords": ["attribute", "size", "3", "x", "y", "z", "float"],
+      "hint": "size 描述这个 attribute 每个顶点包含多少个分量。"
+    },
+    {
+      "id": "triangle-vertices",
+      "title": "定义三角形顶点",
+      "concept": "顶点缓冲是一段连续数据，attribute 描述 GPU 每次从中读取几个分量。",
+      "question": "从 3 个顶点 * 每个 position 3 个 float 出发，为什么一个最小三角形位置缓冲至少需要 9 个 float？",
+      "expectedKeywords": ["3", "顶点", "position", "float", "9", "x", "y", "z"],
+      "hint": "先算每个顶点的位置分量数，再乘以三角形的顶点数。",
+      "patchId": "01-triangle-vertices",
+      "expectedObservation": "预览中出现一个居中的深色三角形。",
+      "state": {
+        "shape": "triangle",
+        "mode": "solid",
+        "color": [0.13, 0.16, 0.19]
+      }
+    },
+    {
+      "id": "rasterization-role",
+      "title": "光栅化的职责",
+      "concept": "顶点着色器输出裁剪空间顶点后，光栅化阶段会判断哪些屏幕片元被三角形覆盖。",
+      "question": "为什么只有三个顶点位置还不能直接得到屏幕上所有像素的颜色，中间还需要光栅化产生片元？",
+      "expectedKeywords": ["光栅化", "片元", "顶点", "覆盖", "像素"],
+      "hint": "顶点只定义边界，三角形内部的大量屏幕位置需要被转换成片元。"
+    },
+    {
+      "id": "fragment-color",
+      "title": "输出片元颜色",
+      "concept": "顶点着色器只处理顶点；光栅化产生片元后，fragment shader 才决定每个片元颜色。",
+      "question": "为什么 fragment shader 的输出可以理解为“每个被覆盖片元的颜色函数”？",
+      "expectedKeywords": ["fragment", "片元", "颜色", "函数", "覆盖"],
+      "hint": "fragment shader 会对光栅化得到的片元执行，输出该片元的最终颜色。",
+      "patchId": "02-fragment-color",
+      "expectedObservation": "三角形变成橙色。",
+      "state": {
+        "shape": "triangle",
+        "mode": "solid",
+        "color": [1.0, 0.5, 0.2]
+      }
+    },
+    {
+      "id": "barycentric-interpolation",
+      "title": "重心插值",
+      "concept": "三角形内部片元的 varying 可写为 a * v0 + b * v1 + c * v2，其中 a + b + c = 1。",
+      "question": "为什么片元越靠近某个顶点，它从该顶点颜色获得的重心权重通常越大？",
+      "expectedKeywords": ["重心", "权重", "顶点", "插值", "片元"],
+      "hint": "重心权重描述片元相对三个顶点的位置比例。"
+    },
+    {
+      "id": "vertex-colors",
+      "title": "观察顶点颜色插值",
+      "concept": "varying 会在光栅化阶段按片元位置插值，fragment shader 收到的不是原始顶点值。",
+      "question": "为什么顶点颜色作为 varying 传入 fragment shader 后，三角形内部会形成连续渐变？",
+      "expectedKeywords": ["varying", "插值", "重心", "fragment", "连续"],
+      "hint": "fragment shader 收到的是每个片元位置对应的插值结果，而不是固定的顶点原值。",
+      "patchId": "03-vertex-colors",
+      "expectedObservation": "三角形显示为由三个顶点颜色插值得到的渐变。",
+      "state": {
+        "shape": "triangle",
+        "mode": "vertex-color"
+      }
+    }
+  ]
+}
