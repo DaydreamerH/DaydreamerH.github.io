@@ -430,20 +430,25 @@ h3 {
 }
 
 .coach-layout.is-left-collapsed {
-  grid-template-columns: 48px minmax(0, 1fr) 300px;
+  grid-template-columns: 36px minmax(0, 1fr) 300px;
 }
 
 .coach-layout.is-right-collapsed {
-  grid-template-columns: 280px minmax(0, 1fr) 48px;
+  grid-template-columns: 280px minmax(0, 1fr) 36px;
 }
 
 .coach-layout.is-left-collapsed.is-right-collapsed {
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
 }
 
 .coach-layout.is-left-collapsed .coach-sidebar,
 .coach-layout.is-right-collapsed .feedback-panel {
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .coach-layout.is-left-collapsed .coach-sidebar .panel-block > :not(.panel-heading),
@@ -454,8 +459,10 @@ h3 {
 
 .coach-layout.is-left-collapsed .coach-sidebar .panel-block,
 .coach-layout.is-right-collapsed .feedback-panel .feedback-summary {
-  min-height: 240px;
-  padding: 10px;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .coach-layout.is-left-collapsed .coach-sidebar .panel-heading,
@@ -528,18 +535,51 @@ h3 {
 }
 
 .side-toggle {
+  width: 38px;
   min-width: 38px;
-  padding: 0 10px;
-  white-space: nowrap;
+  padding: 0;
+  color: var(--muted);
+}
+
+.side-toggle:hover {
+  border-color: rgba(76, 201, 167, 0.72);
+  color: var(--accent-strong);
+  background: rgba(76, 201, 167, 0.09);
+}
+
+.toggle-icon {
+  display: block;
+  stroke-width: 1.8;
+}
+
+.icon-expand {
+  display: none;
 }
 
 .coach-layout.is-left-collapsed .side-toggle[data-toggle-left],
 .coach-layout.is-right-collapsed .side-toggle[data-toggle-right] {
-  width: 28px;
-  min-width: 28px;
-  min-height: 140px;
-  padding: 8px 0;
-  writing-mode: vertical-rl;
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent-strong);
+}
+
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left]:hover,
+.coach-layout.is-right-collapsed .side-toggle[data-toggle-right]:hover {
+  border-color: rgba(76, 201, 167, 0.32);
+  background: rgba(76, 201, 167, 0.08);
+}
+
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-collapse,
+.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] .icon-collapse {
+  display: none;
+}
+
+.coach-layout.is-left-collapsed .side-toggle[data-toggle-left] .icon-expand,
+.coach-layout.is-right-collapsed .side-toggle[data-toggle-right] .icon-expand {
+  display: block;
 }
 
 .node-list button {

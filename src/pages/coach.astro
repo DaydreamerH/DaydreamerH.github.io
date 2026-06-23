@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "@lucide/astro";
 
 const knowledgeNodes = [
   {
@@ -83,7 +84,10 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
             <span>测试目标与上下文</span>
             <strong><a data-context-link href={`/knowledge/${activeNode.id}/`}>{activeNode.title}</a></strong>
           </div>
-          <button class="side-toggle" type="button" data-toggle-left aria-expanded="true">折叠</button>
+          <button class="side-toggle" type="button" data-toggle-left aria-label="折叠左侧面板" aria-expanded="true">
+            <PanelLeftClose class="toggle-icon icon-collapse" size={18} aria-hidden="true" />
+            <PanelLeftOpen class="toggle-icon icon-expand" size={18} aria-hidden="true" />
+          </button>
         </div>
         <label class="select-field compact-select">
           <span>分类</span>
@@ -146,7 +150,10 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
             <span>反馈摘要</span>
             <strong data-feedback-title>等待回答</strong>
           </div>
-          <button class="side-toggle" type="button" data-toggle-right aria-expanded="true">折叠</button>
+          <button class="side-toggle" type="button" data-toggle-right aria-label="折叠右侧面板" aria-expanded="true">
+            <PanelRightClose class="toggle-icon icon-collapse" size={18} aria-hidden="true" />
+            <PanelRightOpen class="toggle-icon icon-expand" size={18} aria-hidden="true" />
+          </button>
         </div>
         <p class="feedback-source" data-feedback-source>请先填写右侧 API 信息。</p>
         <ul class="feedback-list" data-feedback-list>
@@ -467,14 +474,14 @@ const categories = [...new Set(knowledgeNodes.map((node) => node.category))];
     document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
       layout.classList.toggle("is-left-collapsed");
       const isCollapsed = layout.classList.contains("is-left-collapsed");
-      event.currentTarget.textContent = isCollapsed ? "展开" : "折叠";
+      event.currentTarget.setAttribute("aria-label", isCollapsed ? "展开左侧面板" : "折叠左侧面板");
       event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
     });
 
     document.querySelector("[data-toggle-right]").addEventListener("click", (event) => {
       layout.classList.toggle("is-right-collapsed");
       const isCollapsed = layout.classList.contains("is-right-collapsed");
-      event.currentTarget.textContent = isCollapsed ? "展开" : "折叠";
+      event.currentTarget.setAttribute("aria-label", isCollapsed ? "展开右侧面板" : "折叠右侧面板");
       event.currentTarget.setAttribute("aria-expanded", String(!isCollapsed));
     });
 
