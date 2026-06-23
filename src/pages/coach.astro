@@ -2,20 +2,26 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { PanelLeftClose, PanelLeftOpen } from "@lucide/astro";
-import { categoryLabels, levelLabels } from "../data/navigation";
+import { getCategoryLabel, getLevelLabel } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
-  .filter((item) => item.data.status === "ready")
-  .sort((a, b) => a.data.order - b.data.order);
+  .filter((item) => item.data.status === "ready" && item.data.published !== false)
+  .sort((a, b) => {
+    if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+    const dateA = a.data.date ? Date.parse(a.data.date) : 0;
+    const dateB = b.data.date ? Date.parse(b.data.date) : 0;
+    if (dateA !== dateB) return dateB - dateA;
+    return a.data.title.localeCompare(b.data.title, "zh-Hans-CN");
+  });
 
 const knowledgeNodes = docs.map((doc) => ({
   id: doc.slug,
-  category: categoryLabels[doc.data.category],
+  category: getCategoryLabel(doc.data.category),
   href: `/knowledge/${doc.slug}/`,
   title: doc.data.title,
   description: doc.data.description,
   track: doc.data.track,
-  level: levelLabels[doc.data.level],
+  level: getLevelLabel(doc.data.level),
   minutes: doc.data.minutes,
   prerequisites: doc.data.prerequisites,
   tags: doc.data.tags,

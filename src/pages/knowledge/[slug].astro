@@ -1,10 +1,12 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
-import { categoryLabels, levelLabels } from "../../data/navigation";
+import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
 
 export async function getStaticPaths() {
-  const docs = await getCollection("knowledge");
+  const docs = (await getCollection("knowledge"))
+    .filter((doc) => doc.data.status === "ready" && doc.data.published !== false);
+
   return docs.map((doc) => ({
     params: { slug: doc.slug },
     props: { doc }
@@ -21,13 +23,18 @@ const { Content } = await render(doc);
       <a class="back-link" href="/knowledge/">返回知识库</a>
       <p class="eyebrow">{doc.data.track}</p>
       <h1>{doc.data.title}</h1>
-      <p>{doc.data.description}</p>
+      {doc.data.description && <p>{doc.data.description}</p>}
       <div class="article-meta">
-        <span>{categoryLabels[doc.data.category]}</span>
-        <span>{levelLabels[doc.data.level]}</span>
+        <span>{getCategoryLabel(doc.data.category)}</span>
+        <span>{getLevelLabel(doc.data.level)}</span>
         <span>{doc.data.minutes} min</span>
+        {doc.data.date && <span>{doc.data.date.slice(0, 10)}</span>}
       </div>
     </header>
+
+    {doc.data.photos && (
+      <img class="article-banner" src={`./${doc.data.photos}`} alt="" loading="eager" />
+    )}
 
     {doc.data.prerequisites.length > 0 && (
       <aside class="prereq-box">
@@ -46,7 +53,7 @@ const { Content } = await render(doc);
       <div>
         <p class="eyebrow">Coach</p>
         <h2>阅读完成后测试这个知识点</h2>
-        <p>用一个简短问题检查自己是否真正理解了当前内容，提交后查看反馈摘要。</p>
+        <p>用一个简短问题检查自己是否真正理解了当前内容，提交后继续追问。</p>
       </div>
       <a class="button primary" href={`/coach/?node=${doc.slug}`}>开始测试</a>
     </section>

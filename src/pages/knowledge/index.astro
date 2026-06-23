@@ -1,11 +1,20 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { categoryLabels, levelLabels } from "../../data/navigation";
+import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
 
 const docs = (await getCollection("knowledge"))
-  .filter((item) => item.data.status === "ready")
-  .sort((a, b) => a.data.order - b.data.order);
+  .filter((item) => item.data.status === "ready" && item.data.published !== false)
+  .sort((a, b) => {
+    if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+    const dateA = a.data.date ? Date.parse(a.data.date) : 0;
+    const dateB = b.data.date ? Date.parse(b.data.date) : 0;
+    if (dateA !== dateB) return dateB - dateA;
+    return a.data.title.localeCompare(b.data.title, "zh-Hans-CN");
+  });
+
+const categories = [...new Set(docs.map((doc) => doc.data.category))]
+  .sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b), "zh-Hans-CN"));
 ---
 
 <BaseLayout title="知识库" description="DaydreamerH 的游戏开发知识库。">
@@ -18,8 +27,8 @@ const docs = (await getCollection("knowledge"))
       <span>分类</span>
       <select id="category-filter">
         <option value="all">全部分类</option>
-        {Object.entries(categoryLabels).map(([key, label]) => (
-          <option value={key}>{label}</option>
+        {categories.map((category) => (
+          <option value={category}>{getCategoryLabel(category)}</option>
         ))}
       </select>
     </label>
@@ -34,8 +43,8 @@ const docs = (await getCollection("knowledge"))
         data-category={doc.data.category}
       >
         <div class="card-meta">
-          <span class="pill">{categoryLabels[doc.data.category]}</span>
-          <span>{levelLabels[doc.data.level]} · {doc.data.minutes} min</span>
+          <span class="pill">{getCategoryLabel(doc.data.category)}</span>
+          <span>{getLevelLabel(doc.data.level)} · {doc.data.minutes} min</span>
         </div>
         <h2><a href={`/knowledge/${doc.slug}/`}>{doc.data.title}</a></h2>
         <p>{doc.data.description}</p>

@@ -13,6 +13,14 @@ export const levelLabels: Record<string, string> = {
   advanced: "高级"
 };
 
+export function getCategoryLabel(category: string) {
+  return categoryLabels[category] ?? category;
+}
+
+export function getLevelLabel(level: string) {
+  return levelLabels[level] ?? level;
+}
+
 export const trackDescriptions = [
   {
     title: "UE Gameplay Programmer",
