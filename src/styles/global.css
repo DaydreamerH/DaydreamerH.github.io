@@ -445,6 +445,10 @@ h3 {
   display: none;
 }
 
+.coach-layout.is-left-collapsed .coach-sidebar .panel-block:not(:first-child) {
+  display: none;
+}
+
 .coach-layout.is-left-collapsed .coach-sidebar .panel-block {
   min-height: 0;
   border: 0;
