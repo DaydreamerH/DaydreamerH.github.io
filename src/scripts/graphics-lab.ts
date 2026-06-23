@@ -45,87 +45,148 @@ type GuidePatch = {
   content: string;
 };
 
+type LessonPatch = {
+  id: string;
+  description: string;
+  changes: GuidePatch[];
+};
+
+type LessonCheckpoint = {
+  id: string;
+  title: string;
+  concept: string;
+  question: string;
+  expectedKeywords: string[];
+  hint: string;
+  patchId: string;
+  expectedObservation: string;
+};
+
+type GraphicsLesson = {
+  id: string;
+  title: string;
+  category: string;
+  level: string;
+  source: string;
+  runtime: string;
+  previewTitle: string;
+  aiBrief: string;
+  referenceBrief: string[];
+  referenceFiles?: Array<{
+    path: string;
+    role: string;
+  }>;
+  referenceCode?: string;
+  teachingRules: string[];
+  checkpoints: LessonCheckpoint[];
+  starterFiles: Record<LabFileName, string>;
+  patches: Record<string, LessonPatch>;
+};
+
 type GuideResponse = {
   type?: "question" | "feedback" | "code_patch" | "debug_fix" | "summary";
   message?: string;
   question?: string;
+  patchId?: string;
   patches?: GuidePatch[];
   runAfterApply?: boolean;
   expectedObservation?: string;
+  nextCheckpointId?: string;
 };
 
 declare global {
   interface Window {
-    __graphicsLabSmokeTest?: () => Promise<{
-      ok: boolean;
-      activeFile: LabFileName;
-      canvas: { width: number; height: number };
-      status: string;
-      error: string;
-    }>;
+    __graphicsLabSmokeTest?: () => Promise<SmokeResult>;
     __graphicsLabGuideSmokeTest?: () => Promise<{
       ok: boolean;
       status: string;
       error: string;
       appliedFiles: LabFileName[];
+      checkpointId: string;
     }>;
   }
 }
 
-const STORAGE_KEY = "daydreamerh.graphics-lab.v1";
+const STORAGE_KEY_PREFIX = "daydreamerh.graphics-lab.lesson";
 
-const shaderLessonReference = {
-  title: "LearnOpenGL Shader Primer",
-  topic: "Shaders, GLSL, uniforms, vector swizzling, vertex-to-fragment data flow",
-  summary: [
-    "Shader 是运行在 GPU 上的小程序，图形管线的不同阶段通过输入和输出连接。",
-    "GLSL 类似 C，常用 vec2/vec3/vec4、mat 系列、uniform、varying 和 main 函数。",
-    "顶点着色器处理每个顶点的位置与可传递数据，片段着色器决定最终像素颜色。",
-    "顶点着色器和片段着色器之间通过同名同类型的输出/输入变量传递数据。当前 Three.js WebGL1 示例使用 varying。",
-    "uniform 是 CPU/应用侧传给 shader 的全局值，可以随时间更新，用来控制颜色、时间、矩阵或材质参数。",
-    "向量 swizzling 可以用 .xyzw/.rgba/.stpq 组合访问或重组分量。"
-  ],
-  firstStep:
-    "先确认用户理解 vertex shader 与 fragment shader 如何通过 varying 传递颜色，再让 AI 修改当前实验显示由 shader 控制的颜色变化。"
+const fallbackLesson: GraphicsLesson = {
+  id: "fallback",
+  title: "Hello Triangle",
+  category: "OpenGL 基础",
+  level: "intro",
+  source: "inline",
+  runtime: "three-shader-material",
+  previewTitle: "Hello Triangle",
+  aiBrief: "基础三角形实验。",
+  referenceBrief: [],
+  referenceCode: "",
+  teachingRules: [],
+  checkpoints: [],
+  starterFiles: {
+    "main.js": `const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setClearColor(0xf8f8f8, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+camera.position.z = 1;
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
+  0.0, 0.6, 0.0,
+  -0.6, -0.5, 0.0,
+  0.6, -0.5, 0.0
+]), 3));
+const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, side: THREE.DoubleSide });
+const triangle = new THREE.Mesh(geometry, material);
+scene.add(triangle);
+function resize() {
+  const bounds = canvas.parentElement.getBoundingClientRect();
+  renderer.setSize(Math.max(1, Math.floor(bounds.width)), Math.max(1, Math.floor(bounds.height)), false);
+}
+resize();
+renderer.render(scene, camera);
+return () => {
+  geometry.dispose();
+  material.dispose();
+  renderer.dispose();
+};`,
+    "vertex.glsl": "void main() {\n  gl_Position = vec4(position, 1.0);\n}",
+    "fragment.glsl": "void main() {\n  gl_FragColor = vec4(0.13, 0.16, 0.19, 1.0);\n}"
+  },
+  patches: {}
 };
+
+const fileNames: LabFileName[] = ["main.js", "vertex.glsl", "fragment.glsl"];
 
 const jsCompletions = [
   "THREE.Scene",
+  "THREE.OrthographicCamera",
   "THREE.PerspectiveCamera",
   "THREE.WebGLRenderer",
   "THREE.ShaderMaterial",
   "THREE.Mesh",
-  "THREE.BoxGeometry",
-  "THREE.SphereGeometry",
-  "THREE.PlaneGeometry",
-  "THREE.Color",
-  "THREE.Vector2",
-  "THREE.Vector3",
-  "THREE.Matrix4",
-  "requestAnimationFrame",
-  "cancelAnimationFrame",
+  "THREE.BufferGeometry",
+  "THREE.BufferAttribute",
+  "THREE.Float32BufferAttribute",
+  "THREE.DoubleSide",
+  "Float32Array",
   "renderer.render",
   "renderer.setSize",
-  "camera.lookAt",
   "scene.add",
-  "uniforms",
+  "geometry.setAttribute",
   "vertexShader",
   "fragmentShader"
 ].map((label) => ({ label, type: "variable" }));
 
 const glslCompletions = [
+  "attribute",
   "uniform",
   "varying",
-  "attribute",
   "void main()",
   "gl_Position",
   "gl_FragColor",
-  "projectionMatrix",
-  "modelViewMatrix",
-  "normalMatrix",
   "position",
-  "normal",
+  "color",
   "uv",
+  "normal",
   "vec2",
   "vec3",
   "vec4",
@@ -134,14 +195,10 @@ const glslCompletions = [
   "float",
   "normalize",
   "dot",
-  "cross",
   "mix",
   "sin",
   "cos",
-  "max",
-  "min",
-  "clamp",
-  "texture2D"
+  "clamp"
 ].map((label) => ({ label, type: "keyword" }));
 
 function labCompletionSource(fileName: LabFileName) {
@@ -157,161 +214,56 @@ function labCompletionSource(fileName: LabFileName) {
   };
 }
 
-const defaultFiles: Record<LabFileName, LabFile> = {
-  "main.js": {
-    name: "main.js",
-    label: "main.js",
-    source: `// Ctrl + Enter 运行，Ctrl + S 保存当前实验
-// 可用对象：THREE, canvas, vertexShader, fragmentShader, report
-
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true
-});
-
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0xf8f8f8, 1);
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-camera.position.set(2.8, 2.1, 4.2);
-camera.lookAt(0, 0, 0);
-
-const uniforms = {
-  uTime: { value: 0 },
-  uBaseColor: { value: new THREE.Color("#00adb5") },
-  uInkColor: { value: new THREE.Color("#222831") }
-};
-
-const material = new THREE.ShaderMaterial({
-  vertexShader,
-  fragmentShader,
-  uniforms
-});
-
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1.45, 1.45, 1.45, 1, 1, 1),
-  material
-);
-scene.add(cube);
-
-const grid = new THREE.GridHelper(5, 10, 0x393e46, 0xd0d3d6);
-grid.position.y = -1.15;
-scene.add(grid);
-
-let frame = 0;
-const clock = new THREE.Clock();
-
-function resize() {
-  const bounds = canvas.parentElement.getBoundingClientRect();
-  const width = Math.max(1, Math.floor(bounds.width));
-  const height = Math.max(1, Math.floor(bounds.height));
-  renderer.setSize(width, height, false);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-}
-
-function animate() {
-  frame = requestAnimationFrame(animate);
-  const time = clock.getElapsedTime();
-
-  uniforms.uTime.value = time;
-  cube.rotation.x = time * 0.35;
-  cube.rotation.y = time * 0.55;
-
-  renderer.render(scene, camera);
-  report({ time });
-}
-
-resize();
-window.addEventListener("resize", resize);
-animate();
-
-return () => {
-  cancelAnimationFrame(frame);
-  window.removeEventListener("resize", resize);
-  cube.geometry.dispose();
-  material.dispose();
-  renderer.dispose();
-};`
-  },
-  "vertex.glsl": {
-    name: "vertex.glsl",
-    label: "vertex.glsl",
-    source: `varying vec2 vUv;
-varying vec3 vNormal;
-
-uniform float uTime;
-
-void main() {
-  vUv = uv;
-  vNormal = normalize(normalMatrix * normal);
-
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}`
-  },
-  "fragment.glsl": {
-    name: "fragment.glsl",
-    label: "fragment.glsl",
-    source: `varying vec2 vUv;
-varying vec3 vNormal;
-
-uniform float uTime;
-uniform vec3 uBaseColor;
-uniform vec3 uInkColor;
-
-void main() {
-  vec3 normal = normalize(vNormal);
-  vec3 lightDir = normalize(vec3(0.4, 0.8, 0.7));
-  float diffuse = max(dot(normal, lightDir), 0.0);
-
-  float pulse = 0.5 + 0.5 * sin(uTime + vUv.x * 6.2831);
-  vec3 color = mix(uInkColor, uBaseColor, 0.35 + diffuse * 0.55);
-  color += pulse * 0.08;
-
-  gl_FragColor = vec4(color, 1.0);
-}`
-  }
-};
-
-const cloneDefaultFiles = () =>
-  Object.fromEntries(
-    Object.entries(defaultFiles).map(([name, file]) => [name, { ...file }])
-  ) as Record<LabFileName, LabFile>;
-
-function loadFiles() {
+function parseLesson(root: HTMLElement): GraphicsLesson {
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return cloneDefaultFiles();
+    const raw = root.dataset.lessonPayload;
+    if (!raw) return fallbackLesson;
+    const lesson = JSON.parse(raw) as GraphicsLesson;
+    if (!lesson.id || !lesson.starterFiles) return fallbackLesson;
+    return lesson;
+  } catch {
+    return fallbackLesson;
+  }
+}
+
+function makeStorageKey(lessonId: string) {
+  return `${STORAGE_KEY_PREFIX}.${lessonId}.v1`;
+}
+
+function cloneStarterFiles(lesson: GraphicsLesson): Record<LabFileName, LabFile> {
+  return Object.fromEntries(
+    fileNames.map((name) => [
+      name,
+      {
+        name,
+        label: name,
+        source: lesson.starterFiles[name] ?? fallbackLesson.starterFiles[name]
+      }
+    ])
+  ) as Record<LabFileName, LabFile>;
+}
+
+function loadFiles(lesson: GraphicsLesson) {
+  try {
+    const saved = window.localStorage.getItem(makeStorageKey(lesson.id));
+    if (!saved) return cloneStarterFiles(lesson);
 
     const parsed = JSON.parse(saved) as Partial<Record<LabFileName, string>>;
-    const files = cloneDefaultFiles();
-    (Object.keys(files) as LabFileName[]).forEach((name) => {
+    const files = cloneStarterFiles(lesson);
+    fileNames.forEach((name) => {
       if (typeof parsed[name] === "string") {
         files[name].source = parsed[name] ?? files[name].source;
       }
     });
-    if (
-      files["main.js"].source.includes(
-        "new THREE.BoxGeometry(1.4, 1.4, 1.4, 24, 24, 24)"
-      )
-    ) {
-      files["main.js"].source = defaultFiles["main.js"].source;
-    }
-    if (files["vertex.glsl"].source.includes("animatedPosition")) {
-      files["vertex.glsl"].source = defaultFiles["vertex.glsl"].source;
-    }
     return files;
   } catch {
-    return cloneDefaultFiles();
+    return cloneStarterFiles(lesson);
   }
 }
 
-function persistFiles(files: Record<LabFileName, LabFile>) {
-  const payload = Object.fromEntries(
-    (Object.keys(files) as LabFileName[]).map((name) => [name, files[name].source])
-  );
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+function persistFiles(lesson: GraphicsLesson, files: Record<LabFileName, LabFile>) {
+  const payload = Object.fromEntries(fileNames.map((name) => [name, files[name].source]));
+  window.localStorage.setItem(makeStorageKey(lesson.id), JSON.stringify(payload));
 }
 
 function extractJsonObject(text: string) {
@@ -330,10 +282,38 @@ function normalizeGuideResponse(response: GuideResponse): GuideResponse {
     type: response.type ?? "feedback",
     message: response.message ?? "",
     question: response.question ?? "",
+    patchId: response.patchId ?? "",
     patches: Array.isArray(response.patches) ? response.patches : [],
     runAfterApply: Boolean(response.runAfterApply),
-    expectedObservation: response.expectedObservation ?? ""
+    expectedObservation: response.expectedObservation ?? "",
+    nextCheckpointId: response.nextCheckpointId ?? ""
   };
+}
+
+function compactReferenceCode(code = "") {
+  if (!code) return "(无)";
+  const lines = code.split(/\r?\n/);
+  const useful = lines.filter((line) => {
+    const trimmed = line.trim();
+    return (
+      trimmed.startsWith("const char *vertexShaderSource") ||
+      trimmed.startsWith("const char *fragmentShaderSource") ||
+      trimmed.includes("layout (location = 0)") ||
+      trimmed.includes("gl_Position") ||
+      trimmed.includes("FragColor") ||
+      trimmed.includes("float vertices[]") ||
+      trimmed.includes("unsigned int indices[]") ||
+      trimmed.includes("glGenVertexArrays") ||
+      trimmed.includes("glBindBuffer") ||
+      trimmed.includes("glBufferData") ||
+      trimmed.includes("glVertexAttribPointer") ||
+      trimmed.includes("glEnableVertexAttribArray") ||
+      trimmed.includes("glUseProgram") ||
+      trimmed.includes("glDrawElements") ||
+      trimmed.includes("glDrawArrays")
+    );
+  });
+  return useful.slice(0, 80).join("\n") || lines.slice(0, 80).join("\n");
 }
 
 function createEditorState(
@@ -379,8 +359,7 @@ function createEditorState(
           fontSize: "13px"
         },
         ".cm-scroller": {
-          fontFamily:
-            "JetBrains Mono, Fira Code, Consolas, 'SFMono-Regular', monospace",
+          fontFamily: "JetBrains Mono, Fira Code, Consolas, 'SFMono-Regular', monospace",
           lineHeight: "1.58"
         },
         ".cm-gutters": {
@@ -408,6 +387,7 @@ function createEditorState(
 }
 
 function initGraphicsLab(root: HTMLElement) {
+  const lesson = parseLesson(root);
   const labWorkspace = root.querySelector<HTMLElement>("[data-lab-workspace]");
   const canvas = root.querySelector<HTMLCanvasElement>("[data-lab-canvas]");
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
@@ -438,11 +418,21 @@ function initGraphicsLab(root: HTMLElement) {
   const guideKeyInput = root.querySelector<HTMLInputElement>("[data-guide-key]");
   const guideModelInput = root.querySelector<HTMLInputElement>("[data-guide-model]");
 
-  if (!labWorkspace || !canvas || !editorHost || !runButton || !resetButton || !expandButton || !statusLabel || !statusDot || !errorBox) {
+  if (
+    !labWorkspace ||
+    !canvas ||
+    !editorHost ||
+    !runButton ||
+    !resetButton ||
+    !expandButton ||
+    !statusLabel ||
+    !statusDot ||
+    !errorBox
+  ) {
     return;
   }
 
-  let files = loadFiles();
+  let files = loadFiles(lesson);
   let activeFile: LabFileName = "main.js";
   let activeWorkspaceTab: WorkspaceTab = "main.js";
   let guideConversationStarted = false;
@@ -450,7 +440,14 @@ function initGraphicsLab(root: HTMLElement) {
   let runTimer = 0;
   let saveTimer = 0;
   let runId = 0;
+  let currentCheckpointIndex = 0;
+  const completedPatches = new Set<string>();
   const guideHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
+
+  root.dataset.lessonId = lesson.id;
+  root.dataset.checkpointId = lesson.checkpoints[0]?.id ?? "";
+
+  const currentCheckpoint = () => lesson.checkpoints[currentCheckpointIndex];
 
   const setStatus = (type: "idle" | "running" | "ok" | "error", text: string) => {
     statusLabel.textContent = text;
@@ -510,7 +507,7 @@ function initGraphicsLab(root: HTMLElement) {
   const saveSoon = () => {
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => {
-      persistFiles(files);
+      persistFiles(lesson, files);
       setStatus("idle", "已保存到当前浏览器");
     }, 260);
   };
@@ -566,15 +563,23 @@ function initGraphicsLab(root: HTMLElement) {
   };
 
   const getFilesSnapshot = () =>
-    (Object.keys(files) as LabFileName[])
-      .map((name) => `--- ${name} ---\n${files[name].source}`)
-      .join("\n\n");
+    fileNames.map((name) => `--- ${name} ---\n${files[name].source}`).join("\n\n");
+
+  const advanceCheckpoint = (patchId?: string, nextCheckpointId?: string) => {
+    if (nextCheckpointId) {
+      const found = lesson.checkpoints.findIndex((checkpoint) => checkpoint.id === nextCheckpointId);
+      if (found >= 0) currentCheckpointIndex = found;
+    } else if (patchId && currentCheckpoint()?.patchId === patchId) {
+      currentCheckpointIndex = Math.min(currentCheckpointIndex + 1, lesson.checkpoints.length - 1);
+    }
+    root.dataset.checkpointId = currentCheckpoint()?.id ?? "";
+  };
 
   const applyGuidePatches = (patches: GuidePatch[]) => {
     const changedFiles = new Set<LabFileName>();
 
     patches.forEach((patch) => {
-      if (!(patch.file in files)) {
+      if (!fileNames.includes(patch.file)) {
         throw new Error(`AI 请求修改不允许的文件：${patch.file}`);
       }
       if (patch.operation === "replace_all") {
@@ -585,7 +590,7 @@ function initGraphicsLab(root: HTMLElement) {
       if (patch.operation === "replace") {
         if (!patch.target) throw new Error("replace patch 缺少 target。");
         if (!files[patch.file].source.includes(patch.target)) {
-          throw new Error(`无法在 ${patch.file} 中找到 AI 指定的替换片段。`);
+          throw new Error(`无法在 ${patch.file} 中找到 patch 指定片段。`);
         }
         files[patch.file].source = files[patch.file].source.replace(patch.target, patch.content);
         changedFiles.add(patch.file);
@@ -604,42 +609,56 @@ function initGraphicsLab(root: HTMLElement) {
       );
     }
 
-    persistFiles(files);
+    persistFiles(lesson, files);
+    return [...changedFiles];
+  };
+
+  const applyLessonPatch = (patchId: string) => {
+    const patch = lesson.patches[patchId];
+    if (!patch) throw new Error(`课程包中不存在 patchId：${patchId}`);
+    const changedFiles = applyGuidePatches(patch.changes);
+    completedPatches.add(patchId);
+    return { patch, changedFiles };
   };
 
   const buildGuideMessages = (mode: "start" | "answer" | "debug", userText = "") => {
+    const checkpoint = currentCheckpoint();
     const errorText = errorBox.textContent || "";
-    const systemPrompt = `你是一个图形学实验导师，参考 LearnOpenGL 的 Shaders 教程，但当前页面使用 Three.js ShaderMaterial 与 WebGL1 风格 GLSL。
-
-教学规则：
-1. 目标是帮助用户理解原理，不要一次性讲完整教程。
-2. 每轮最多提出一个关键问题。用户答对后，才给出代码修改。
-3. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-4. 你必须只返回 JSON，不要返回 Markdown，不要返回解释性前后缀。
-5. JSON schema:
+    const systemPrompt = `你是图形学实验教练，当前网站是纯静态页面，课程内容和代码 patch 已经预设在本地。
+必须遵守：
+1. 每轮最多提出一个问题。
+2. 不要一次性讲完整教程，不要输出长篇代码。
+3. 用户回答正确或基本正确时，优先返回 patchId，让网页应用本地预设 patch。
+4. 用户回答不完整时，只给简短反馈和一个提示，不要返回 patchId。
+5. 只有在 debug 模式并且本地 patch 无法解决时，才可以返回 patches。
+6. 只允许修改 main.js、vertex.glsl、fragment.glsl。
+7. 只返回 JSON，不返回 Markdown。
+JSON schema:
 {
   "type": "question | feedback | code_patch | debug_fix | summary",
   "message": "给用户看的简短反馈，最多 80 字",
   "question": "下一步问题，没有则为空字符串",
-  "patches": [
-    {
-      "file": "main.js | vertex.glsl | fragment.glsl",
-      "operation": "replace_all | replace",
-      "target": "replace 时必须提供",
-      "content": "完整新内容或替换内容"
-    }
-  ],
+  "patchId": "要应用的本地预设 patch id，没有则为空字符串",
+  "patches": [],
   "runAfterApply": true,
-  "expectedObservation": "运行后用户应该观察到的现象"
-}
-6. 如果生成代码，优先使用 replace_all 给出完整文件，避免 target 匹配失败。
-7. 代码必须能在当前 Three.js 环境运行。fragment.glsl 使用 gl_FragColor；顶点与片段之间使用 varying。`;
+  "expectedObservation": "应用 patch 后应观察到的现象",
+  "nextCheckpointId": "可选，进入的 checkpoint id"
+}`;
 
-    const lessonPrompt = `当前教学主题：${shaderLessonReference.title}
-话题：${shaderLessonReference.topic}
+    const lessonPrompt = `课程：${lesson.title}
+类别：${lesson.category}
+来源：${lesson.source}
+运行环境：${lesson.runtime}
+课程摘要：${lesson.aiBrief}
 参考要点：
-${shaderLessonReference.summary.map((item) => `- ${item}`).join("\n")}
-第一阶段目标：${shaderLessonReference.firstStep}`;
+${lesson.referenceBrief.map((item) => `- ${item}`).join("\n")}
+参考源码摘录：
+${compactReferenceCode(lesson.referenceCode)}
+教学规则：
+${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
+当前 checkpoint：
+${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
+已完成 patchId：${[...completedPatches].join(", ") || "(无)"}`;
 
     const userPrompt = `模式：${mode}
 用户输入：${userText || "(无)"}
@@ -675,7 +694,7 @@ ${getFilesSnapshot()}`;
       body: JSON.stringify({
         model: guideModelInput.value.trim(),
         messages: buildGuideMessages(mode, userText),
-        temperature: 0.35,
+        temperature: 0.25,
         response_format: { type: "json_object" }
       })
     });
@@ -695,7 +714,7 @@ ${getFilesSnapshot()}`;
     guideHistory.push({ role: "assistant", content });
 
     const parsed = normalizeGuideResponse(extractJsonObject(content));
-    const patches = parsed.patches ?? [];
+    const directPatches = parsed.patches ?? [];
 
     if (mode === "start") {
       setGuidePhase("conversation");
@@ -703,15 +722,23 @@ ${getFilesSnapshot()}`;
     if (parsed.message) appendGuideEntry("assistant", "AI 反馈", parsed.message);
     if (parsed.question) appendGuideEntry("assistant", "下一问", parsed.question);
 
-    if (patches.length) {
-      applyGuidePatches(patches);
-      appendGuideEntry("system", "代码已应用", `${patches.map((patch) => patch.file).join(", ")} 已更新。`);
-      if (parsed.expectedObservation) {
-        appendGuideEntry("assistant", "观察目标", parsed.expectedObservation);
-      }
-      if (parsed.runAfterApply) {
-        await runProgram();
-      }
+    let changedFiles: LabFileName[] = [];
+    if (parsed.patchId) {
+      const result = applyLessonPatch(parsed.patchId);
+      changedFiles = result.changedFiles;
+      appendGuideEntry("system", "课程 patch 已应用", `${result.patch.id}：${result.patch.description}`);
+      advanceCheckpoint(parsed.patchId, parsed.nextCheckpointId);
+    } else if (directPatches.length) {
+      changedFiles = applyGuidePatches(directPatches);
+      appendGuideEntry("system", "代码已应用", `${changedFiles.join(", ")} 已更新。`);
+      advanceCheckpoint(undefined, parsed.nextCheckpointId);
+    }
+
+    if (changedFiles.length && parsed.expectedObservation) {
+      appendGuideEntry("assistant", "观察目标", parsed.expectedObservation);
+    }
+    if (changedFiles.length && parsed.runAfterApply) {
+      await runProgram();
     }
 
     setGuideState(parsed.type === "question" ? "等待回答" : "已更新");
@@ -780,8 +807,10 @@ ${getFilesSnapshot()}`;
 
   const resetLab = () => {
     stopRuntime();
-    files = cloneDefaultFiles();
-    persistFiles(files);
+    files = cloneStarterFiles(lesson);
+    completedPatches.clear();
+    currentCheckpointIndex = 0;
+    persistFiles(lesson, files);
     switchFile(activeFile);
     setError();
     void runProgram();
@@ -790,14 +819,14 @@ ${getFilesSnapshot()}`;
   fileTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       const fileName = tab.dataset.file as LabFileName | undefined;
-      if (fileName && fileName in files) switchFile(fileName);
+      if (fileName && fileNames.includes(fileName)) switchFile(fileName);
     });
   });
 
   guideTab?.addEventListener("click", switchGuide);
 
   runButton.addEventListener("click", () => {
-    persistFiles(files);
+    persistFiles(lesson, files);
     void runProgram();
   });
 
@@ -864,13 +893,13 @@ ${getFilesSnapshot()}`;
         guideForm?.requestSubmit();
         return;
       }
-      persistFiles(files);
+      persistFiles(lesson, files);
       void runProgram();
     }
 
     if (event.key.toLowerCase() === "s") {
       event.preventDefault();
-      persistFiles(files);
+      persistFiles(lesson, files);
       setStatus("idle", "已手动保存");
     }
   });
@@ -889,35 +918,10 @@ ${getFilesSnapshot()}`;
   };
 
   const guideSmokeTest = async () => {
-    const patches: GuidePatch[] = [
-      {
-        file: "vertex.glsl",
-        operation: "replace_all",
-        content: `varying vec2 vUv;
-varying vec4 vertexColor;
-
-uniform float uTime;
-
-void main() {
-  vUv = uv;
-  float green = 0.5 + 0.5 * sin(uTime);
-  vertexColor = vec4(vUv.x, green, vUv.y, 1.0);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}`
-      },
-      {
-        file: "fragment.glsl",
-        operation: "replace_all",
-        content: `varying vec2 vUv;
-varying vec4 vertexColor;
-
-void main() {
-  gl_FragColor = vertexColor;
-}`
-      }
-    ];
-
-    applyGuidePatches(patches);
+    const checkpoint = currentCheckpoint();
+    if (!checkpoint) throw new Error("课程没有 checkpoint。");
+    const result = applyLessonPatch(checkpoint.patchId);
+    advanceCheckpoint(checkpoint.patchId);
     await runProgram();
     await new Promise((resolve) => window.setTimeout(resolve, 180));
 
@@ -925,7 +929,8 @@ void main() {
       ok: root.dataset.labState === "ok" && !errorBox.textContent,
       status: statusLabel.textContent || "",
       error: errorBox.textContent || "",
-      appliedFiles: patches.map((patch) => patch.file)
+      appliedFiles: result.changedFiles,
+      checkpointId: root.dataset.checkpointId || ""
     };
   };
 

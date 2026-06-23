@@ -1,16 +1,24 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
+import { defaultGraphicsLesson } from "../data/graphicsLessons";
+
+const lessonPayload = JSON.stringify(defaultGraphicsLesson);
 ---
 
 <BaseLayout title="Graphics Lab" description="WebGL 与 shader 实验编辑器。">
-  <section class="graphics-lab-page wide-surface" data-graphics-lab aria-label="Graphics Lab 编辑器">
+  <section
+    class="graphics-lab-page wide-surface"
+    data-graphics-lab
+    data-lesson-payload={lessonPayload}
+    aria-label="Graphics Lab 编辑器"
+  >
     <div class="graphics-lab" data-lab-workspace>
       <div class="lab-preview-panel">
         <div class="lab-panel-head">
           <div>
             <span>Preview</span>
-            <strong>Transform Starter</strong>
+            <strong data-preview-title>{defaultGraphicsLesson.previewTitle}</strong>
           </div>
           <div class="lab-status">
             <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
@@ -75,15 +83,15 @@ import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
               <div class="lab-panel-head guide-panel-head">
                 <div>
                   <span>AI Guide</span>
-                  <strong>LearnOpenGL Shader Primer</strong>
+                  <strong data-guide-lesson-title>{defaultGraphicsLesson.title}</strong>
                 </div>
                 <span class="lab-guide-state" data-guide-state>等待 API</span>
               </div>
 
               <div class="guide-setup-body">
                 <div class="guide-rule-card">
-                  <strong>开始前</strong>
-                  <p>填写 OpenAI-compatible API 后生成第一问。AI 会先围绕 shader 原理提问，通过后再返回受控代码修改。</p>
+                  <strong>当前实验</strong>
+                  <p>{defaultGraphicsLesson.aiBrief}</p>
                 </div>
 
                 <div class="guide-alert" data-guide-alert hidden></div>
@@ -103,7 +111,7 @@ import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
                   </label>
                   <button type="button" data-guide-start>生成第一问</button>
                   <button type="button" data-guide-return hidden>返回对话</button>
-                  <p>密钥只保存在当前页面内存中。AI 只能修改 main.js、vertex.glsl、fragment.glsl。</p>
+                  <p>密钥只保存在当前页面内存中。AI 按课程 checkpoint 推进，代码变更优先使用本地预设 patch。</p>
                 </div>
               </div>
             </div>
@@ -112,7 +120,7 @@ import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
               <div class="lab-panel-head guide-panel-head">
                 <div>
                   <span>AI Guide</span>
-                  <strong>LearnOpenGL Shader Primer</strong>
+                  <strong>{defaultGraphicsLesson.title}</strong>
                 </div>
                 <div class="guide-actions">
                   <span class="lab-guide-state" data-guide-state-mirror>等待回答</span>
@@ -124,7 +132,7 @@ import { Bot, Maximize2, Minimize2 } from "@lucide/astro";
               <div class="guide-alert" data-guide-chat-alert hidden></div>
               <div class="guide-log" data-guide-log></div>
               <form class="guide-input-row" data-guide-form>
-                <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你想测试的 shader 概念。Ctrl + Enter 提交。"></textarea>
+                <textarea data-guide-input rows="3" placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"></textarea>
                 <button type="submit">提交</button>
               </form>
             </div>

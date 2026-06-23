@@ -1,0 +1,12 @@
+{
+  "id": "01-triangle-vertices",
+  "description": "写入三个裁剪空间顶点，形成一个基础三角形。",
+  "changes": [
+    {
+      "file": "main.js",
+      "operation": "replace",
+      "target": "const positions = new Float32Array([\n  // TODO: 三角形需要 3 个顶点，每个顶点 3 个 float。\n]);",
+      "content": "const positions = new Float32Array([\n   0.0,  0.6, 0.0,\n  -0.6, -0.5, 0.0,\n   0.6, -0.5, 0.0\n]);"
+    }
+  ]
+}

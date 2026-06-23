@@ -29,6 +29,13 @@ const checks = [
       html.includes("data-guide-start")
   },
   {
+    name: "lesson payload",
+    test: (html) =>
+      html.includes("data-lesson-payload") &&
+      html.includes("Hello Triangle") &&
+      html.includes("01-triangle-vertices")
+  },
+  {
     name: "runtime script",
     test: (html) => /<script[^>]+type="module"[^>]+src="\/_astro\/webgl\./.test(html)
   }
@@ -46,7 +53,8 @@ checks.push(
     name: "AI guide runtime",
     test: () =>
       runtimeScript.includes("__graphicsLabGuideSmokeTest") &&
-      runtimeScript.includes("guideReady")
+      runtimeScript.includes("guideReady") &&
+      runtimeScript.includes("patchId")
   }
 );
 
