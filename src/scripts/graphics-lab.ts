@@ -1027,24 +1027,14 @@ function initGraphicsLab(root: HTMLElement) {
       }
     }
 
-    const trackedConstructors = new Map<PropertyKey, unknown>([
-      ["WebGLRenderer", CapturedWebGLRenderer],
-      ["PerspectiveCamera", CapturedPerspectiveCamera],
-      ["OrthographicCamera", CapturedOrthographicCamera],
-      ["Scene", CapturedScene],
-      ["OrbitControls", OrbitControls]
-    ]);
-    const trackedThree = new Proxy(THREE, {
-      get(target, property, receiver) {
-        if (trackedConstructors.has(property)) {
-          return trackedConstructors.get(property);
-        }
-        return Reflect.get(target, property, receiver);
-      },
-      has(target, property) {
-        return trackedConstructors.has(property) || Reflect.has(target, property);
-      }
-    }) as typeof THREE;
+    const trackedThree = {
+      ...THREE,
+      WebGLRenderer: CapturedWebGLRenderer,
+      PerspectiveCamera: CapturedPerspectiveCamera,
+      OrthographicCamera: CapturedOrthographicCamera,
+      Scene: CapturedScene,
+      OrbitControls
+    } as typeof THREE;
 
     return { THREE: trackedThree, captured };
   };
