@@ -56,7 +56,8 @@
       "files": [
         "cube.fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "object-color",
@@ -97,7 +98,8 @@
       "files": [
         "scene.json",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "channel-filtering",
@@ -114,7 +116,8 @@
       "hint": "乘法中任一通道的输入接近 0，最终这个通道也会接近 0。",
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "light-color",
@@ -155,7 +158,8 @@
       "files": [
         "scene.json",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "light-direction-setup",
@@ -174,7 +178,8 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl",
         "geometry.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "light-position",
@@ -223,7 +228,8 @@
         "main.js",
         "light.vertex.glsl",
         "light.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

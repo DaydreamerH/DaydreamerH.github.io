@@ -90,6 +90,7 @@ type LessonCheckpoint = {
   title: string;
   concept: string;
   files?: LabFileName[];
+  flow?: "question_only" | "answer_then_patch" | "observe_then_question";
   question: string;
   expectedKeywords: string[];
   hint: string;
@@ -399,10 +400,10 @@ function normalizeGuideResponse(response: GuideResponse): GuideResponse {
 function removeQuestionSentences(message: string, question: string) {
   if (!message || !question) return message;
   return message
-    .split(/(?<=[銆傦紒锛??])\s*/)
+    .split(/(?<=[。！？?!])\s*/)
     .filter((sentence) => {
       const trimmed = sentence.trim();
-      return trimmed && !/[锛?]/.test(trimmed) && !trimmed.includes("please answer");
+      return trimmed && !/[？?]/.test(trimmed) && !trimmed.includes("please answer");
     })
     .join("")
     .trim();
@@ -730,6 +731,9 @@ function initGraphicsLab(root: HTMLElement) {
   root.dataset.checkpointId = lesson.checkpoints[0]?.id ?? "";
 
   const currentCheckpoint = () => lesson.checkpoints[currentCheckpointIndex];
+  const isObservationCheckpoint = (checkpoint?: LessonCheckpoint) =>
+    Boolean(checkpoint?.patchId && checkpoint.flow === "observe_then_question");
+  const isPatchAlreadyApplied = (patchId?: string) => Boolean(patchId && completedPatches.has(patchId));
 
   const countLines = (text: string) => text.split(/\r\n|\r|\n/).length;
 
@@ -1673,6 +1677,7 @@ function initGraphicsLab(root: HTMLElement) {
       if (!(patch.file in nextFiles)) nextFiles[patch.file] = files[patch.file].source;
       const source = nextFiles[patch.file] ?? "";
       if (patch.operation === "replace_all") {
+        if (source === patch.content) return;
         const preview = compactCodePreview(source, patch.content, 1, 3, 34);
         changeReviewBatch.push({
           file: patch.file,
@@ -1694,6 +1699,7 @@ function initGraphicsLab(root: HTMLElement) {
           throw new Error(`无法在 ${patch.file} 中找到 patch 指定片段。`);
         }
         const before = source.slice(targetRange.start, targetRange.end);
+        if (before === patch.content) return;
         const startLine = lineNumberAt(source, targetRange.start);
         const preview = compactCodePreview(before, patch.content, startLine, 3, 34);
         changeReviewBatch.push({
@@ -1709,7 +1715,7 @@ function initGraphicsLab(root: HTMLElement) {
         changedFiles.add(patch.file);
         return;
       }
-      throw new Error(`涓嶆敮鎸佺殑 patch 鎿嶄綔锛?{patch.operation}`);
+      throw new Error(`不支持的 patch 操作：${patch.operation}`);
     });
 
     changedFiles.forEach((fileName) => {
@@ -1742,9 +1748,21 @@ function initGraphicsLab(root: HTMLElement) {
   const applyLessonPatch = (patchId: string) => {
     const patch = lesson.patches[patchId];
     if (!patch) throw new Error(`课程包中不存在 patchId：${patchId}`);
+    if (completedPatches.has(patchId)) {
+      return { patch, changedFiles: [] as LabFileName[] };
+    }
     const changedFiles = applyGuidePatches(patch.changes);
     completedPatches.add(patchId);
     return { patch, changedFiles };
+  };
+
+  const prepareObservationCheckpoint = async (checkpoint: LessonCheckpoint) => {
+    if (!checkpoint.patchId || isPatchAlreadyApplied(checkpoint.patchId)) return [] as LabFileName[];
+    const result = applyLessonPatch(checkpoint.patchId);
+    if (result.changedFiles.length) {
+      await runProgram();
+    }
+    return result.changedFiles;
   };
 
   const buildGuideMessages = (mode: "start" | "answer", userText = "") => {
@@ -1754,17 +1772,18 @@ function initGraphicsLab(root: HTMLElement) {
     const systemPrompt = `你是图形学实验教练。课程内容、checkpoint 和本地 patch 已经由静态课程包提供。
 必须遵守：
 1. 每轮最多提出一个问题。
-2. 预设课程推进模式下，用户只回答概念；代码变更优先通过本地 patchId 完成。
-3. 如果当前 checkpoint 有 patchId，且用户回答正确或基本正确，只返回该 patchId。
-4. 如果当前 checkpoint 没有 patchId，且用户回答正确或基本正确，只返回 nextCheckpointId。
-5. 如果用户回答错误、不完整或说不知道，给一个紧密相关的提示，并重复当前 checkpoint.question；不要推进 checkpoint。
-6. 如果用户明确说某个概念不懂，只解释这个概念与当前 checkpoint 的直接关系，最多 120 字，然后重复当前问题。
-7. 自由实验模式下，不要再回到 checkpoint 提问；用户问概念就直接解释，用户要求修改效果就返回最小 patches 并设置 runAfterApply=true。
-8. 只能修改课程工作区文件列表中的文件；确需新增辅助文件时，可以在 patches 中给出新文件名。
-9. 当前运行入口文件是 ${entryFileName}；运行环境注入 THREE、OrbitControls、canvas、files、getFile、report。多文件课程必须通过 getFile("file-name") 读取 shader、json 或 helper，不要依赖固定文件名。
-10. message 字段不要包含问题；需要提问只能写在 question 字段。
-11. start 模式必须优先使用当前 checkpoint.question 作为唯一问题。
-12. 只返回 JSON，不返回 Markdown。
+2. 预设课程推进模式下，用户主要回答概念；代码变更优先通过本地 patchId 完成。
+3. checkpoint.flow 为 observe_then_question 时，页面会在提问前自动应用该 checkpoint 的 patchId。你应先用 message 简短说明 expectedObservation，再在 question 中提问；用户回答正确或基本正确时只返回 nextCheckpointId，不要重复返回当前 patchId。
+4. checkpoint.flow 为 answer_then_patch 时，如果用户回答正确或基本正确，只返回当前 patchId，让页面在回答后应用代码。
+5. checkpoint.flow 为 question_only 或没有 patchId 时，如果用户回答正确或基本正确，只返回 nextCheckpointId。
+6. 如果用户回答错误、不完整或说不知道，给一个紧密相关的提示，并重复当前 checkpoint.question；不要推进 checkpoint。
+7. 如果用户明确说某个概念不懂，只解释这个概念与当前 checkpoint 的直接关系，最多 120 字，然后重复当前问题。
+8. 自由实验模式下，不要再回到 checkpoint 提问；用户问概念就直接解释，用户要求修改效果就返回最小 patches。需要立即展示效果时可设置 runAfterApply=true；若用户开启 Auto，页面会在代码变更后自动运行。
+9. 只能修改课程工作区文件列表中的文件；确需新增辅助文件时，可以在 patches 中给出新文件名。
+10. 当前运行入口文件是 ${entryFileName}；运行环境注入 THREE、OrbitControls、canvas、files、getFile、report。多文件课程必须通过 getFile("file-name") 读取 shader、json 或 helper，不要依赖固定文件名。
+11. message 字段不要包含问题；需要提问只能写在 question 字段。
+12. start 模式必须优先使用当前 checkpoint.question 作为唯一问题。
+13. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
@@ -1787,6 +1806,8 @@ ${lesson.checkpoints
   .join("\n")}
 当前 checkpoint：
 ${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(无 checkpoint)"}
+当前 checkpoint 的代码是否已应用：
+${isPatchAlreadyApplied(checkpoint?.patchId) ? "已应用；如果 flow 是 observe_then_question，应围绕现象提问，不要再次返回 patchId。" : "未应用；如果 flow 是 answer_then_patch，回答正确后再返回 patchId。"}
 当前 checkpoint 关联文件：
 ${describeCheckpointFiles(checkpoint)}
 已完成 patchId：
@@ -1837,7 +1858,14 @@ ${getFilesSnapshot()}`;
     }
 
     setGuideAlert();
-    setGuideState("AI 鎬濊€冧腑");
+    setGuideState("AI 思考中");
+
+    if (!lessonFreeMode) {
+      const checkpoint = currentCheckpoint();
+      if (isObservationCheckpoint(checkpoint) && !isPatchAlreadyApplied(checkpoint.patchId)) {
+        await prepareObservationCheckpoint(checkpoint);
+      }
+    }
 
     const response = await fetch(guideEndpointInput.value.trim(), {
       method: "POST",
@@ -1909,8 +1937,16 @@ ${getFilesSnapshot()}`;
       if (lessonCompleted) lessonFreeMode = true;
     }
 
+    let preparedObservationFiles: LabFileName[] = [];
+    if (!lessonCompleted && allowCourseAdvance && checkpointMoved) {
+      const nextCheckpoint = currentCheckpoint();
+      if (isObservationCheckpoint(nextCheckpoint) && !isPatchAlreadyApplied(nextCheckpoint.patchId)) {
+        preparedObservationFiles = await prepareObservationCheckpoint(nextCheckpoint);
+      }
+    }
+
     const shouldAskNextQuestion =
-      (Boolean(changedFiles.length) || Boolean(parsed.nextCheckpointId)) &&
+      (Boolean(changedFiles.length) || Boolean(parsed.nextCheckpointId) || Boolean(preparedObservationFiles.length)) &&
       checkpointMoved &&
       Boolean(currentCheckpoint()) &&
       !parsed.question;
@@ -1943,12 +1979,16 @@ ${getFilesSnapshot()}`;
       lessonCompleted && !displayedQuestion
         ? "预设实验已完成。你可以继续让 AI 解释当前代码，也可以直接要求它修改代码、shader 或画面效果。"
         : "";
-    const aiText = [displayedMessage, retryMessage, displayedQuestion ?? "", completionMessage]
+    const observationMessage =
+      preparedObservationFiles.length && currentCheckpoint()?.expectedObservation
+        ? `预览已更新：${currentCheckpoint()?.expectedObservation}`
+        : "";
+    const aiText = [displayedMessage, observationMessage, retryMessage, displayedQuestion ?? "", completionMessage]
       .filter(Boolean)
       .join("\n\n");
     if (aiText) appendGuideEntry("assistant", "AI Guide", aiText);
 
-    if (changedFiles.length && parsed.runAfterApply) {
+    if (changedFiles.length && (parsed.runAfterApply || Boolean(autoRunToggle?.checked))) {
       await runProgram();
     }
 

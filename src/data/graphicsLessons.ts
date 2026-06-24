@@ -49,6 +49,7 @@ export type GraphicsLesson = {
     title: string;
     concept: string;
     files?: GraphicsLabFileName[];
+    flow?: "question_only" | "answer_then_patch" | "observe_then_question";
     question: string;
     expectedKeywords: string[];
     hint: string;

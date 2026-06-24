@@ -38,7 +38,8 @@
       "files": [
         "vertex.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "model-transform",
@@ -70,7 +71,8 @@
         "vertex.glsl",
         "geometry.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "matrix-order",
@@ -88,7 +90,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "rotation",
@@ -117,7 +120,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "scale-matrix",
@@ -136,7 +140,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "scale",
@@ -166,7 +171,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "time-integration-transform",
@@ -184,7 +190,8 @@
       "files": [
         "main.js",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "animated-transform",
@@ -214,7 +221,8 @@
       "files": [
         "main.js",
         "scene.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

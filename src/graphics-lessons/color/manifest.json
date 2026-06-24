@@ -104,11 +104,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -119,6 +118,7 @@
         "cube.fragment.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "阅读 scene.json 的 uObjectColor、uLightColor 和 cube.fragment.glsl 的乘法关系，为什么颜色应逐通道相乘，而不是先压成一个亮度标量？",
       "expectedKeywords": [
         "RGB",
@@ -137,6 +137,7 @@
         "scene.json",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "当 scene.json 中 uObjectColor = (0.95, 0.48, 0.2) 时，为什么 cube.fragment.glsl 会让物体更偏橙色而不是蓝色？",
       "expectedKeywords": [
         "objectColor",
@@ -156,6 +157,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "如果 scene.json 把 uLightColor 的红色分量调得很低，为什么 cube.fragment.glsl 中再高的 uObjectColor.r 也难以产生强红色？",
       "expectedKeywords": [
         "lightColor",
@@ -174,6 +176,7 @@
         "scene.json",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么只修改 scene.json 中的 uLightColor，就能让同一段 cube.fragment.glsl 输出偏冷或偏暗的物体颜色？",
       "expectedKeywords": [
         "finalColor",
@@ -195,6 +198,7 @@
         "cube.fragment.glsl",
         "geometry.json"
       ],
+      "flow": "question_only",
       "question": "为什么从纯颜色模型过渡到漫反射时，cube.vertex.glsl 必须开始向 cube.fragment.glsl 提供世界位置或法线等空间信息？",
       "expectedKeywords": [
         "lightDir",
@@ -215,6 +219,7 @@
         "light.vertex.glsl",
         "light.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么光源标记适合使用 light.vertex.glsl/light.fragment.glsl 独立显示，而不是混进 cube.fragment.glsl 的物体着色公式里？",
       "expectedKeywords": [
         "lightDir",

@@ -104,11 +104,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -119,6 +118,7 @@
         "scene.json",
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么同一个 scene.json 中要区分 material 参数和 lightColor/lightPos，而不是把它们合并成一个颜色常量？",
       "expectedKeywords": [
         "material",
@@ -138,6 +138,7 @@
         "cube.fragment.glsl",
         "geometry.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 cube.fragment.glsl 中材质通常要拆成 ambient、diffuse、specular 响应，而不是只从 scene.json 读取一个 baseColor？",
       "expectedKeywords": [
         "ambient",
@@ -158,6 +159,7 @@
         "cube.fragment.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "在 cube.fragment.glsl 的 color = (ambient + diffuse + specular) * objectColor 中，为什么 scene.json 里的 ambientStrength 过大会削弱明暗对比？",
       "expectedKeywords": [
         "ambient",
@@ -176,6 +178,7 @@
         "scene.json",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么只提高 scene.json 中的 ambient 响应能增强暗部可见性，却不能单独建立清晰立体感？",
       "expectedKeywords": [
         "ambient",
@@ -195,6 +198,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么非金属主体颜色更适合在 cube.fragment.glsl 的 diffuse 项中调制，而不是主要塞进 specular 项？",
       "expectedKeywords": [
         "非金属",
@@ -214,6 +218,7 @@
         "cube.fragment.glsl",
         "geometry.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 cube.fragment.glsl 计算 diffuse 材质颜色前，必须依赖 cube.vertex.glsl 传来的法线和世界位置？",
       "expectedKeywords": [
         "diffuse",
@@ -233,6 +238,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么 scene.json 中提高 specularStrength 主要增强局部高光，而不会像 ambient 那样均匀抬亮所有表面？",
       "expectedKeywords": [
         "specularStrength",
@@ -252,6 +258,7 @@
         "light.vertex.glsl",
         "light.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "对照 light.* 显示的光源位置，为什么 specular 材质分量改变的是镜面反射能量，而不是整个物体的基础色？",
       "expectedKeywords": [
         "specular",
@@ -271,6 +278,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "在 cube.fragment.glsl 中，如果 dot(V,R)=0.8，为什么 pow(0.8,16) 会明显大于 pow(0.8,96)？",
       "expectedKeywords": [
         "pow",
@@ -289,6 +297,7 @@
         "scene.json",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么只修改 scene.json 的 shininess，就能让 cube.fragment.glsl 输出的高光范围变窄、中心更锐利？",
       "expectedKeywords": [
         "shininess",
@@ -310,6 +319,7 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么静态截图可能看不出 normal 或 specular 错误，而 main.js 让物体旋转后错误更容易暴露？",
       "expectedKeywords": [
         "静态",
@@ -330,6 +340,7 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么材质实验最后要观察旋转中的高光，而不是只确认 cube.fragment.glsl 在一帧画面里画出了亮斑？",
       "expectedKeywords": [
         "旋转",

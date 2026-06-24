@@ -78,11 +78,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -93,6 +92,7 @@
         "vertex.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "为什么普通 3x3 线性变换不能直接表达三维平移，而 4x4 齐次矩阵可以？",
       "expectedKeywords": [
         "齐次坐标",
@@ -114,6 +114,7 @@
         "geometry.json",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "若顶点 p_local 通过 p_world = M * p_local 进入世界空间，为什么同一组顶点可以被不同 M 复用成多个实例？",
       "expectedKeywords": [
         "p_world",
@@ -134,6 +135,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "从 T * R * p 与 R * T * p 出发，为什么先旋转再平移和先平移再旋转会得到不同位置？",
       "expectedKeywords": [
         "矩阵乘法",
@@ -152,6 +154,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么旋转矩阵不仅改变顶点位置，也可以理解为改变物体局部坐标轴在世界中的方向？",
       "expectedKeywords": [
         "旋转矩阵",
@@ -172,6 +175,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "如果缩放矩阵为 diag(sx, sy, sz, 1)，为什么顶点的 x、y、z 分量会分别按 sx、sy、sz 改变？",
       "expectedKeywords": [
         "diag",
@@ -191,6 +195,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么围绕原点缩放时，离原点越远的顶点产生的位移通常越大？",
       "expectedKeywords": [
         "原点",
@@ -211,6 +216,7 @@
         "main.js",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "如果角速度 omega 单位是 rad/s，为什么一帧内增加的角度应是 omega * deltaTime？",
       "expectedKeywords": [
         "omega",
@@ -229,6 +235,7 @@
         "main.js",
         "scene.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么用 elapsed time 或 deltaTime 驱动旋转，能让不同刷新率设备上的动画速度更一致？",
       "expectedKeywords": [
         "时间",

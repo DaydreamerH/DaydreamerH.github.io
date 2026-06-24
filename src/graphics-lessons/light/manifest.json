@@ -104,11 +104,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -119,6 +118,7 @@
         "cube.fragment.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "如果 cube.fragment.glsl 最终要写 color = (ambient + diffuse + specular) * objectColor，为什么把三项拆开比只在 scene.json 中调一个亮度系数更有教学意义？",
       "expectedKeywords": [
         "ambient",
@@ -138,6 +138,7 @@
         "scene.json",
         "geometry.json"
       ],
+      "flow": "observe_then_question",
       "question": "在 cube.fragment.glsl 中，如果 ambient 与 vNormal 无关，为什么只启用 ambient 会让立方体各个面缺少体积感？",
       "expectedKeywords": [
         "ambient",
@@ -158,6 +159,7 @@
         "cube.vertex.glsl",
         "geometry.json"
       ],
+      "flow": "question_only",
       "question": "为什么 cube.vertex.glsl 中处理 normal 时要关心变换后的方向保持垂直关系，而不能把 normal 当成普通 position 来理解？",
       "expectedKeywords": [
         "法线",
@@ -176,6 +178,7 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 cube.fragment.glsl 里的 dot(normal, lightDir) 只有在 normal 与 lightDir 使用同一坐标空间时才有夹角余弦意义？",
       "expectedKeywords": [
         "同一空间",
@@ -195,6 +198,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "从 dot(N, L)=cos(theta) 出发，为什么 cube.fragment.glsl 中 theta 越接近 0 度时漫反射应越亮？",
       "expectedKeywords": [
         "theta",
@@ -212,6 +216,7 @@
       "files": [
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 cube.fragment.glsl 中的 max(dot(N, L), 0.0) 要把背光面的负值截断为 0？",
       "expectedKeywords": [
         "max",
@@ -232,6 +237,7 @@
         "cube.fragment.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "为什么高光需要 cube.fragment.glsl 同时知道 viewDir 和 reflectDir，而不仅仅知道 normal 与 lightDir 的夹角？",
       "expectedKeywords": [
         "viewDir",
@@ -251,6 +257,7 @@
         "light.vertex.glsl",
         "light.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "观察 light.* 显示的光源位置后，为什么 cube.fragment.glsl 中 pow(max(dot(V, R), 0.0), shininess) 会让高光集中在特定视角区域？",
       "expectedKeywords": [
         "pow",
@@ -272,6 +279,7 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么 main.js 旋转物体时，即使 scene.json 中 lightPos 和 camera.position 不动，cube.fragment.glsl 中 N、L、V 的相对关系仍会变化？",
       "expectedKeywords": [
         "旋转",
@@ -293,6 +301,7 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么把旋转动画放进 main.js 后，更容易检查 cube.fragment.glsl 的 diffuse 和 specular 是否真的依赖法线方向？",
       "expectedKeywords": [
         "旋转",

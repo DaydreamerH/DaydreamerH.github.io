@@ -16,13 +16,13 @@ const workspace = join(scriptDir, "..");
 const args = process.argv.slice(2);
 
 const defaultEntryFileName = "main.js";
+const checkpointFlows = new Set(["question_only", "answer_then_patch", "observe_then_question"]);
 const defaultTeachingRules = [
   "每轮只提出一个问题。",
-  "先判断用户回答，再决定是否应用 patch。",
-  "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-  "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+  "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+  "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
   "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-  "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+  "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
 ];
 
 function readOption(name, fallback = "") {
@@ -827,6 +827,12 @@ function validateRecipe(recipe) {
     if (!checkpoint.patchId && (checkpoint.state || checkpoint.changes)) {
       throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has state/changes but is missing patchId.`);
     }
+    if (checkpoint.flow && !checkpointFlows.has(checkpoint.flow)) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} has unsupported flow: ${checkpoint.flow}.`);
+    }
+    if (checkpoint.flow === "observe_then_question" && !checkpoint.patchId) {
+      throw new Error(`Checkpoint ${recipe.id}/${checkpoint.id} uses observe_then_question without patchId.`);
+    }
   }
 }
 
@@ -873,6 +879,7 @@ function generateLesson(recipe, options) {
       title: checkpoint.title,
       concept: checkpoint.concept,
       files: checkpoint.files ?? [],
+      flow: checkpoint.flow ?? (checkpoint.patchId ? "answer_then_patch" : "question_only"),
       question: checkpoint.question,
       expectedKeywords: checkpoint.expectedKeywords ?? [],
       hint: checkpoint.hint,

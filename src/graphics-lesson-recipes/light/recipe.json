@@ -51,7 +51,8 @@
       "files": [
         "cube.fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "ambient",
@@ -89,7 +90,8 @@
         "cube.fragment.glsl",
         "scene.json",
         "geometry.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "normal-transform",
@@ -107,7 +109,8 @@
       "files": [
         "cube.vertex.glsl",
         "geometry.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "normal-space",
@@ -148,7 +151,8 @@
       "files": [
         "cube.vertex.glsl",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "lambert-cosine",
@@ -165,7 +169,8 @@
       "hint": "夹角越小，光线越正对表面，单位面积接收的能量越高。",
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "lambert",
@@ -206,7 +211,8 @@
       },
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "specular-vector",
@@ -224,7 +230,8 @@
       "files": [
         "cube.fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "specular",
@@ -270,7 +277,8 @@
         "cube.fragment.glsl",
         "light.vertex.glsl",
         "light.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "rotating-normal",
@@ -290,7 +298,8 @@
         "main.js",
         "cube.vertex.glsl",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "moving-light",
@@ -338,7 +347,8 @@
         "scene.json",
         "cube.vertex.glsl",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

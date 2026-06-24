@@ -67,11 +67,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -83,6 +82,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "如果一个三角形覆盖了 8000 个片元，为什么把逐像素颜色计算放在 vertex shader 中会丢失很多屏幕细节？",
       "expectedKeywords": [
         "执行频率",
@@ -101,6 +101,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 gl_Position 必须在 vertex shader 中写出，而 gl_FragColor 或片元输出颜色必须在 fragment shader 中决定？",
       "expectedKeywords": [
         "gl_Position",
@@ -121,6 +122,7 @@
         "geometry.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "若每个顶点按 position.xyz + color.rgb 连续存储，为什么 position 和 color 的 stride 都应跨过 6 个 float？",
       "expectedKeywords": [
         "stride",
@@ -141,6 +143,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "如果每个顶点都有不同颜色，为什么把颜色写成 attribute 比写死在 fragment shader 中更符合数据变化频率？",
       "expectedKeywords": [
         "每顶点",
@@ -161,6 +164,7 @@
         "scene.json",
         "main.js"
       ],
+      "flow": "question_only",
       "question": "为什么 modelViewProjection 矩阵通常适合作为 uniform，而顶点位置不适合作为 uniform？",
       "expectedKeywords": [
         "uniform",
@@ -179,6 +183,7 @@
         "scene.json",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "当整个物体颜色统一变化时，为什么修改 uniform 比重建顶点 buffer 更合适？",
       "expectedKeywords": [
         "uniform",
@@ -199,6 +204,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么三角形内部某个片元的 varying 可以写成三个顶点输出的加权和，且权重之和为 1？",
       "expectedKeywords": [
         "重心坐标",
@@ -217,6 +223,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 varying 从 vertex shader 传到 fragment shader 后，会在三角形内部形成连续渐变，而不是保持三个离散顶点值？",
       "expectedKeywords": [
         "插值",

@@ -124,6 +124,7 @@ Required checkpoint fields:
   "title": "定义三角形顶点",
   "concept": "这一阶段要理解的概念。",
   "files": ["geometry.json", "main.js"],
+  "flow": "observe_then_question",
   "question": "只包含一个主问题。",
   "expectedKeywords": ["3", "顶点", "float"],
   "hint": "用户答错或不完整时给出的短提示。",
@@ -133,6 +134,14 @@ Required checkpoint fields:
 ```
 
 `checkpoint.files` declares which starter files are taught by that checkpoint. This field is required by the pipeline because every visible starter file must be covered by at least one checkpoint.
+
+`checkpoint.flow` declares the teaching order:
+
+- `observe_then_question`: apply the local patch first, run the preview, tell the learner what changed, then ask the learner to explain the phenomenon. Use this when the question depends on a visible result.
+- `answer_then_patch`: ask the learner to predict or reason first, then apply the patch after a correct answer. Use this when the learning goal is prediction.
+- `question_only`: ask a concept question and advance with `nextCheckpointId`; no code patch is applied.
+
+Choose the flow from the learning goal. Do not make every checkpoint a code patch, and do not ask users to explain a visual result before the result exists.
 
 ## Patch Contract
 
@@ -163,6 +172,7 @@ Patch rules:
 - One checkpoint should normally apply one patch.
 - A patch may touch multiple files when the concept requires it.
 - A patch may add a new file by using `replace_all` on a file name that does not exist yet.
+- A patch should only include files that actually change. Do not include unchanged files for review cosmetics or context padding.
 - Avoid fragile targets. Put clear TODO blocks in starter code so replacements are stable.
 - Do not rely on AI-generated code for required progress. AI should return `patchId`; the page applies local patch content.
 
@@ -325,8 +335,9 @@ Before committing a generated lesson:
 - `category`, `description`, and card text are user-facing, not AI instructions.
 - Every checkpoint asks exactly one main question.
 - Every checkpoint declares `files`.
+- Every checkpoint declares or inherits a valid `flow`.
 - Every visible `starter/` file appears in at least one checkpoint's `files`.
-- Every checkpoint has a matching patch file.
+- Every checkpoint with `patchId` has a matching patch file.
 - Every patch can be applied from the current starter state.
 - The final lesson state renders without shader errors.
 - The first AI question appears only after API setup.

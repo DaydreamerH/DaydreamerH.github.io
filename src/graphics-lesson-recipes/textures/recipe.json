@@ -43,7 +43,8 @@
       "files": [
         "geometry.json",
         "main.js"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "quad-geometry",
@@ -71,7 +72,8 @@
       },
       "files": [
         "geometry.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "uv-normalization",
@@ -89,7 +91,8 @@
       "files": [
         "geometry.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "uv-coordinates",
@@ -114,7 +117,8 @@
         "vertex.glsl",
         "fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "sampling-frequency",
@@ -131,7 +135,8 @@
       "hint": "当纹理变化频率高于屏幕采样能力时，相邻像素无法稳定表达原始信号。",
       "files": [
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "procedural-sampling",
@@ -159,7 +164,8 @@
       },
       "files": [
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "linear-interpolation",
@@ -176,7 +182,8 @@
       "hint": "t = 0.25 时，a 的权重是 0.75，b 的权重是 0.25。",
       "files": [
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "texture-mix",
@@ -201,7 +208,8 @@
       "files": [
         "scene.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

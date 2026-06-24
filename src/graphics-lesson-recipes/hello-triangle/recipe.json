@@ -45,7 +45,8 @@
       "files": [
         "geometry.json",
         "main.js"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "triangle-vertices",
@@ -77,7 +78,8 @@
       "files": [
         "geometry.json",
         "main.js"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "rasterization-role",
@@ -96,7 +98,8 @@
         "main.js",
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "fragment-color",
@@ -125,7 +128,8 @@
       "files": [
         "fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "barycentric-interpolation",
@@ -143,7 +147,8 @@
       "files": [
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "vertex-colors",
@@ -169,7 +174,8 @@
         "vertex.glsl",
         "fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

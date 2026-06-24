@@ -77,11 +77,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -92,6 +91,7 @@
         "vertex.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "在 p_clip = P * V * M * p_local 中，为什么 M、V、P 分别不应该混在同一个概念里理解？",
       "expectedKeywords": [
         "M",
@@ -114,6 +114,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么保留局部空间能让同一个 mesh 用不同 model matrix 实例化到多个世界位置？",
       "expectedKeywords": [
         "局部",
@@ -134,6 +135,7 @@
         "geometry.json",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "为什么只看二维平面很难暴露 view/projection 矩阵中的深度错误，而立方体更容易暴露？",
       "expectedKeywords": [
         "深度",
@@ -153,6 +155,7 @@
         "scene.json",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么立方体的多个面能帮助你判断旋转、相机方向和透视是否同时正确？",
       "expectedKeywords": [
         "多个面",
@@ -173,6 +176,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "如果相机在世界中向 +x 移动，为什么 view 变换看起来像把世界向 -x 移动？",
       "expectedKeywords": [
         "逆矩阵",
@@ -191,6 +195,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么同一个世界点经过不同 view matrix 后，会得到不同的观察空间坐标？",
       "expectedKeywords": [
         "view matrix",
@@ -211,6 +216,7 @@
         "vertex.glsl",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "为什么透视投影要先保留 w，再用 xyz / w 得到 NDC，而不是直接输出最终屏幕坐标？",
       "expectedKeywords": [
         "w",
@@ -229,6 +235,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么更远的物体在透视除法后会占用更小的 NDC 范围？",
       "expectedKeywords": [
         "透视除法",

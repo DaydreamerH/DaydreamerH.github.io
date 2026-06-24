@@ -63,11 +63,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -78,6 +77,7 @@
         "geometry.json",
         "main.js"
       ],
+      "flow": "question_only",
       "question": "如果 position attribute 的 size 为 3，为什么 GPU 每读取一个顶点位置时会连续取 x、y、z 三个 float？",
       "expectedKeywords": [
         "attribute",
@@ -98,6 +98,7 @@
         "geometry.json",
         "main.js"
       ],
+      "flow": "observe_then_question",
       "question": "从 3 个顶点 * 每个 position 3 个 float 出发，为什么一个最小三角形位置缓冲至少需要 9 个 float？",
       "expectedKeywords": [
         "3",
@@ -122,6 +123,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么只有三个顶点位置还不能直接得到屏幕上所有像素的颜色，中间还需要光栅化产生片元？",
       "expectedKeywords": [
         "光栅化",
@@ -140,6 +142,7 @@
         "fragment.glsl",
         "scene.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 fragment shader 的输出可以理解为“每个被覆盖片元的颜色函数”？",
       "expectedKeywords": [
         "fragment",
@@ -160,6 +163,7 @@
         "vertex.glsl",
         "fragment.glsl"
       ],
+      "flow": "question_only",
       "question": "为什么片元越靠近某个顶点，它从该顶点颜色获得的重心权重通常越大？",
       "expectedKeywords": [
         "重心",
@@ -180,6 +184,7 @@
         "fragment.glsl",
         "scene.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么顶点颜色作为 varying 传入 fragment shader 后，三角形内部会形成连续渐变？",
       "expectedKeywords": [
         "varying",

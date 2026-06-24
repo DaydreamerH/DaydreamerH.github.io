@@ -52,7 +52,8 @@
       "files": [
         "scene.json",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "material-role",
@@ -94,7 +95,8 @@
         "scene.json",
         "cube.fragment.glsl",
         "geometry.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "ambient-bias",
@@ -112,7 +114,8 @@
       "files": [
         "cube.fragment.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "ambient-material",
@@ -149,7 +152,8 @@
       "files": [
         "scene.json",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "diffuse-albedo",
@@ -166,7 +170,8 @@
       "hint": "非金属的镜面反射通常更接近光源颜色，主体色更多来自漫反射。",
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "diffuse-material",
@@ -209,7 +214,8 @@
         "cube.vertex.glsl",
         "cube.fragment.glsl",
         "geometry.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "specular-locality",
@@ -226,7 +232,8 @@
       "hint": "specular 只有在视线接近反射方向的区域才大。",
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "specular-material",
@@ -272,7 +279,8 @@
         "cube.fragment.glsl",
         "light.vertex.glsl",
         "light.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "shininess-power",
@@ -289,7 +297,8 @@
       "hint": "小于 1 的数被反复相乘，指数越大衰减越快。",
       "files": [
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "shininess",
@@ -334,7 +343,8 @@
       "files": [
         "scene.json",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "material-dynamic-check",
@@ -353,7 +363,8 @@
         "main.js",
         "cube.vertex.glsl",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "material-motion",
@@ -401,7 +412,8 @@
         "scene.json",
         "cube.vertex.glsl",
         "cube.fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

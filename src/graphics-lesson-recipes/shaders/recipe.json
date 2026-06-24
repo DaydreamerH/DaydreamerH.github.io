@@ -44,7 +44,8 @@
         "main.js",
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "shader-stage-role",
@@ -73,7 +74,8 @@
       "files": [
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "attribute-layout",
@@ -92,7 +94,8 @@
       "files": [
         "geometry.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "vertex-attribute-color",
@@ -117,7 +120,8 @@
         "geometry.json",
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "uniform-frequency",
@@ -135,7 +139,8 @@
       "files": [
         "scene.json",
         "main.js"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "uniform-color",
@@ -164,7 +169,8 @@
       "files": [
         "scene.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "barycentric-varying",
@@ -182,7 +188,8 @@
       "files": [
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "varying-interpolation",
@@ -206,7 +213,8 @@
       "files": [
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

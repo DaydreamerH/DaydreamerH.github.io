@@ -78,11 +78,10 @@
   ],
   "teachingRules": [
     "每轮只提出一个问题。",
-    "先判断用户回答，再决定是否应用 patch。",
-    "checkpoint 有 patchId 且回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
-    "checkpoint 没有 patchId 且回答正确或基本正确时，返回下一个 checkpoint 的 nextCheckpointId，不要应用 patch。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
     "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
-    "不要输出大段 OpenGL 或 WebGL 代码，代码变更由本地 patch 完成。"
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
   ],
   "checkpoints": [
     {
@@ -93,6 +92,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "若相机世界位置为 eye，世界点为 p_world，为什么观察空间坐标可以理解为先计算 p_world - eye，再投到相机的右、上、前向基上？",
       "expectedKeywords": [
         "p_world",
@@ -114,6 +114,7 @@
         "geometry.json",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "在透视投影近似 y_ndc = y_view / (-z_view * tan(fov / 2)) 中，为什么相机远离物体时物体会变小？",
       "expectedKeywords": [
         "z_view",
@@ -135,6 +136,7 @@
         "scene.json",
         "main.js"
       ],
+      "flow": "question_only",
       "question": "为什么只知道 eye 不能确定 view matrix，还必须通过 target 和 up 构造 f、r、u 三个相机基向量？",
       "expectedKeywords": [
         "eye",
@@ -154,6 +156,7 @@
         "scene.json",
         "main.js"
       ],
+      "flow": "observe_then_question",
       "question": "当相机位置相同但 target 改变时，为什么物体在屏幕上的左右、上下位置会变化？",
       "expectedKeywords": [
         "target",
@@ -174,6 +177,7 @@
         "scene.json",
         "vertex.glsl"
       ],
+      "flow": "question_only",
       "question": "从 f = 1 / tan(fov / 2) 出发，为什么 FOV 增大后同一个 y_view 会映射到更小的 NDC 位移？",
       "expectedKeywords": [
         "tan",
@@ -195,6 +199,7 @@
         "geometry.json",
         "fragment.glsl"
       ],
+      "flow": "observe_then_question",
       "question": "为什么 FOV 变大时画面能容纳更多物体，但边缘物体的透视拉伸也更明显？",
       "expectedKeywords": [
         "视锥",
@@ -215,6 +220,7 @@
         "main.js",
         "scene.json"
       ],
+      "flow": "question_only",
       "question": "如果角速度是 omega rad/s，为什么每帧更新应写成 angle += omega * deltaTime，而不是 angle += 常数？",
       "expectedKeywords": [
         "omega",
@@ -234,6 +240,7 @@
         "main.js",
         "scene.json"
       ],
+      "flow": "observe_then_question",
       "question": "为什么使用 deltaTime 后，30 FPS 和 144 FPS 下同一个旋转动画仍能保持接近相同的每秒速率？",
       "expectedKeywords": [
         "帧率",

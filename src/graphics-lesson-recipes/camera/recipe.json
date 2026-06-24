@@ -45,7 +45,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "camera-position",
@@ -78,7 +79,8 @@
         "vertex.glsl",
         "geometry.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "lookat-basis",
@@ -97,7 +99,8 @@
       "files": [
         "scene.json",
         "main.js"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "look-direction",
@@ -127,7 +130,8 @@
       "files": [
         "scene.json",
         "main.js"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "projection-scale",
@@ -146,7 +150,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "fov",
@@ -180,7 +185,8 @@
         "vertex.glsl",
         "geometry.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "time-integration",
@@ -199,7 +205,8 @@
       "files": [
         "main.js",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "delta-time",
@@ -232,7 +239,8 @@
       "files": [
         "main.js",
         "scene.json"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [

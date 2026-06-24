@@ -39,7 +39,8 @@
       "files": [
         "vertex.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "local-world",
@@ -65,7 +66,8 @@
         "scene.json",
         "vertex.glsl",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "depth-and-occlusion",
@@ -83,7 +85,8 @@
       "files": [
         "geometry.json",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "enter-3d",
@@ -114,7 +117,8 @@
         "geometry.json",
         "scene.json",
         "fragment.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "view-inverse",
@@ -132,7 +136,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "view-transform",
@@ -162,7 +167,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     },
     {
       "id": "clip-and-ndc",
@@ -180,7 +186,8 @@
       "files": [
         "vertex.glsl",
         "scene.json"
-      ]
+      ],
+      "flow": "question_only"
     },
     {
       "id": "projection",
@@ -211,7 +218,8 @@
       "files": [
         "scene.json",
         "vertex.glsl"
-      ]
+      ],
+      "flow": "observe_then_question"
     }
   ],
   "workspaceFiles": [
