@@ -1,0 +1,67 @@
+---
+import { ArrowUp } from "@lucide/astro";
+
+interface Props {
+  class?: string;
+  ariaLabel?: string;
+  alertData?: string;
+  statusData?: string;
+  messageData: string;
+  messageClass?: string;
+  formData: string;
+  formClass?: string;
+  textareaId: string;
+  textareaData: string;
+  textareaRows?: number;
+  placeholder: string;
+  size?: "compact" | "default" | "wide";
+  submitLabel?: string;
+}
+
+const {
+  class: className = "",
+  ariaLabel = "AI 对话",
+  alertData,
+  statusData,
+  messageData,
+  messageClass = "",
+  formData,
+  formClass = "",
+  textareaId,
+  textareaData,
+  textareaRows = 2,
+  placeholder,
+  size = "default",
+  submitLabel = "提交"
+} = Astro.props;
+
+const alertAttrs = alertData ? { [alertData]: "" } : {};
+const statusAttrs = statusData ? { [statusData]: "" } : {};
+const messageAttrs = { [messageData]: "" };
+const formAttrs = { [formData]: "" };
+const textareaAttrs = { [textareaData]: "" };
+---
+
+<section class:list={["chat-panel", "chat-surface", `chat-surface--${size}`, className]}>
+  <slot name="toolbar" />
+
+  {alertData && <div class="chat-alert" {...alertAttrs} hidden></div>}
+  {statusData && <div class="chat-status" {...statusAttrs} hidden></div>}
+
+  <div class:list={["message-list", messageClass]} aria-label={ariaLabel} {...messageAttrs}></div>
+
+  <form class:list={["answer-box", formClass]} {...formAttrs}>
+    <textarea
+      id={textareaId}
+      rows={textareaRows}
+      {...textareaAttrs}
+      placeholder={placeholder}
+    ></textarea>
+    <div class="composer-toolbar">
+      <slot name="composer-left" />
+      <button class="composer-send" type="submit" aria-label={submitLabel}>
+        <ArrowUp size={19} aria-hidden="true" />
+      </button>
+    </div>
+  </form>
+</section>

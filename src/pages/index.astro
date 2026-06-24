@@ -13,16 +13,23 @@ function parseDate(value = "") {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-const recentUpdates = [
-  ...docs.map((doc) => ({
+const recentPosts = docs
+  .map((doc) => ({
     type: "博客",
     title: doc.data.title,
     href: `/knowledge/${doc.slug}/`,
     date: doc.data.date ? doc.data.date.slice(0, 10) : "未标注日期",
     timestamp: parseDate(doc.data.date ?? ""),
     meta: getCategoryLabel(doc.data.category)
-  })),
-  ...graphicsLessonSummaries.map((lesson) => ({
+  }))
+  .sort((a, b) => {
+    if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
+    return a.title.localeCompare(b.title, "zh-Hans-CN");
+  })
+  .slice(0, 6);
+
+const recentLessons = graphicsLessonSummaries
+  .map((lesson) => ({
     type: "实验",
     title: lesson.title,
     href: `/webgl/${lesson.id}/`,
@@ -30,12 +37,16 @@ const recentUpdates = [
     timestamp: parseDate(lesson.createdAt),
     meta: lesson.category
   }))
-]
   .sort((a, b) => {
     if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
     return a.title.localeCompare(b.title, "zh-Hans-CN");
   })
   .slice(0, 6);
+
+const recentGroups = [
+  { label: "博客", items: recentPosts },
+  { label: "实验", items: recentLessons }
+];
 
 const modules = [
   {
@@ -68,14 +79,22 @@ const modules = [
           <h1>近日更新</h1>
         </div>
       </div>
-      <div class="recent-post-list">
-        {recentUpdates.map((item) => (
-          <a class="recent-post-item" href={item.href}>
-            <span>{item.date}</span>
-            <b class="recent-update-type" data-type={item.type}>{item.type}</b>
-            <strong>{item.title}</strong>
-            <small>{item.meta}</small>
-          </a>
+      <div class="recent-update-groups">
+        {recentGroups.map((group) => (
+          <section class="recent-update-group" aria-label={`近日更新-${group.label}`}>
+            <div class="recent-group-heading">
+              <h2>{group.label}</h2>
+            </div>
+            <div class="recent-post-list">
+              {group.items.map((item) => (
+                <a class="recent-post-item" href={item.href}>
+                  <span>{item.date}</span>
+                  <strong>{item.title}</strong>
+                  <small>{item.meta}</small>
+                </a>
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>

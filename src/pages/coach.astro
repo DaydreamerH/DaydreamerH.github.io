@@ -1,7 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import ChatSurface from "../components/ChatSurface.astro";
 import { getCollection } from "astro:content";
-import { ArrowUp, ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Sparkles } from "@lucide/astro";
+import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Sparkles } from "@lucide/astro";
 import { getCategoryLabel, getLevelLabel } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
@@ -129,8 +130,18 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       </div>
     </aside>
 
-    <section class="chat-panel">
-      <div class="chat-toolbar">
+    <ChatSurface
+      ariaLabel="AI 对话"
+      alertData="data-chat-alert"
+      statusData="data-chat-status"
+      messageData="data-message-list"
+      formData="data-answer-form"
+      textareaId="answer"
+      textareaData="data-answer-input"
+      textareaRows={2}
+      placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"
+    >
+      <div class="chat-toolbar" slot="toolbar">
         <div>
           <span>Session</span>
           <strong data-session-title>{activeNode.title}</strong>
@@ -140,23 +151,11 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         </div>
       </div>
 
-      <div class="chat-alert" data-chat-alert hidden></div>
-      <div class="chat-status" data-chat-status hidden></div>
-      <div class="message-list" aria-label="AI 对话" data-message-list></div>
-
-      <form class="answer-box" data-answer-form>
-        <textarea id="answer" rows="2" data-answer-input placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"></textarea>
-        <div class="composer-toolbar">
-          <span data-answer-hint>
-            <Sparkles size={15} aria-hidden="true" />
-            <span data-answer-hint-text>填写左侧 API 后，可先生成第一题。</span>
-          </span>
-          <button class="composer-send" type="submit" aria-label="提交">
-            <ArrowUp size={19} aria-hidden="true" />
-          </button>
-        </div>
-      </form>
-    </section>
+      <span data-answer-hint slot="composer-left">
+        <Sparkles size={15} aria-hidden="true" />
+        <span data-answer-hint-text>填写左侧 API 后，可先生成第一题。</span>
+      </span>
+    </ChatSurface>
   </section>
 
   <script define:vars={{ nodesJson }}>

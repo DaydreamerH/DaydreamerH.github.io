@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   autocompletion,
   closeBrackets,
@@ -30,6 +31,16 @@ type LabFile = {
 };
 
 type RuntimeCleanup = () => void;
+type RuntimeResult =
+  | RuntimeCleanup
+  | {
+      cleanup?: RuntimeCleanup;
+      dispose?: RuntimeCleanup;
+      renderer?: THREE.WebGLRenderer;
+      camera?: THREE.Camera;
+      scene?: THREE.Scene;
+      render?: () => void;
+    };
 type SmokeResult = {
   ok: boolean;
   activeFile: LabFileName;
@@ -117,6 +128,7 @@ declare global {
 }
 
 const STORAGE_KEY_PREFIX = "daydreamerh.graphics-lab.lesson";
+const PREVIEW_LAYOUT_KEY = "daydreamerh.graphics-lab.preview-layout";
 
 const fallbackLesson: GraphicsLesson = {
   id: "fallback",
@@ -508,6 +520,9 @@ function createEditorState(
 function initGraphicsLab(root: HTMLElement) {
   const lesson = parseLesson(root);
   const labWorkspace = root.querySelector<HTMLElement>("[data-lab-workspace]");
+  const previewPanel = root.querySelector<HTMLElement>(".lab-preview-panel");
+  const previewDragHandle = root.querySelector<HTMLElement>("[data-preview-drag]");
+  const previewResizeHandle = root.querySelector<HTMLElement>("[data-preview-resize]");
   const canvas = root.querySelector<HTMLCanvasElement>("[data-lab-canvas]");
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
   const fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
@@ -519,14 +534,21 @@ function initGraphicsLab(root: HTMLElement) {
   const guideChatAlert = root.querySelector<HTMLElement>("[data-guide-chat-alert]");
   const guideConfigureButton = root.querySelector<HTMLButtonElement>("[data-guide-configure]");
   const runButton = root.querySelector<HTMLButtonElement>("[data-run]");
+  const runButtonLabel = root.querySelector<HTMLElement>("[data-run-label]");
   const resetButton = root.querySelector<HTMLButtonElement>("[data-reset-lab]");
-  const expandButton = root.querySelector<HTMLButtonElement>("[data-expand-editor]");
+  const previewHideButton = root.querySelector<HTMLButtonElement>("[data-preview-hide]");
+  const previewShowButton = root.querySelector<HTMLButtonElement>("[data-preview-show]");
+  const orbitToggleButton = root.querySelector<HTMLButtonElement>("[data-orbit-toggle]");
+  const sidebarToggleButton = root.querySelector<HTMLButtonElement>("[data-toggle-lab-sidebar]");
+  const workspaceLabel = root.querySelector<HTMLElement>("[data-workspace-label]");
+  const workspaceTitle = root.querySelector<HTMLElement>("[data-workspace-title]");
   const statusLabel = root.querySelector<HTMLElement>("[data-lab-status]");
   const statusDot = root.querySelector<HTMLElement>("[data-lab-status-dot]");
   const errorBox = root.querySelector<HTMLElement>("[data-lab-errors]");
   const autoRunToggle = root.querySelector<HTMLInputElement>("[data-auto-run]");
   const guideState = root.querySelector<HTMLElement>("[data-guide-state]");
   const guideStateMirror = root.querySelector<HTMLElement>("[data-guide-state-mirror]");
+  const guideSurface = root.querySelector<HTMLElement>(".lab-chat-surface");
   const guideLog = root.querySelector<HTMLElement>("[data-guide-log]");
   const guideForm = root.querySelector<HTMLFormElement>("[data-guide-form]");
   const guideInput = root.querySelector<HTMLTextAreaElement>("[data-guide-input]");
@@ -539,11 +561,11 @@ function initGraphicsLab(root: HTMLElement) {
 
   if (
     !labWorkspace ||
+    !previewPanel ||
     !canvas ||
     !editorHost ||
     !runButton ||
     !resetButton ||
-    !expandButton ||
     !statusLabel ||
     !statusDot ||
     !errorBox
@@ -559,6 +581,10 @@ function initGraphicsLab(root: HTMLElement) {
   let runTimer = 0;
   let saveTimer = 0;
   let runId = 0;
+  let orbitEnabled = false;
+  let orbitControls: OrbitControls | undefined;
+  let runtimeResult: Exclude<RuntimeResult, RuntimeCleanup> | undefined;
+  let orbitAnimationFrame = 0;
   let currentCheckpointIndex = 0;
   let guideWorkspaceInitialized = false;
   let lessonFreeMode = false;
@@ -570,11 +596,32 @@ function initGraphicsLab(root: HTMLElement) {
 
   const currentCheckpoint = () => lesson.checkpoints[currentCheckpointIndex];
 
+  const setRunFeedback = (type: "idle" | "running" | "ok" | "error", text: string) => {
+    const labels = {
+      idle: "运行",
+      running: "运行中",
+      ok: "完成",
+      error: "错误"
+    };
+    runButton.dataset.runState = type;
+    runButton.dataset.runFeedback = text;
+    runButton.disabled = type === "running";
+    if (runButtonLabel) runButtonLabel.textContent = labels[type];
+  };
+
   const setStatus = (type: "idle" | "running" | "ok" | "error", text: string) => {
-    statusLabel.textContent = text;
+    const shortLabels = {
+      idle: text.includes("保存") ? "已保存" : "等待",
+      running: "运行中",
+      ok: "完成",
+      error: "错误"
+    };
+    statusLabel.textContent = shortLabels[type];
+    statusLabel.title = text;
     statusDot.dataset.state = type;
     root.dataset.labState = type;
     root.dataset.labMessage = text;
+    setRunFeedback(type, text);
   };
 
   const setError = (message = "") => {
@@ -583,10 +630,253 @@ function initGraphicsLab(root: HTMLElement) {
     root.dataset.labError = message;
   };
 
+  const setOrbitButtonState = () => {
+    if (!orbitToggleButton) return;
+    orbitToggleButton.classList.toggle("is-active", orbitEnabled);
+    orbitToggleButton.setAttribute("aria-pressed", String(orbitEnabled));
+    orbitToggleButton.title = orbitEnabled ? "关闭轨道控制器" : "开启轨道控制器";
+  };
+
+  const disposeOrbitControls = () => {
+    if (orbitAnimationFrame) {
+      window.cancelAnimationFrame(orbitAnimationFrame);
+      orbitAnimationFrame = 0;
+    }
+    if (!orbitControls) return;
+    orbitControls.dispose();
+    orbitControls = undefined;
+  };
+
+  const createTrackedThree = () => {
+    const captured: Pick<Exclude<RuntimeResult, RuntimeCleanup>, "renderer" | "camera" | "scene"> = {};
+
+    class CapturedWebGLRenderer extends THREE.WebGLRenderer {
+      constructor(...args: ConstructorParameters<typeof THREE.WebGLRenderer>) {
+        super(...args);
+        captured.renderer = this;
+      }
+    }
+
+    class CapturedPerspectiveCamera extends THREE.PerspectiveCamera {
+      constructor(...args: ConstructorParameters<typeof THREE.PerspectiveCamera>) {
+        super(...args);
+        captured.camera = this;
+      }
+    }
+
+    class CapturedOrthographicCamera extends THREE.OrthographicCamera {
+      constructor(...args: ConstructorParameters<typeof THREE.OrthographicCamera>) {
+        super(...args);
+        captured.camera = this;
+      }
+    }
+
+    class CapturedScene extends THREE.Scene {
+      constructor(...args: ConstructorParameters<typeof THREE.Scene>) {
+        super(...args);
+        captured.scene = this;
+      }
+    }
+
+    const trackedConstructors = new Map<PropertyKey, unknown>([
+      ["WebGLRenderer", CapturedWebGLRenderer],
+      ["PerspectiveCamera", CapturedPerspectiveCamera],
+      ["OrthographicCamera", CapturedOrthographicCamera],
+      ["Scene", CapturedScene],
+      ["OrbitControls", OrbitControls]
+    ]);
+    const trackedThree = new Proxy(THREE, {
+      get(target, property, receiver) {
+        if (trackedConstructors.has(property)) {
+          return trackedConstructors.get(property);
+        }
+        return Reflect.get(target, property, receiver);
+      },
+      has(target, property) {
+        return trackedConstructors.has(property) || Reflect.has(target, property);
+      }
+    }) as typeof THREE;
+
+    return { THREE: trackedThree, captured };
+  };
+
+  const normalizeRuntimeResult = (
+    result: unknown,
+    captured: Pick<Exclude<RuntimeResult, RuntimeCleanup>, "renderer" | "camera" | "scene">
+  ) => {
+    runtimeResult = undefined;
+    cleanup = undefined;
+    if (typeof result === "function") {
+      cleanup = result as RuntimeCleanup;
+      runtimeResult = Object.values(captured).some(Boolean) ? { ...captured } : undefined;
+      return;
+    }
+    if (!result || typeof result !== "object") return;
+
+    const candidate = result as Exclude<RuntimeResult, RuntimeCleanup>;
+    runtimeResult = { ...captured, ...candidate };
+    cleanup = candidate.cleanup ?? candidate.dispose;
+  };
+
+  const applyOrbitControls = () => {
+    disposeOrbitControls();
+    setOrbitButtonState();
+    if (!orbitEnabled) return;
+
+    const renderer = runtimeResult?.renderer;
+    const camera = runtimeResult?.camera;
+    if (!renderer || !camera) {
+      setError("当前代码需要返回 { renderer, camera } 后才能使用轨道控制器。");
+      return;
+    }
+
+    orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.enableDamping = true;
+    orbitControls.dampingFactor = 0.08;
+
+    const renderOrbitFrame = () => {
+      if (!orbitControls || !runtimeResult?.renderer || !runtimeResult?.camera) return;
+      orbitControls.update();
+      if (runtimeResult?.render) {
+        runtimeResult.render();
+      } else if (runtimeResult?.scene && runtimeResult?.renderer && runtimeResult?.camera) {
+        runtimeResult.renderer.render(runtimeResult.scene, runtimeResult.camera);
+      }
+      orbitAnimationFrame = window.requestAnimationFrame(renderOrbitFrame);
+    };
+
+    renderOrbitFrame();
+  };
+
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+  const applyPreviewLayout = (layout: Partial<{ left: number; top: number; width: number; height: number }>) => {
+    const width = clamp(layout.width ?? (previewPanel.offsetWidth || 360), 260, window.innerWidth - 16);
+    const height = clamp(layout.height ?? (previewPanel.offsetHeight || 240), 190, window.innerHeight - 16);
+    const left = clamp(layout.left ?? window.innerWidth - width - 42, 8, window.innerWidth - width - 8);
+    const top = clamp(layout.top ?? 132, 8, window.innerHeight - height - 8);
+
+    previewPanel.style.width = `${width}px`;
+    previewPanel.style.height = `${height}px`;
+    previewPanel.style.left = `${left}px`;
+    previewPanel.style.top = `${top}px`;
+    previewPanel.style.right = "auto";
+  };
+
+  const savePreviewLayout = () => {
+    const rect = previewPanel.getBoundingClientRect();
+    try {
+      localStorage.setItem(
+        PREVIEW_LAYOUT_KEY,
+        JSON.stringify({
+          left: Math.round(rect.left),
+          top: Math.round(rect.top),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height)
+        })
+      );
+    } catch {
+      // Ignore storage failures; the preview still works without persistence.
+    }
+  };
+
+  const restorePreviewLayout = () => {
+    try {
+      const raw = localStorage.getItem(PREVIEW_LAYOUT_KEY);
+      if (!raw) return;
+      applyPreviewLayout(JSON.parse(raw) as Partial<{ left: number; top: number; width: number; height: number }>);
+    } catch {
+      applyPreviewLayout({});
+    }
+  };
+
+  const initPreviewWindowControls = () => {
+    restorePreviewLayout();
+
+    previewDragHandle?.addEventListener("pointerdown", (event) => {
+      if ((event.target as HTMLElement).closest("button")) return;
+      const rect = previewPanel.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+      previewPanel.classList.add("is-dragging");
+      previewDragHandle.setPointerCapture(event.pointerId);
+
+      const handleMove = (moveEvent: PointerEvent) => {
+        applyPreviewLayout({
+          left: moveEvent.clientX - offsetX,
+          top: moveEvent.clientY - offsetY,
+          width: rect.width,
+          height: rect.height
+        });
+      };
+      const handleUp = () => {
+        previewPanel.classList.remove("is-dragging");
+        previewDragHandle.removeEventListener("pointermove", handleMove);
+        previewDragHandle.removeEventListener("pointerup", handleUp);
+        previewDragHandle.removeEventListener("pointercancel", handleUp);
+        savePreviewLayout();
+      };
+
+      previewDragHandle.addEventListener("pointermove", handleMove);
+      previewDragHandle.addEventListener("pointerup", handleUp);
+      previewDragHandle.addEventListener("pointercancel", handleUp);
+    });
+
+    previewResizeHandle?.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      const rect = previewPanel.getBoundingClientRect();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const right = rect.right;
+      previewPanel.classList.add("is-resizing");
+      previewResizeHandle.setPointerCapture(event.pointerId);
+
+      const handleMove = (moveEvent: PointerEvent) => {
+        const width = rect.width + startX - moveEvent.clientX;
+        applyPreviewLayout({
+          left: right - width,
+          top: rect.top,
+          width,
+          height: rect.height + moveEvent.clientY - startY
+        });
+      };
+      const handleUp = () => {
+        previewPanel.classList.remove("is-resizing");
+        previewResizeHandle.removeEventListener("pointermove", handleMove);
+        previewResizeHandle.removeEventListener("pointerup", handleUp);
+        previewResizeHandle.removeEventListener("pointercancel", handleUp);
+        savePreviewLayout();
+        resizePreviewSoon();
+      };
+
+      previewResizeHandle.addEventListener("pointermove", handleMove);
+      previewResizeHandle.addEventListener("pointerup", handleUp);
+      previewResizeHandle.addEventListener("pointercancel", handleUp);
+    });
+
+    window.addEventListener("resize", () => {
+      const rect = previewPanel.getBoundingClientRect();
+      applyPreviewLayout({ left: rect.left, top: rect.top, width: rect.width, height: rect.height });
+      savePreviewLayout();
+    });
+  };
+
+  const getGuideStateType = (text: string) => {
+    if (text.includes("错误")) return "error";
+    if (text.includes("更新")) return "done";
+    if (text.includes("等待回答") || text.includes("自由提问")) return "active";
+    if (text.includes("生成") || text.includes("分析") || text.includes("请求")) return "running";
+    return "waiting";
+  };
+
   const setGuideState = (text: string) => {
+    const stateType = getGuideStateType(text);
     if (guideState) guideState.textContent = text;
     if (guideStateMirror) guideStateMirror.textContent = text;
+    if (guideState) guideState.dataset.state = stateType;
+    if (guideStateMirror) guideStateMirror.dataset.state = stateType;
     root.dataset.guideState = text;
+    root.dataset.guideStateType = stateType;
   };
 
   const setGuideAlert = (message = "") => {
@@ -603,6 +893,7 @@ function initGraphicsLab(root: HTMLElement) {
     if (guideConversation) guideConversation.hidden = phase !== "conversation";
     if (guideReturnButton) guideReturnButton.hidden = !guideConversationStarted || phase !== "setup";
     root.dataset.guidePhase = phase;
+    requestAnimationFrame(syncGuideChatFrame);
   };
 
   const resetGuideSession = () => {
@@ -652,7 +943,53 @@ function initGraphicsLab(root: HTMLElement) {
       article.append(body);
     }
     guideLog.append(article);
-    guideLog.scrollTop = guideLog.scrollHeight;
+    scrollLatestGuideMessageIntoView();
+  };
+
+  const resizeGuideInput = () => {
+    if (!guideInput) return;
+    guideInput.style.height = "auto";
+    guideInput.style.height = `${Math.min(guideInput.scrollHeight, 180)}px`;
+    syncGuideChatFrame();
+  };
+
+  const syncGuideChatFrame = () => {
+    if (!guideSurface || !guideForm || guideConversation?.hidden) return;
+    const rect = guideSurface.getBoundingClientRect();
+    if (!rect.width) return;
+    labWorkspace.style.setProperty("--lab-chat-left", `${rect.left}px`);
+    labWorkspace.style.setProperty("--lab-chat-fixed-width", `${rect.width}px`);
+    guideSurface.style.paddingBottom = `${Math.ceil(guideForm.offsetHeight + 42)}px`;
+    guideSurface.style.paddingTop = guideConversation?.hidden ? "" : "0px";
+  };
+
+  const syncGuideChatFrameDuringTransition = (duration = 420) => {
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      syncGuideChatFrame();
+      if (now - startedAt < duration) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const scrollLatestGuideMessageIntoView = () => {
+    const latest = guideLog?.lastElementChild;
+    if (!latest || !guideForm) return;
+
+    requestAnimationFrame(() => {
+      syncGuideChatFrame();
+      const latestRect = latest.getBoundingClientRect();
+      const composerTop = guideForm.getBoundingClientRect().top;
+      const safeGap = 24;
+      if (latestRect.bottom > composerTop - safeGap) {
+        window.scrollBy({
+          top: latestRect.bottom - composerTop + safeGap,
+          behavior: "smooth"
+        });
+      }
+    });
   };
 
   const saveSoon = () => {
@@ -688,6 +1025,23 @@ function initGraphicsLab(root: HTMLElement) {
     });
     guideTab?.classList.toggle("is-active", activeWorkspaceTab === "ai");
     guideTab?.setAttribute("aria-selected", String(activeWorkspaceTab === "ai"));
+    labWorkspace.dataset.workspaceMode = activeWorkspaceTab === "ai" ? "guide" : "editor";
+    labWorkspace.classList.toggle("is-guide-mode", activeWorkspaceTab === "ai");
+    labWorkspace.classList.toggle("is-code-mode", activeWorkspaceTab !== "ai");
+    if (workspaceLabel) {
+      workspaceLabel.textContent = activeWorkspaceTab === "ai" ? "AI Guide" : "Editor";
+    }
+    if (workspaceTitle) {
+      workspaceTitle.textContent = activeWorkspaceTab === "ai" ? lesson.title : activeFile;
+    }
+    requestAnimationFrame(syncGuideChatFrame);
+  };
+
+  const resizePreviewSoon = () => {
+    window.setTimeout(() => {
+      void runProgram();
+      editor.requestMeasure();
+    }, 260);
   };
 
   const switchFile = (fileName: LabFileName) => {
@@ -828,10 +1182,12 @@ function initGraphicsLab(root: HTMLElement) {
 6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
 7. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
 8. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-9. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
-10. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
-11. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
-12. 只返回 JSON，不返回 Markdown。
+9. 运行环境会向 main.js 注入 THREE、OrbitControls、canvas、vertexShader、fragmentShader、report；不要写 import，也不要写 THREE.OrbitControls。
+10. 如果用户要求移动摄像头、观察 specular 或增加相机交互，优先调整 camera/light/material；需要轨道交互时使用 OrbitControls 参数，或让代码返回 { renderer, camera, scene, render, cleanup } 以便页面顶部轨道控制按钮接管。
+11. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
+12. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
+13. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
+14. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
@@ -990,10 +1346,12 @@ ${getFilesSnapshot()}`;
   };
 
   const stopRuntime = () => {
+    disposeOrbitControls();
     if (cleanup) {
       cleanup();
       cleanup = undefined;
     }
+    runtimeResult = undefined;
   };
 
   const runProgram = async () => {
@@ -1014,8 +1372,10 @@ ${getFilesSnapshot()}`;
     };
 
     try {
+      const tracked = createTrackedThree();
       const factory = new Function(
         "THREE",
+        "OrbitControls",
         "canvas",
         "vertexShader",
         "fragmentShader",
@@ -1023,14 +1383,16 @@ ${getFilesSnapshot()}`;
         `"use strict";\n${files["main.js"].source}`
       );
       const result = factory(
-        THREE,
+        tracked.THREE,
+        OrbitControls,
         canvas,
         files["vertex.glsl"].source,
         files["fragment.glsl"].source,
         () => undefined
       );
 
-      cleanup = typeof result === "function" ? (result as RuntimeCleanup) : undefined;
+      normalizeRuntimeResult(result, tracked.captured);
+      applyOrbitControls();
 
       await new Promise((resolve) => window.setTimeout(resolve, 120));
 
@@ -1043,6 +1405,11 @@ ${getFilesSnapshot()}`;
       }
 
       setStatus("ok", "运行成功，预览已更新");
+      window.setTimeout(() => {
+        if (runButton.dataset.runState === "ok") {
+          setRunFeedback("idle", "");
+        }
+      }, 1200);
     } catch (error) {
       if (currentRun !== runId) return;
       stopRuntime();
@@ -1081,12 +1448,32 @@ ${getFilesSnapshot()}`;
 
   resetButton.addEventListener("click", resetLab);
 
-  expandButton.addEventListener("click", () => {
-    const isExpanded = labWorkspace.classList.toggle("is-editor-expanded");
-    expandButton.setAttribute("aria-label", isExpanded ? "恢复预览" : "展开工作区");
-    expandButton.setAttribute("title", isExpanded ? "恢复预览" : "展开工作区");
-    expandButton.setAttribute("aria-pressed", String(isExpanded));
-    editor.requestMeasure();
+  previewHideButton?.addEventListener("click", () => {
+    labWorkspace.classList.add("is-preview-hidden");
+    if (previewShowButton) previewShowButton.hidden = false;
+    resizePreviewSoon();
+  });
+
+  previewShowButton?.addEventListener("click", () => {
+    labWorkspace.classList.remove("is-preview-hidden");
+    previewShowButton.hidden = true;
+    resizePreviewSoon();
+  });
+
+  orbitToggleButton?.addEventListener("click", () => {
+    orbitEnabled = !orbitEnabled;
+    applyOrbitControls();
+  });
+
+  sidebarToggleButton?.addEventListener("click", () => {
+    const isCollapsed = labWorkspace.classList.toggle("is-sidebar-collapsed");
+    sidebarToggleButton.setAttribute("aria-label", isCollapsed ? "展开文件栏" : "收起文件栏");
+    sidebarToggleButton.setAttribute("title", isCollapsed ? "展开文件栏" : "收起文件栏");
+    sidebarToggleButton.setAttribute("aria-pressed", String(isCollapsed));
+    syncGuideChatFrameDuringTransition(520);
+    window.setTimeout(() => {
+      editor.requestMeasure();
+    }, 260);
   });
 
   guideStartButton?.addEventListener("click", () => {
@@ -1116,7 +1503,10 @@ ${getFilesSnapshot()}`;
     const userText = guideInput?.value.trim() ?? "";
     if (!userText) return;
     appendGuideEntry("user", "", userText);
-    if (guideInput) guideInput.value = "";
+    if (guideInput) {
+      guideInput.value = "";
+      resizeGuideInput();
+    }
     void requestGuide("answer", userText).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       setGuideState("API 错误");
@@ -1130,6 +1520,10 @@ ${getFilesSnapshot()}`;
       guideForm?.requestSubmit();
     }
   });
+
+  guideInput?.addEventListener("input", resizeGuideInput);
+  window.addEventListener("resize", syncGuideChatFrame);
+  initPreviewWindowControls();
 
   window.addEventListener("keydown", (event) => {
     if (!(event.ctrlKey || event.metaKey)) return;

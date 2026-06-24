@@ -1,6 +1,19 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { ArrowUp, Bot, Maximize2, Minimize2, Settings2 } from "@lucide/astro";
+import ChatSurface from "../../components/ChatSurface.astro";
+import {
+  Bot,
+  BookOpen,
+  Code2,
+  Eye,
+  EyeOff,
+  Orbit,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Play,
+  RefreshCcw,
+  Settings2
+} from "@lucide/astro";
 import { graphicsLessons } from "../../data/graphicsLessons";
 
 export function getStaticPaths() {
@@ -21,16 +34,21 @@ const lessonPayload = JSON.stringify(lesson);
     data-lesson-payload={lessonPayload}
     aria-label={`${lesson.title} 编辑器`}
   >
-    <div class="graphics-lab" data-lab-workspace>
+    <div class="graphics-lab is-guide-mode" data-lab-workspace data-workspace-mode="guide">
       <div class="lab-preview-panel">
-        <div class="lab-panel-head">
+        <div class="lab-panel-head" data-preview-drag>
           <div>
             <span>Preview</span>
-            <strong data-preview-title>{lesson.previewTitle}</strong>
-          </div>
-          <div class="lab-status">
             <i data-lab-status-dot data-state="idle" aria-hidden="true"></i>
-            <span data-lab-status>等待运行</span>
+          </div>
+          <span class="lab-status" data-lab-status>等待运行</span>
+          <div class="lab-preview-actions">
+            <button type="button" data-orbit-toggle aria-label="切换轨道控制器" title="切换轨道控制器" aria-pressed="false">
+              <Orbit size={16} aria-hidden="true" />
+            </button>
+            <button type="button" data-preview-hide aria-label="隐藏预览" title="隐藏预览">
+              <EyeOff size={16} aria-hidden="true" />
+            </button>
           </div>
         </div>
 
@@ -39,64 +57,80 @@ const lessonPayload = JSON.stringify(lesson);
         </div>
 
         <div class="lab-error-box" data-lab-errors hidden></div>
+        <span class="lab-preview-resize-handle" data-preview-resize="sw" aria-hidden="true"></span>
       </div>
 
+      <nav class="lab-mode-sidebar" aria-label="实验工作区">
+        <button
+          class="lab-sidebar-toggle"
+          type="button"
+          data-toggle-lab-sidebar
+          aria-label="收起文件栏"
+          title="收起文件栏"
+          aria-pressed="false"
+        >
+          <PanelLeftClose class="toggle-icon icon-sidebar-close" size={16} aria-hidden="true" />
+          <PanelLeftOpen class="toggle-icon icon-sidebar-open" size={16} aria-hidden="true" />
+          <span>切换边栏</span>
+        </button>
+        <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
+          <button class="lab-ai-tab is-active" type="button" role="tab" data-guide-tab aria-selected="true">
+            <Bot size={16} aria-hidden="true" />
+            <span>AI Guide</span>
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
+            <Code2 size={15} aria-hidden="true" />
+            <span>main.js</span>
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
+            <Code2 size={15} aria-hidden="true" />
+            <span>vertex.glsl</span>
+          </button>
+          <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
+            <Code2 size={15} aria-hidden="true" />
+            <span>fragment.glsl</span>
+          </button>
+        </div>
+        <div class="lab-sidebar-actions" aria-label="实验操作">
+          <label class="lab-sidebar-action lab-auto-action" title="自动运行">
+            <input type="checkbox" data-auto-run checked />
+            <Settings2 size={16} aria-hidden="true" />
+            <span>Auto</span>
+          </label>
+          <button class="lab-sidebar-action lab-run-action" type="button" data-run data-run-state="idle" data-run-feedback="">
+            <Play size={16} aria-hidden="true" />
+            <span data-run-label>运行</span>
+          </button>
+          <button class="lab-sidebar-action" type="button" data-reset-lab>
+            <RefreshCcw size={16} aria-hidden="true" />
+            <span>重置</span>
+          </button>
+        </div>
+        <a class="lab-sidebar-link lab-sidebar-return" href="/webgl/">
+          <BookOpen size={17} aria-hidden="true" />
+          <span>返回课程</span>
+        </a>
+      </nav>
+
       <aside class="lab-editor-panel">
-        <div class="lab-panel-head">
-          <div>
-            <span>Editor</span>
-            <strong>Three.js + Shader</strong>
+        <div class="lab-panel-head lab-workspace-head">
+          <div class="lab-workspace-title">
+            <span data-workspace-label>AI Guide</span>
+            <strong data-workspace-title>{lesson.title}</strong>
           </div>
+
           <div class="lab-toolbar">
-            <a class="lab-toolbar-link" href="/webgl/">课程</a>
-            <label class="lab-toggle">
-              <input type="checkbox" data-auto-run checked />
-              <span>Auto</span>
-            </label>
-            <button type="button" data-run>运行</button>
-            <button type="button" data-reset-lab>重置</button>
-            <button
-              class="lab-expand-toggle"
-              type="button"
-              data-expand-editor
-              aria-label="展开工作区"
-              title="展开工作区"
-              aria-pressed="false"
-            >
-              <Maximize2 class="toggle-icon icon-expand-workspace" size={17} aria-hidden="true" />
-              <Minimize2 class="toggle-icon icon-contract-workspace" size={17} aria-hidden="true" />
+            <small class="lab-guide-state" data-guide-state data-state="waiting">等待 API</small>
+            <button class="lab-preview-show" type="button" data-preview-show hidden aria-label="显示预览" title="显示预览">
+              <Eye size={17} aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
-          <button class="lab-ai-tab is-active" type="button" role="tab" data-guide-tab aria-selected="true">
-            <Bot size={16} aria-hidden="true" />
-            <span>AI</span>
-          </button>
-          <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
-            main.js
-          </button>
-          <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
-            vertex.glsl
-          </button>
-          <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
-            fragment.glsl
-          </button>
-        </div>
-
         <div class="lab-editor-shell">
-          <div class="lab-editor-host" data-editor-host></div>
-          <section class="lab-guide-workspace" data-guide-workspace hidden aria-label="AI 图形学实验教练">
+          <div class="lab-editor-host" data-editor-host hidden></div>
+          <section class="lab-guide-workspace" data-guide-workspace aria-label="AI 图形学实验教练">
             <div class="guide-setup" data-guide-setup>
-              <div class="lab-panel-head guide-panel-head">
-                <div>
-                  <span>AI Guide</span>
-                  <strong data-guide-lesson-title>{lesson.title}</strong>
-                </div>
-                <span class="lab-guide-state" data-guide-state>等待 API</span>
-              </div>
-
               <div class="guide-setup-body">
                 <div class="guide-rule-card">
                   <strong>当前实验</strong>
@@ -125,39 +159,31 @@ const lessonPayload = JSON.stringify(lesson);
               </div>
             </div>
 
-            <div class="guide-conversation chat-panel" data-guide-conversation hidden>
-              <div class="chat-toolbar guide-chat-toolbar">
-                <div>
-                  <span>AI Guide</span>
-                  <strong>{lesson.title}</strong>
-                </div>
-                <small class="lab-guide-state" data-guide-state-mirror>等待回答</small>
-              </div>
+            <div class="guide-conversation" data-guide-conversation hidden>
+              <small class="lab-guide-state" data-guide-state-mirror data-state="active" hidden>等待回答</small>
 
-              <div class="chat-alert" data-guide-chat-alert hidden></div>
-              <div class="message-list guide-log" aria-label="AI 图形学实验对话" data-guide-log></div>
-              <form class="answer-box guide-input-row" data-guide-form>
-                <textarea id="guide-answer" data-guide-input rows="4" placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"></textarea>
-                <div class="composer-toolbar">
-                  <div class="guide-actions">
-                    <button class="composer-tool" type="button" data-guide-configure aria-label="API 设置">
-                      <Settings2 size={17} aria-hidden="true" />
-                      <span>API</span>
-                    </button>
-                  </div>
-                  <button class="composer-send" type="submit" aria-label="提交">
-                    <ArrowUp size={19} aria-hidden="true" />
+              <ChatSurface
+                class="lab-chat-surface"
+                ariaLabel="AI 图形学实验对话"
+                alertData="data-guide-chat-alert"
+                messageData="data-guide-log"
+                messageClass="guide-log"
+                formData="data-guide-form"
+                formClass="guide-input-row"
+                textareaId="guide-answer"
+                textareaData="data-guide-input"
+                textareaRows={2}
+                placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"
+              >
+                <div class="guide-actions" slot="composer-left">
+                  <button class="composer-tool" type="button" data-guide-configure aria-label="API 设置">
+                    <Settings2 size={17} aria-hidden="true" />
+                    <span>API</span>
                   </button>
                 </div>
-              </form>
+              </ChatSurface>
             </div>
           </section>
-        </div>
-
-        <div class="lab-hints" data-lab-hints>
-          <span>Ctrl + Enter 运行</span>
-          <span>Ctrl + S 保存</span>
-          <span>自动保存到当前浏览器</span>
         </div>
       </aside>
     </div>
