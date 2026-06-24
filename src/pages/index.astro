@@ -26,7 +26,7 @@ const recentPosts = docs
     if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
     return a.title.localeCompare(b.title, "zh-Hans-CN");
   })
-  .slice(0, 6);
+  .slice(0, 12);
 
 const recentLessons = graphicsLessonSummaries
   .map((lesson) => ({
@@ -41,32 +41,11 @@ const recentLessons = graphicsLessonSummaries
     if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
     return a.title.localeCompare(b.title, "zh-Hans-CN");
   })
-  .slice(0, 6);
+  .slice(0, 12);
 
 const recentGroups = [
   { label: "博客", items: recentPosts },
   { label: "实验", items: recentLessons }
-];
-
-const modules = [
-  {
-    title: "知识库",
-    status: "已启动",
-    body: "按分类整理博客与学习笔记，并提供搜索、分页和详情阅读。",
-    href: "/knowledge/"
-  },
-  {
-    title: "AI 对话测试",
-    status: "已启动",
-    body: "使用自定义 API 与模型，基于选定文章生成问题并返回回答反馈。",
-    href: "/coach/"
-  },
-  {
-    title: "WebGL 实验",
-    status: "已启动",
-    body: "提供 CG 实验课程入口，在浏览器中编辑 Three.js 与 Shader 代码，并通过 AI 引导完成 checkpoint。",
-    href: "/webgl/"
-  }
 ];
 ---
 
@@ -97,22 +76,6 @@ const modules = [
           </section>
         ))}
       </div>
-    </div>
-  </section>
-
-  <section class="module-section" id="modules">
-    <div class="module-grid">
-      {modules.map((module) => (
-        <a class={`module-card ${module.status === "待完成" ? "is-muted" : ""}`} href={module.href}>
-          {module.status === "待完成" && (
-            <div class="card-meta">
-              <span class="pill">{module.status}</span>
-            </div>
-          )}
-          <h3>{module.title}</h3>
-          <p>{module.body}</p>
-        </a>
-      ))}
     </div>
   </section>
 </BaseLayout>
