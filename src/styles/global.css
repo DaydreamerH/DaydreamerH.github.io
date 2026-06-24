@@ -564,12 +564,20 @@ h3 {
 
 .lesson-grid {
   grid-template-columns: repeat(3, minmax(260px, 1fr));
+  perspective: 1200px;
+}
+
+.knowledge-grid {
+  perspective: 1200px;
 }
 
 .lesson-library-card {
   display: flex;
   flex-direction: column;
   min-height: 210px;
+  transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
 }
 
 .lesson-library-card[hidden] {
@@ -577,8 +585,15 @@ h3 {
 }
 
 .lesson-library-card:hover {
-  border-color: var(--line-strong);
-  box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-hover);
+  border-color: color-mix(in srgb, var(--line-strong) 72%, #ffffff);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line-strong) 72%, #ffffff),
+    var(--press-shadow-x, 0px) var(--press-shadow-y, 0px) 34px rgba(34, 40, 49, 0.14),
+    0 6px 14px rgba(34, 40, 49, 0.08);
+  transform:
+    translateY(-4px)
+    rotateX(var(--card-tilt-x, 0deg))
+    rotateY(var(--card-tilt-y, 0deg));
 }
 
 .lesson-library-card p {
@@ -598,13 +613,17 @@ h3 {
   display: flex;
   flex-direction: column;
   min-height: 205px;
+  transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
 }
 
 .knowledge-card[hidden] {
   display: none;
 }
 
-.knowledge-card::before {
+.knowledge-card::before,
+.lesson-library-card::before {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -614,32 +633,80 @@ h3 {
   content: "";
   opacity: 0;
   pointer-events: none;
-  transform: scale(1.02);
+  transform:
+    scale(1.02)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
   transition:
     opacity 520ms cubic-bezier(0.55, 0, 1, 0.45),
     transform 520ms cubic-bezier(0.55, 0, 1, 0.45);
-  -webkit-mask-image: linear-gradient(
+  -webkit-mask-image: radial-gradient(
     135deg,
     rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.08) 46%,
-    rgba(0, 0, 0, 1) 100%
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.8) 100%
   );
   mask-image: linear-gradient(
     135deg,
     rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.08) 46%,
-    rgba(0, 0, 0, 1) 100%
+    rgba(0, 0, 0, 0.05) 50%,
+    rgba(0, 0, 0, 0.8) 100%
   );
 }
 
-.knowledge-card:hover::before {
-  opacity: 0.9;
-  transform: scale(1);
+.knowledge-card::after,
+.lesson-library-card::after {
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  background:
+    radial-gradient(
+      circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.08) 42%,
+      rgba(255, 255, 255, 0) 78%
+    );
+  backdrop-filter: blur(5px) saturate(1.08);
+  border-radius: inherit;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.62) 32%,
+    rgba(0, 0, 0, 0.16) 58%,
+    rgba(0, 0, 0, 0) 82%
+  );
+  mask-image: radial-gradient(
+    circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.62) 32%,
+    rgba(0, 0, 0, 0.16) 58%,
+    rgba(0, 0, 0, 0) 82%
+  );
+  transition:
+    opacity 260ms ease;
 }
 
-.knowledge-card > * {
+.knowledge-card:hover::before,
+.lesson-library-card:hover::before {
+  opacity: 0.86;
+  transform:
+    scale(1.012)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+}
+
+.knowledge-card:hover::after,
+.lesson-library-card:hover::after {
+  opacity: 0.36;
+}
+
+.knowledge-card > *,
+.lesson-library-card > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .module-card p,
@@ -665,7 +732,15 @@ h3 {
 }
 
 .knowledge-card:hover {
-  box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-hover);
+  border-color: color-mix(in srgb, var(--line-strong) 72%, #ffffff);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line-strong) 72%, #ffffff),
+    var(--press-shadow-x, 0px) var(--press-shadow-y, 0px) 34px rgba(34, 40, 49, 0.14),
+    0 6px 14px rgba(34, 40, 49, 0.08);
+  transform:
+    translateY(-4px)
+    rotateX(var(--card-tilt-x, 0deg))
+    rotateY(var(--card-tilt-y, 0deg));
 }
 
 .coach-head {

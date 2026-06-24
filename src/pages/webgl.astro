@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { graphicsLessonSummaries } from "../data/graphicsLessons";
+import defaultBanner from "../../default-banner.png";
 
 const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.category))].sort((a, b) =>
   a.localeCompare(b, "zh-Hans-CN")
@@ -28,6 +29,7 @@ const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.ca
     {graphicsLessonSummaries.map((lesson, index) => (
       <article
         class="lesson-library-card"
+        style={`--card-banner: url("${defaultBanner.src}")`}
         data-title={`${lesson.title} ${lesson.description}`.toLowerCase()}
         data-category={lesson.category}
         data-index={index}
@@ -72,6 +74,37 @@ const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.ca
 
     searchInput.addEventListener("input", applyFilters);
     categoryFilter.addEventListener("change", applyFilters);
+
+    function bindCardTilt(card) {
+      card.addEventListener("pointermove", (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        const rotateX = (0.5 - y) * 4;
+        const rotateY = (x - 0.5) * 4;
+        card.style.setProperty("--tilt-x", `${rotateX.toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${rotateY.toFixed(2)}deg`);
+        card.style.setProperty("--card-tilt-x", `${(rotateX * 0.75).toFixed(2)}deg`);
+        card.style.setProperty("--card-tilt-y", `${(rotateY * 0.75).toFixed(2)}deg`);
+        card.style.setProperty("--glow-x", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--glow-y", `${(y * 100).toFixed(1)}%`);
+        card.style.setProperty("--press-shadow-x", `${((0.5 - x) * 10).toFixed(1)}px`);
+        card.style.setProperty("--press-shadow-y", `${((0.5 - y) * 12).toFixed(1)}px`);
+      });
+
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+        card.style.setProperty("--card-tilt-x", "0deg");
+        card.style.setProperty("--card-tilt-y", "0deg");
+        card.style.setProperty("--glow-x", "16%");
+        card.style.setProperty("--glow-y", "12%");
+        card.style.setProperty("--press-shadow-x", "0px");
+        card.style.setProperty("--press-shadow-y", "0px");
+      });
+    }
+
+    cards.forEach(bindCardTilt);
     applyFilters();
   </script>
 </BaseLayout>

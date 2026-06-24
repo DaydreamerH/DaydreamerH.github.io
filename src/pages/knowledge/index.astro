@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
+import defaultBanner from "../../../default-banner.png";
 
 const articleImages = import.meta.glob<{ default: ImageMetadata }>(
   "../../content/knowledge/**/*.{avif,gif,jpeg,jpg,png,webp}",
@@ -22,9 +23,9 @@ const categories = [...new Set(docs.map((doc) => doc.data.category))]
   .sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b), "zh-Hans-CN"));
 
 function getBannerSrc(doc: (typeof docs)[number]) {
-  if (!doc.data.photos) return "";
+  if (!doc.data.photos) return defaultBanner.src;
   const bannerPath = `../../content/knowledge/${doc.slug}/${doc.data.photos}`;
-  return articleImages[bannerPath]?.default.src ?? "";
+  return articleImages[bannerPath]?.default.src ?? defaultBanner.src;
 }
 ---
 
@@ -49,7 +50,7 @@ function getBannerSrc(doc: (typeof docs)[number]) {
     {docs.map((doc, index) => (
       <article
         class="knowledge-card"
-        style={getBannerSrc(doc) ? `--card-banner: url("${getBannerSrc(doc)}")` : undefined}
+        style={`--card-banner: url("${getBannerSrc(doc)}")`}
         data-title={doc.data.title.toLowerCase()}
         data-tags={doc.data.tags.join(" ").toLowerCase()}
         data-category={doc.data.category}
@@ -144,6 +145,37 @@ function getBannerSrc(doc: (typeof docs)[number]) {
         renderPage();
       }
     });
+
+    function bindCardTilt(card) {
+      card.addEventListener("pointermove", (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        const rotateX = (0.5 - y) * 4;
+        const rotateY = (x - 0.5) * 4;
+        card.style.setProperty("--tilt-x", `${rotateX.toFixed(2)}deg`);
+        card.style.setProperty("--tilt-y", `${rotateY.toFixed(2)}deg`);
+        card.style.setProperty("--card-tilt-x", `${(rotateX * 0.75).toFixed(2)}deg`);
+        card.style.setProperty("--card-tilt-y", `${(rotateY * 0.75).toFixed(2)}deg`);
+        card.style.setProperty("--glow-x", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--glow-y", `${(y * 100).toFixed(1)}%`);
+        card.style.setProperty("--press-shadow-x", `${((0.5 - x) * 10).toFixed(1)}px`);
+        card.style.setProperty("--press-shadow-y", `${((0.5 - y) * 12).toFixed(1)}px`);
+      });
+
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+        card.style.setProperty("--card-tilt-x", "0deg");
+        card.style.setProperty("--card-tilt-y", "0deg");
+        card.style.setProperty("--glow-x", "16%");
+        card.style.setProperty("--glow-y", "12%");
+        card.style.setProperty("--press-shadow-x", "0px");
+        card.style.setProperty("--press-shadow-y", "0px");
+      });
+    }
+
+    cards.forEach(bindCardTilt);
     applyFilters();
   </script>
 </BaseLayout>
