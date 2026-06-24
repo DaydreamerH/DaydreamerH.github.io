@@ -1196,13 +1196,23 @@ function initGraphicsLab(root: HTMLElement) {
     renderOrbitFrame();
   };
 
-  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+  const clamp = (value: number, min: number, max: number) => {
+    if (max < min) return min;
+    return Math.min(Math.max(value, min), max);
+  };
+  const getPreviewSafeTop = () => {
+    const topbar = document.querySelector<HTMLElement>("[data-topbar]");
+    if (!topbar || topbar.classList.contains("is-hidden")) return 8;
+    const rect = topbar.getBoundingClientRect();
+    return Math.max(8, Math.ceil(rect.bottom) + 8);
+  };
 
   const applyPreviewLayout = (layout: Partial<{ left: number; top: number; width: number; height: number }>) => {
     const width = clamp(layout.width ?? (previewPanel.offsetWidth || 360), 260, window.innerWidth - 16);
-    const height = clamp(layout.height ?? (previewPanel.offsetHeight || 240), 190, window.innerHeight - 16);
+    const safeTop = getPreviewSafeTop();
+    const height = clamp(layout.height ?? (previewPanel.offsetHeight || 240), 190, window.innerHeight - safeTop - 8);
     const left = clamp(layout.left ?? window.innerWidth - width - 42, 8, window.innerWidth - width - 8);
-    const top = clamp(layout.top ?? 132, 8, window.innerHeight - height - 8);
+    const top = clamp(layout.top ?? safeTop, safeTop, window.innerHeight - height - 8);
 
     previewPanel.style.width = `${width}px`;
     previewPanel.style.height = `${height}px`;

@@ -146,7 +146,6 @@ const lessonFiles = Object.keys(lesson.starterFiles ?? {}).filter((fileName) => 
           </div>
 
           <div class="lab-toolbar">
-            <small class="lab-guide-state" data-guide-state data-state="waiting">等待 API</small>
             <button class="lab-preview-show" type="button" data-preview-show hidden aria-label="显示预览" title="显示预览">
               <Eye size={17} aria-hidden="true" />
             </button>
@@ -192,8 +191,6 @@ const lessonFiles = Object.keys(lesson.starterFiles ?? {}).filter((fileName) => 
             </div>
 
             <div class="guide-conversation" data-guide-conversation hidden>
-              <small class="lab-guide-state" data-guide-state-mirror data-state="active" hidden>等待回答</small>
-
               <ChatSurface
                 class="lab-chat-surface"
                 ariaLabel="AI 图形学实验对话"
@@ -208,6 +205,7 @@ const lessonFiles = Object.keys(lesson.starterFiles ?? {}).filter((fileName) => 
                 placeholder="回答 AI 的问题，或说明你观察到的画面。Ctrl + Enter 提交。"
               >
                 <div class="guide-actions" slot="composer-left">
+                  <small class="lab-guide-state" data-guide-state data-guide-state-mirror data-state="waiting">等待 API</small>
                   <button class="composer-tool" type="button" data-guide-configure aria-label="API 设置">
                     <Settings2 size={17} aria-hidden="true" />
                     <span>API</span>

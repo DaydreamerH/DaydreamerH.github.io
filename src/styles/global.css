@@ -3069,9 +3069,12 @@ body.is-topbar-hidden .graphics-lab,
   gap: 6px;
 }
 
-.lab-workspace-head .lab-guide-state {
+.guide-actions .lab-guide-state {
   position: relative;
-  max-width: 112px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  max-width: 136px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
   border-radius: 999px;
@@ -3085,7 +3088,7 @@ body.is-topbar-hidden .graphics-lab,
   white-space: nowrap;
 }
 
-.lab-workspace-head .lab-guide-state::before {
+.guide-actions .lab-guide-state::before {
   position: absolute;
   top: 50%;
   left: 10px;
@@ -3097,39 +3100,34 @@ body.is-topbar-hidden .graphics-lab,
   content: "";
 }
 
-.lab-workspace-head .lab-guide-state[data-state="waiting"] {
+.guide-actions .lab-guide-state[data-state="waiting"] {
   border-color: color-mix(in srgb, var(--muted) 18%, transparent);
   background: color-mix(in srgb, var(--panel-strong) 68%, #ffffff);
   color: color-mix(in srgb, var(--muted) 78%, #ffffff);
 }
 
-.lab-workspace-head .lab-guide-state[data-state="active"] {
+.guide-actions .lab-guide-state[data-state="active"] {
   border-color: color-mix(in srgb, var(--accent) 34%, transparent);
   background: color-mix(in srgb, var(--accent) 10%, #ffffff);
   color: color-mix(in srgb, var(--accent) 82%, var(--text));
 }
 
-.lab-workspace-head .lab-guide-state[data-state="running"] {
+.guide-actions .lab-guide-state[data-state="running"] {
   border-color: color-mix(in srgb, #8b6f1d 30%, transparent);
   background: color-mix(in srgb, #d9ad2b 13%, #ffffff);
   color: #7b5d10;
 }
 
-.lab-workspace-head .lab-guide-state[data-state="done"] {
+.guide-actions .lab-guide-state[data-state="done"] {
   border-color: color-mix(in srgb, #2f8f5b 30%, transparent);
   background: color-mix(in srgb, #35b779 12%, #ffffff);
   color: #24724b;
 }
 
-.lab-workspace-head .lab-guide-state[data-state="error"] {
+.guide-actions .lab-guide-state[data-state="error"] {
   border-color: color-mix(in srgb, #b44747 34%, transparent);
   background: color-mix(in srgb, #d45b5b 12%, #ffffff);
   color: #9a3333;
-}
-
-.graphics-lab.is-code-mode .lab-workspace-head .lab-guide-state,
-.graphics-lab.is-review-mode .lab-workspace-head .lab-guide-state {
-  display: none;
 }
 
 .lab-editor-shell {
