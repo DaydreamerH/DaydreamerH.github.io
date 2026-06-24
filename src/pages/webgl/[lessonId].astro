@@ -7,6 +7,7 @@ import {
   Code2,
   Eye,
   EyeOff,
+  FileDiff,
   Orbit,
   PanelLeftClose,
   PanelLeftOpen,
@@ -78,6 +79,10 @@ const lessonPayload = JSON.stringify(lesson);
             <Bot size={16} aria-hidden="true" />
             <span>AI Guide</span>
           </button>
+          <button class="lab-review-tab" type="button" role="tab" data-change-review-tab aria-selected="false">
+            <FileDiff size={15} aria-hidden="true" />
+            <span>最近修改</span>
+          </button>
           <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
             <Code2 size={15} aria-hidden="true" />
             <span>main.js</span>
@@ -129,6 +134,12 @@ const lessonPayload = JSON.stringify(lesson);
 
         <div class="lab-editor-shell">
           <div class="lab-editor-host" data-editor-host hidden></div>
+          <section class="lab-change-review" data-change-review hidden aria-label="最近代码修改">
+            <div class="change-review-empty" data-change-review-empty>
+              暂无 AI 代码修改。AI 应用 patch 后，这里会显示最近一次变更。
+            </div>
+            <div class="change-review-body" data-change-review-body hidden></div>
+          </section>
           <section class="lab-guide-workspace" data-guide-workspace aria-label="AI 图形学实验教练">
             <div class="guide-setup" data-guide-setup>
               <div class="guide-setup-body">

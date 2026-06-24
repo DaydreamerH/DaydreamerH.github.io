@@ -22,7 +22,7 @@ import {
 } from "@codemirror/view";
 
 type LabFileName = "main.js" | "vertex.glsl" | "fragment.glsl";
-type WorkspaceTab = LabFileName | "ai";
+type WorkspaceTab = LabFileName | "ai" | "review";
 
 type LabFile = {
   label: string;
@@ -41,6 +41,12 @@ type RuntimeResult =
       scene?: THREE.Scene;
       render?: () => void;
     };
+type CameraSnapshot = {
+  position: THREE.Vector3;
+  quaternion: THREE.Quaternion;
+  up: THREE.Vector3;
+  zoom?: number;
+};
 type SmokeResult = {
   ok: boolean;
   activeFile: LabFileName;
@@ -54,6 +60,23 @@ type GuidePatch = {
   operation: "replace_all" | "replace";
   target?: string;
   content: string;
+};
+
+type ChangeReviewEntry = {
+  file: LabFileName;
+  operation: GuidePatch["operation"];
+  startLine: number;
+  endLine: number;
+  before: string;
+  after: string;
+  compacted?: boolean;
+};
+
+type ChangeReviewDiffRow = {
+  kind: "context" | "add" | "remove" | "fold";
+  oldLine?: number;
+  newLine?: number;
+  text: string;
 };
 
 type LessonPatch = {
@@ -527,6 +550,10 @@ function initGraphicsLab(root: HTMLElement) {
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
   const fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
   const guideTab = root.querySelector<HTMLButtonElement>("[data-guide-tab]");
+  const changeReviewTab = root.querySelector<HTMLButtonElement>("[data-change-review-tab]");
+  const changeReview = root.querySelector<HTMLElement>("[data-change-review]");
+  const changeReviewBody = root.querySelector<HTMLElement>("[data-change-review-body]");
+  const changeReviewEmpty = root.querySelector<HTMLElement>("[data-change-review-empty]");
   const guideWorkspace = root.querySelector<HTMLElement>("[data-guide-workspace]");
   const guideSetup = root.querySelector<HTMLElement>("[data-guide-setup]");
   const guideConversation = root.querySelector<HTMLElement>("[data-guide-conversation]");
@@ -585,9 +612,13 @@ function initGraphicsLab(root: HTMLElement) {
   let orbitControls: OrbitControls | undefined;
   let runtimeResult: Exclude<RuntimeResult, RuntimeCleanup> | undefined;
   let orbitAnimationFrame = 0;
+  let defaultCameraSnapshot: CameraSnapshot | undefined;
   let currentCheckpointIndex = 0;
   let guideWorkspaceInitialized = false;
   let lessonFreeMode = false;
+  let latestChangeReview: ChangeReviewEntry[] = [];
+  let selectedChangeReviewIndex = 0;
+  let changeReviewUnread = false;
   const completedPatches = new Set<string>();
   const guideHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
 
@@ -595,6 +626,287 @@ function initGraphicsLab(root: HTMLElement) {
   root.dataset.checkpointId = lesson.checkpoints[0]?.id ?? "";
 
   const currentCheckpoint = () => lesson.checkpoints[currentCheckpointIndex];
+
+  const countLines = (text: string) => text.split(/\r\n|\r|\n/).length;
+
+  const lineNumberAt = (source: string, index: number) => countLines(source.slice(0, Math.max(index, 0)));
+
+  const normalizeNewlines = (text: string) => text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  const originalIndexFromNormalizedIndex = (source: string, normalizedIndex: number) => {
+    if (normalizedIndex <= 0) return 0;
+    let offset = 0;
+    for (let index = 0; index < source.length; index += 1) {
+      if (offset === normalizedIndex) return index;
+      if (source[index] === "\r" && source[index + 1] === "\n") {
+        offset += 1;
+        index += 1;
+      } else {
+        offset += 1;
+      }
+    }
+    return source.length;
+  };
+
+  const findPatchTargetRange = (source: string, target: string) => {
+    const directIndex = source.indexOf(target);
+    if (directIndex >= 0) {
+      return {
+        start: directIndex,
+        end: directIndex + target.length
+      };
+    }
+
+    const normalizedSource = normalizeNewlines(source);
+    const normalizedTarget = normalizeNewlines(target);
+    const normalizedIndex = normalizedSource.indexOf(normalizedTarget);
+    if (normalizedIndex < 0) return null;
+
+    return {
+      start: originalIndexFromNormalizedIndex(source, normalizedIndex),
+      end: originalIndexFromNormalizedIndex(source, normalizedIndex + normalizedTarget.length)
+    };
+  };
+
+  const splitLines = (text: string) => normalizeNewlines(text).split("\n");
+
+  const makeDiffRows = (before: string, after: string, startLine: number): ChangeReviewDiffRow[] => {
+    const beforeLines = splitLines(before);
+    const afterLines = splitLines(after);
+    const dp = Array.from({ length: beforeLines.length + 1 }, () => Array(afterLines.length + 1).fill(0));
+
+    for (let oldIndex = beforeLines.length - 1; oldIndex >= 0; oldIndex -= 1) {
+      for (let newIndex = afterLines.length - 1; newIndex >= 0; newIndex -= 1) {
+        dp[oldIndex][newIndex] =
+          beforeLines[oldIndex] === afterLines[newIndex]
+            ? dp[oldIndex + 1][newIndex + 1] + 1
+            : Math.max(dp[oldIndex + 1][newIndex], dp[oldIndex][newIndex + 1]);
+      }
+    }
+
+    const rows: ChangeReviewDiffRow[] = [];
+    let oldIndex = 0;
+    let newIndex = 0;
+    let oldLine = startLine;
+    let newLine = startLine;
+
+    const pushContext = (text: string) => {
+      const isFold = text === "...";
+      rows.push({
+        kind: isFold ? "fold" : "context",
+        oldLine: isFold ? undefined : oldLine,
+        newLine: isFold ? undefined : newLine,
+        text
+      });
+      if (!isFold) {
+        oldLine += 1;
+        newLine += 1;
+      }
+    };
+
+    while (oldIndex < beforeLines.length && newIndex < afterLines.length) {
+      if (beforeLines[oldIndex] === afterLines[newIndex]) {
+        pushContext(beforeLines[oldIndex]);
+        oldIndex += 1;
+        newIndex += 1;
+      } else if (dp[oldIndex + 1][newIndex] >= dp[oldIndex][newIndex + 1]) {
+        rows.push({ kind: "remove", oldLine, text: beforeLines[oldIndex] });
+        oldIndex += 1;
+        oldLine += 1;
+      } else {
+        rows.push({ kind: "add", newLine, text: afterLines[newIndex] });
+        newIndex += 1;
+        newLine += 1;
+      }
+    }
+
+    while (oldIndex < beforeLines.length) {
+      const text = beforeLines[oldIndex];
+      if (text === "...") {
+        rows.push({ kind: "fold", text });
+      } else {
+        rows.push({ kind: "remove", oldLine, text });
+        oldLine += 1;
+      }
+      oldIndex += 1;
+    }
+
+    while (newIndex < afterLines.length) {
+      const text = afterLines[newIndex];
+      if (text === "...") {
+        rows.push({ kind: "fold", text });
+      } else {
+        rows.push({ kind: "add", newLine, text });
+        newLine += 1;
+      }
+      newIndex += 1;
+    }
+
+    return rows;
+  };
+
+  const makeChangeDiffBlock = (entry: ChangeReviewEntry) => {
+    const diff = document.createElement("div");
+    diff.className = "change-review-diff";
+
+    const header = document.createElement("div");
+    header.className = "change-review-hunk";
+    header.textContent = `@@ -${entry.startLine},${countLines(entry.before)} +${entry.startLine},${countLines(entry.after)} @@`;
+    diff.append(header);
+
+    makeDiffRows(entry.before, entry.after, entry.startLine).forEach((row) => {
+      const line = document.createElement("div");
+      line.className = `change-review-line is-${row.kind}`;
+
+      const oldNumber = document.createElement("span");
+      oldNumber.className = "change-review-line-number";
+      oldNumber.textContent = row.oldLine ? String(row.oldLine) : "";
+
+      const newNumber = document.createElement("span");
+      newNumber.className = "change-review-line-number";
+      newNumber.textContent = row.newLine ? String(row.newLine) : "";
+
+      const marker = document.createElement("span");
+      marker.className = "change-review-marker";
+      marker.textContent = row.kind === "add" ? "+" : row.kind === "remove" ? "-" : row.kind === "fold" ? "..." : "";
+
+      const code = document.createElement("code");
+      code.textContent = row.kind === "fold" ? "部分未展示" : row.text || " ";
+
+      line.append(oldNumber, newNumber, marker, code);
+      diff.append(line);
+    });
+
+    return diff;
+  };
+
+  const compactCodePreview = (
+    before: string,
+    after: string,
+    fallbackStartLine = 1,
+    contextLines = 4,
+    maxLines = 42
+  ) => {
+    const beforeLines = splitLines(before);
+    const afterLines = splitLines(after);
+    let prefix = 0;
+    while (
+      prefix < beforeLines.length &&
+      prefix < afterLines.length &&
+      beforeLines[prefix] === afterLines[prefix]
+    ) {
+      prefix += 1;
+    }
+
+    let suffix = 0;
+    while (
+      suffix < beforeLines.length - prefix &&
+      suffix < afterLines.length - prefix &&
+      beforeLines[beforeLines.length - 1 - suffix] === afterLines[afterLines.length - 1 - suffix]
+    ) {
+      suffix += 1;
+    }
+
+    const beforeChangeEnd = beforeLines.length - suffix;
+    const afterChangeEnd = afterLines.length - suffix;
+    const beforeStart = Math.max(0, prefix - contextLines);
+    const afterStart = Math.max(0, prefix - contextLines);
+    const beforeEnd = Math.min(beforeLines.length, beforeChangeEnd + contextLines);
+    const afterEnd = Math.min(afterLines.length, afterChangeEnd + contextLines);
+
+    const clip = (lines: string[], start: number, end: number) => {
+      const selected = lines.slice(start, end);
+      let compacted = start > 0 || end < lines.length;
+      if (selected.length > maxLines) {
+        selected.splice(Math.floor(maxLines / 2), selected.length - maxLines, "...");
+        compacted = true;
+      }
+      if (start > 0) selected.unshift("...");
+      if (end < lines.length) selected.push("...");
+      return {
+        compacted,
+        text: selected.join("\n")
+      };
+    };
+
+    const beforePreview = clip(beforeLines, beforeStart, beforeEnd);
+    const afterPreview = clip(afterLines, afterStart, afterEnd);
+    return {
+      before: beforePreview.text,
+      after: afterPreview.text,
+      compacted: beforePreview.compacted || afterPreview.compacted,
+      startLine: fallbackStartLine + beforeStart,
+      endLine: fallbackStartLine + Math.max(beforeStart, beforeEnd - 1)
+    };
+  };
+
+  const renderChangeReview = () => {
+    if (!changeReviewBody || !changeReviewEmpty) return;
+    changeReviewBody.replaceChildren();
+    const hasChanges = latestChangeReview.length > 0;
+    changeReviewEmpty.hidden = hasChanges;
+    changeReviewBody.hidden = !hasChanges;
+    changeReview?.classList.toggle("has-review", hasChanges);
+    changeReviewTab?.classList.toggle("has-change", hasChanges && changeReviewUnread);
+    changeReviewTab?.setAttribute(
+      "title",
+      hasChanges ? "查看 AI 最近一次代码修改" : "暂无 AI 代码修改"
+    );
+
+    if (!hasChanges) return;
+
+    selectedChangeReviewIndex = Math.min(selectedChangeReviewIndex, latestChangeReview.length - 1);
+    const selectedEntry = latestChangeReview[selectedChangeReviewIndex];
+    const shell = document.createElement("div");
+    shell.className = "change-review-shell";
+
+    const fileList = document.createElement("div");
+    fileList.className = "change-review-files";
+    latestChangeReview.forEach((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "change-review-file";
+      button.classList.toggle("is-active", index === selectedChangeReviewIndex);
+      button.setAttribute("aria-pressed", String(index === selectedChangeReviewIndex));
+
+      const name = document.createElement("strong");
+      name.textContent = entry.file;
+      const summary = document.createElement("span");
+      const operationLabel = entry.operation === "replace_all" ? "完整替换" : "局部替换";
+      summary.textContent = `${operationLabel} · Line ${entry.startLine}-${entry.endLine}`;
+      button.append(name, summary);
+      button.addEventListener("click", () => {
+        selectedChangeReviewIndex = index;
+        renderChangeReview();
+      });
+      fileList.append(button);
+    });
+
+    const article = document.createElement("article");
+    article.className = "change-review-entry";
+
+    const meta = document.createElement("div");
+    meta.className = "change-review-meta";
+    const file = document.createElement("strong");
+    file.textContent = selectedEntry.file;
+    const detail = document.createElement("span");
+    const operationLabel = selectedEntry.operation === "replace_all" ? "完整替换" : "局部替换";
+    detail.textContent = `${operationLabel}${selectedEntry.compacted ? " · 变更片段" : ""} · Line ${selectedEntry.startLine}-${selectedEntry.endLine}`;
+    meta.append(file, detail);
+
+    article.append(meta, makeChangeDiffBlock(selectedEntry));
+    shell.append(fileList, article);
+    changeReviewBody.append(shell);
+  };
+
+  const flashChangeReview = () => {
+    [changeReview, changeReviewTab].forEach((element) => {
+      if (!element) return;
+      element.classList.remove("is-change-updated");
+      void element.offsetWidth;
+      element.classList.add("is-change-updated");
+    });
+  };
 
   const setRunFeedback = (type: "idle" | "running" | "ok" | "error", text: string) => {
     const labels = {
@@ -645,6 +957,43 @@ function initGraphicsLab(root: HTMLElement) {
     if (!orbitControls) return;
     orbitControls.dispose();
     orbitControls = undefined;
+  };
+
+  const captureCameraSnapshot = (camera: THREE.Camera): CameraSnapshot => {
+    const cameraWithZoom = camera as THREE.Camera & { zoom?: number };
+    return {
+      position: camera.position.clone(),
+      quaternion: camera.quaternion.clone(),
+      up: camera.up.clone(),
+      zoom: typeof cameraWithZoom.zoom === "number" ? cameraWithZoom.zoom : undefined
+    };
+  };
+
+  const renderRuntimePreview = () => {
+    if (runtimeResult?.render) {
+      runtimeResult.render();
+    } else if (runtimeResult?.scene && runtimeResult?.renderer && runtimeResult?.camera) {
+      runtimeResult.renderer.render(runtimeResult.scene, runtimeResult.camera);
+    }
+  };
+
+  const restoreCameraSnapshot = () => {
+    const camera = runtimeResult?.camera;
+    if (!camera || !defaultCameraSnapshot) return;
+
+    camera.position.copy(defaultCameraSnapshot.position);
+    camera.quaternion.copy(defaultCameraSnapshot.quaternion);
+    camera.up.copy(defaultCameraSnapshot.up);
+
+    const cameraWithProjection = camera as THREE.Camera & {
+      zoom?: number;
+      updateProjectionMatrix?: () => void;
+    };
+    if (typeof defaultCameraSnapshot.zoom === "number") {
+      cameraWithProjection.zoom = defaultCameraSnapshot.zoom;
+    }
+    cameraWithProjection.updateProjectionMatrix?.();
+    renderRuntimePreview();
   };
 
   const createTrackedThree = () => {
@@ -721,7 +1070,11 @@ function initGraphicsLab(root: HTMLElement) {
   const applyOrbitControls = () => {
     disposeOrbitControls();
     setOrbitButtonState();
-    if (!orbitEnabled) return;
+    if (!orbitEnabled) {
+      restoreCameraSnapshot();
+      defaultCameraSnapshot = undefined;
+      return;
+    }
 
     const renderer = runtimeResult?.renderer;
     const camera = runtimeResult?.camera;
@@ -730,6 +1083,7 @@ function initGraphicsLab(root: HTMLElement) {
       return;
     }
 
+    defaultCameraSnapshot = captureCameraSnapshot(camera);
     orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
@@ -737,11 +1091,7 @@ function initGraphicsLab(root: HTMLElement) {
     const renderOrbitFrame = () => {
       if (!orbitControls || !runtimeResult?.renderer || !runtimeResult?.camera) return;
       orbitControls.update();
-      if (runtimeResult?.render) {
-        runtimeResult.render();
-      } else if (runtimeResult?.scene && runtimeResult?.renderer && runtimeResult?.camera) {
-        runtimeResult.renderer.render(runtimeResult.scene, runtimeResult.camera);
-      }
+      renderRuntimePreview();
       orbitAnimationFrame = window.requestAnimationFrame(renderOrbitFrame);
     };
 
@@ -1019,20 +1369,26 @@ function initGraphicsLab(root: HTMLElement) {
 
   const syncTabs = () => {
     fileTabs.forEach((tab) => {
-      const isActive = activeWorkspaceTab !== "ai" && tab.dataset.file === activeFile;
+      const isActive = activeWorkspaceTab !== "ai" && activeWorkspaceTab !== "review" && tab.dataset.file === activeFile;
       tab.classList.toggle("is-active", isActive);
       tab.setAttribute("aria-selected", String(isActive));
     });
     guideTab?.classList.toggle("is-active", activeWorkspaceTab === "ai");
     guideTab?.setAttribute("aria-selected", String(activeWorkspaceTab === "ai"));
-    labWorkspace.dataset.workspaceMode = activeWorkspaceTab === "ai" ? "guide" : "editor";
+    changeReviewTab?.classList.toggle("is-active", activeWorkspaceTab === "review");
+    changeReviewTab?.setAttribute("aria-selected", String(activeWorkspaceTab === "review"));
+    labWorkspace.dataset.workspaceMode =
+      activeWorkspaceTab === "ai" ? "guide" : activeWorkspaceTab === "review" ? "review" : "editor";
     labWorkspace.classList.toggle("is-guide-mode", activeWorkspaceTab === "ai");
-    labWorkspace.classList.toggle("is-code-mode", activeWorkspaceTab !== "ai");
+    labWorkspace.classList.toggle("is-review-mode", activeWorkspaceTab === "review");
+    labWorkspace.classList.toggle("is-code-mode", activeWorkspaceTab !== "ai" && activeWorkspaceTab !== "review");
     if (workspaceLabel) {
-      workspaceLabel.textContent = activeWorkspaceTab === "ai" ? "AI Guide" : "Editor";
+      workspaceLabel.textContent =
+        activeWorkspaceTab === "ai" ? "AI Guide" : activeWorkspaceTab === "review" ? "Review" : "Editor";
     }
     if (workspaceTitle) {
-      workspaceTitle.textContent = activeWorkspaceTab === "ai" ? lesson.title : activeFile;
+      workspaceTitle.textContent =
+        activeWorkspaceTab === "ai" ? lesson.title : activeWorkspaceTab === "review" ? "最近修改" : activeFile;
     }
     requestAnimationFrame(syncGuideChatFrame);
   };
@@ -1049,6 +1405,7 @@ function initGraphicsLab(root: HTMLElement) {
     activeFile = fileName;
     editorHost.hidden = false;
     if (guideWorkspace) guideWorkspace.hidden = true;
+    if (changeReview) changeReview.hidden = true;
     if (labHints) labHints.hidden = false;
     editor.setState(
       createEditorState(files[activeFile].source, activeFile, (source) => {
@@ -1066,6 +1423,10 @@ function initGraphicsLab(root: HTMLElement) {
     completedPatches.clear();
     currentCheckpointIndex = 0;
     lessonFreeMode = false;
+    latestChangeReview = [];
+    selectedChangeReviewIndex = 0;
+    changeReviewUnread = false;
+    renderChangeReview();
     root.dataset.checkpointId = currentCheckpoint()?.id ?? "";
     persistFiles(lesson, files);
     editor.setState(
@@ -1086,8 +1447,20 @@ function initGraphicsLab(root: HTMLElement) {
     activeWorkspaceTab = "ai";
     editorHost.hidden = true;
     if (guideWorkspace) guideWorkspace.hidden = false;
+    if (changeReview) changeReview.hidden = true;
     if (labHints) labHints.hidden = true;
     setGuidePhase(guideConversationStarted ? "conversation" : "setup");
+    syncTabs();
+  };
+
+  const switchChangeReview = () => {
+    activeWorkspaceTab = "review";
+    changeReviewUnread = false;
+    editorHost.hidden = true;
+    if (guideWorkspace) guideWorkspace.hidden = true;
+    if (changeReview) changeReview.hidden = false;
+    if (labHints) labHints.hidden = true;
+    renderChangeReview();
     syncTabs();
   };
 
@@ -1125,27 +1498,71 @@ function initGraphicsLab(root: HTMLElement) {
 
   const applyGuidePatches = (patches: GuidePatch[]) => {
     const changedFiles = new Set<LabFileName>();
+    const nextFiles = fileNames.reduce(
+      (snapshot, name) => {
+        snapshot[name] = files[name].source;
+        return snapshot;
+      },
+      {} as Record<LabFileName, string>
+    );
+    const changeReviewBatch: ChangeReviewEntry[] = [];
 
     patches.forEach((patch) => {
       if (!fileNames.includes(patch.file)) {
         throw new Error(`AI 请求修改不允许的文件：${patch.file}`);
       }
+      const source = nextFiles[patch.file];
       if (patch.operation === "replace_all") {
-        files[patch.file].source = patch.content;
+        const preview = compactCodePreview(source, patch.content, 1, 3, 34);
+        changeReviewBatch.push({
+          file: patch.file,
+          operation: patch.operation,
+          startLine: preview.startLine,
+          endLine: preview.endLine,
+          before: preview.before,
+          after: preview.after,
+          compacted: preview.compacted
+        });
+        nextFiles[patch.file] = patch.content;
         changedFiles.add(patch.file);
         return;
       }
       if (patch.operation === "replace") {
         if (!patch.target) throw new Error("replace patch 缺少 target。");
-        if (!files[patch.file].source.includes(patch.target)) {
+        const targetRange = findPatchTargetRange(source, patch.target);
+        if (!targetRange) {
           throw new Error(`无法在 ${patch.file} 中找到 patch 指定片段。`);
         }
-        files[patch.file].source = files[patch.file].source.replace(patch.target, patch.content);
+        const before = source.slice(targetRange.start, targetRange.end);
+        const startLine = lineNumberAt(source, targetRange.start);
+        const preview = compactCodePreview(before, patch.content, startLine, 3, 34);
+        changeReviewBatch.push({
+          file: patch.file,
+          operation: patch.operation,
+          startLine: preview.startLine,
+          endLine: preview.endLine,
+          before: preview.before,
+          after: preview.after,
+          compacted: preview.compacted
+        });
+        nextFiles[patch.file] = `${source.slice(0, targetRange.start)}${patch.content}${source.slice(targetRange.end)}`;
         changedFiles.add(patch.file);
         return;
       }
       throw new Error(`不支持的 patch 操作：${patch.operation}`);
     });
+
+    changedFiles.forEach((fileName) => {
+      files[fileName].source = nextFiles[fileName];
+    });
+
+    latestChangeReview = changeReviewBatch;
+    selectedChangeReviewIndex = 0;
+    changeReviewUnread = latestChangeReview.length > 0 && activeWorkspaceTab !== "review";
+    renderChangeReview();
+    if (latestChangeReview.length) {
+      flashChangeReview();
+    }
 
     if (changedFiles.has(activeFile)) {
       editor.setState(
@@ -1177,6 +1594,8 @@ function initGraphicsLab(root: HTMLElement) {
 1. 每轮最多提出一个问题。
 2. 不要一次性讲完整教程，不要输出长篇代码。
 3. 预设课程推进模式下，当前 checkpoint 有 patchId 且用户回答正确或基本正确时，返回该 patchId，让网页应用本地预设 patch。
+3a. 预设课程推进模式下，不要要求用户手写、补全或粘贴代码；用户只回答概念，代码修改由 patchId 或本地预设 patch 完成。
+3b. 预设课程推进模式下，如果需要继续提问，question 必须使用当前或下一个 checkpoint.question 的原文，不要自行改写问题。
 4. 预设课程推进模式下，当前 checkpoint 没有 patchId 且用户回答正确或基本正确时，不要返回 patches；只返回 nextCheckpointId 指向下一个 checkpoint。
 5. 预设课程推进模式下，用户只回答“不知道”或类似表达时，给一个更具体的递进提示，并重复当前 checkpoint.question；不要返回旧问题、patchId 或 nextCheckpointId。
 6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
@@ -1295,9 +1714,19 @@ ${getFilesSnapshot()}`;
       lessonCompleted = advanceResult.completed;
       if (lessonCompleted) lessonFreeMode = true;
     } else if (directPatches.length) {
-      changedFiles = applyGuidePatches(directPatches);
-      const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
+      let fallbackPatchId = "";
+      try {
+        changedFiles = applyGuidePatches(directPatches);
+      } catch (error) {
+        fallbackPatchId = !lessonFreeMode ? currentCheckpoint()?.patchId ?? "" : "";
+        if (!fallbackPatchId) throw error;
+        const result = applyLessonPatch(fallbackPatchId);
+        changedFiles = result.changedFiles;
+      }
+      const advanceResult = advanceCheckpoint(fallbackPatchId || undefined, parsed.nextCheckpointId);
       checkpointMoved = advanceResult.moved;
+      lessonCompleted = advanceResult.completed;
+      if (lessonCompleted) lessonFreeMode = true;
     } else if (parsed.nextCheckpointId) {
       const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
       checkpointMoved = advanceResult.moved;
@@ -1318,7 +1747,13 @@ ${getFilesSnapshot()}`;
       !directPatches.length &&
       Boolean(currentCheckpoint());
     const parsedQuestion =
-      lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode) ? "" : parsed.question;
+      lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode)
+        ? ""
+        : lessonFreeMode
+          ? parsed.question
+          : parsed.question
+            ? currentCheckpoint()?.question
+            : "";
     const displayedQuestion =
       parsedQuestion ||
       (mode === "start" && parsed.type === "question" ? currentCheckpoint()?.question : "") ||
@@ -1347,6 +1782,7 @@ ${getFilesSnapshot()}`;
 
   const stopRuntime = () => {
     disposeOrbitControls();
+    defaultCameraSnapshot = undefined;
     if (cleanup) {
       cleanup();
       cleanup = undefined;
@@ -1422,10 +1858,13 @@ ${getFilesSnapshot()}`;
 
   const resetLab = () => {
     const shouldReturnToGuide = activeWorkspaceTab === "ai";
+    const shouldReturnToReview = activeWorkspaceTab === "review";
     resetLessonCode();
     resetGuideSession();
     if (shouldReturnToGuide) {
       switchGuide();
+    } else if (shouldReturnToReview) {
+      switchChangeReview();
     } else {
       switchFile(activeFile);
     }
@@ -1440,6 +1879,7 @@ ${getFilesSnapshot()}`;
   });
 
   guideTab?.addEventListener("click", switchGuide);
+  changeReviewTab?.addEventListener("click", switchChangeReview);
 
   runButton.addEventListener("click", () => {
     persistFiles(lesson, files);
