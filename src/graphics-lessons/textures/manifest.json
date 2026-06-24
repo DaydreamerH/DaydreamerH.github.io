@@ -18,6 +18,46 @@
     "fragment shader 接收到的是插值后的 UV，而不是只有顶点上的原始 UV。",
     "mix 可以表达两种纹理结果的线性混合。"
   ],
+  "shaderSets": [
+    {
+      "name": "texture",
+      "role": "object/material shader program",
+      "fragment": "reference/texture.fs",
+      "vertex": "reference/texture.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
+  ],
   "referenceFiles": [
     {
       "path": "reference/CMakeLists.txt",
@@ -49,6 +89,10 @@
       "id": "triangle-primitive",
       "title": "三角形作为基础图元",
       "concept": "三角形总是共面，内部任意点都能用三个顶点的重心坐标表示，因此覆盖测试和属性插值都稳定。",
+      "files": [
+        "geometry.json",
+        "main.js"
+      ],
       "question": "为什么四边形拆成两个三角形后，GPU 可以用同一套重心插值规则覆盖整个矩形？",
       "expectedKeywords": [
         "三角形",
@@ -63,6 +107,9 @@
       "id": "quad-geometry",
       "title": "矩形与三角形图元",
       "concept": "GPU 光栅化通常围绕三角形图元组织，矩形可以拆成两个三角形。",
+      "files": [
+        "geometry.json"
+      ],
       "question": "如果一个矩形由两个三角形组成，为什么共享边上的片元需要得到一致的 UV 插值结果？",
       "expectedKeywords": [
         "共享边",
@@ -79,6 +126,10 @@
       "id": "uv-normalization",
       "title": "UV 归一化",
       "concept": "UV 通常使用 [0, 1] 坐标，使几何表面和纹理分辨率解耦。",
+      "files": [
+        "geometry.json",
+        "vertex.glsl"
+      ],
       "question": "如果同一张模型要从 512x512 纹理换成 2048x2048 纹理，为什么归一化 UV 不需要随分辨率重写？",
       "expectedKeywords": [
         "归一化",
@@ -93,6 +144,11 @@
       "id": "uv-coordinates",
       "title": "UV 空间",
       "concept": "UV 把几何表面映射到纹理空间，通常用归一化坐标解耦图片分辨率。",
+      "files": [
+        "vertex.glsl",
+        "fragment.glsl",
+        "scene.json"
+      ],
       "question": "为什么片元颜色可以直接用 vec3(uv, 1.0 - uv.x) 显示成平滑渐变？",
       "expectedKeywords": [
         "UV",
@@ -109,6 +165,9 @@
       "id": "sampling-frequency",
       "title": "采样频率",
       "concept": "纹理采样发生在片元阶段，采样频率接近屏幕像素频率；这决定了细节、走样和过滤的风险。",
+      "files": [
+        "fragment.glsl"
+      ],
       "question": "为什么高频棋盘纹理在屏幕上缩小时容易出现走样，而低频纹理更稳定？",
       "expectedKeywords": [
         "采样频率",
@@ -123,6 +182,9 @@
       "id": "procedural-sampling",
       "title": "片元级采样",
       "concept": "光栅化会为矩形内部每个片元插值 UV，fragment shader 再用 UV 查询颜色。",
+      "files": [
+        "fragment.glsl"
+      ],
       "question": "为什么用 floor(vUv * scale) 生成方格时，scale 越大越容易产生密集变化和锯齿？",
       "expectedKeywords": [
         "floor",
@@ -139,6 +201,9 @@
       "id": "linear-interpolation",
       "title": "线性插值公式",
       "concept": "mix(a, b, t) 等价于 a * (1 - t) + b * t，t 控制结果在两端之间的位置。",
+      "files": [
+        "fragment.glsl"
+      ],
       "question": "从 a * (1 - t) + b * t 出发，为什么 t = 0.25 时结果更接近 a 而不是 b？",
       "expectedKeywords": [
         "线性插值",
@@ -153,6 +218,10 @@
       "id": "texture-mix",
       "title": "线性混合",
       "concept": "mix(a, b, t) 是逐分量线性插值，t 控制结果靠近 a 还是 b。",
+      "files": [
+        "scene.json",
+        "fragment.glsl"
+      ],
       "question": "为什么 mix(textureA, textureB, amount) 对 RGB 三个通道是分别线性混合，而不是把颜色当成一个单独标量？",
       "expectedKeywords": [
         "RGB",

@@ -26,6 +26,31 @@ export function getStaticPaths() {
 
 const { lesson } = Astro.props;
 const lessonPayload = JSON.stringify(lesson);
+const hiddenLessonFiles = new Set(
+  (lesson.workspaceFiles ?? [])
+    .filter((file) => file.visible === false)
+    .map((file) => file.path)
+);
+const lessonFiles = Object.keys(lesson.starterFiles ?? {}).filter((fileName) => !hiddenLessonFiles.has(fileName)).sort((a, b) => {
+  const workspaceFiles = lesson.workspaceFiles ?? [];
+  const metadata = new Map(workspaceFiles.map((file, index) => [file.path, { ...file, index }]));
+  const roleOrder = new Map([
+    ["entry", 0],
+    ["data", 1],
+    ["metadata", 2],
+    ["shader", 3],
+    ["helper", 4]
+  ]);
+  const aMeta = metadata.get(a);
+  const bMeta = metadata.get(b);
+  const aRole = roleOrder.get(aMeta?.role ?? "") ?? 9;
+  const bRole = roleOrder.get(bMeta?.role ?? "") ?? 9;
+  if (aRole !== bRole) return aRole - bRole;
+  if (aMeta && bMeta && aMeta.index !== bMeta.index) return aMeta.index - bMeta.index;
+  if (aMeta && !bMeta) return -1;
+  if (!aMeta && bMeta) return 1;
+  return a.localeCompare(b);
+});
 ---
 
 <BaseLayout title={`${lesson.title} - CG 实验`} description={lesson.description}>
@@ -74,7 +99,7 @@ const lessonPayload = JSON.stringify(lesson);
           <PanelLeftOpen class="toggle-icon icon-sidebar-open" size={16} aria-hidden="true" />
           <span>切换边栏</span>
         </button>
-        <div class="lab-file-tabs" role="tablist" aria-label="实验文件">
+        <div class="lab-file-tabs" role="tablist" aria-label="实验文件" data-file-tabs>
           <button class="lab-ai-tab is-active" type="button" role="tab" data-guide-tab aria-selected="true">
             <Bot size={16} aria-hidden="true" />
             <span>AI Guide</span>
@@ -83,18 +108,14 @@ const lessonPayload = JSON.stringify(lesson);
             <FileDiff size={15} aria-hidden="true" />
             <span>最近修改</span>
           </button>
-          <button type="button" role="tab" data-file-tab data-file="main.js" aria-selected="false">
-            <Code2 size={15} aria-hidden="true" />
-            <span>main.js</span>
-          </button>
-          <button type="button" role="tab" data-file-tab data-file="vertex.glsl" aria-selected="false">
-            <Code2 size={15} aria-hidden="true" />
-            <span>vertex.glsl</span>
-          </button>
-          <button type="button" role="tab" data-file-tab data-file="fragment.glsl" aria-selected="false">
-            <Code2 size={15} aria-hidden="true" />
-            <span>fragment.glsl</span>
-          </button>
+          {
+            lessonFiles.map((fileName) => (
+              <button type="button" role="tab" data-file-tab data-file={fileName} aria-selected="false">
+                <Code2 size={15} aria-hidden="true" />
+                <span>{fileName}</span>
+              </button>
+            ))
+          }
         </div>
         <div class="lab-sidebar-actions" aria-label="实验操作">
           <label class="lab-sidebar-action lab-auto-action" title="自动运行">

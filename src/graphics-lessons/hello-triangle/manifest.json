@@ -2,28 +2,63 @@
   "id": "hello-triangle",
   "title": "Hello Triangle",
   "category": "图元基础",
+  "series": "LearnOpenGL 基础",
+  "order": 2,
   "level": "intro",
   "createdAt": "2026-06-23",
   "description": "在浏览器中补全一个基础三角形渲染实验，理解顶点数据、片元颜色和顶点颜色插值。",
   "source": "OpenGLProject/src/02_hello_triangle",
   "runtime": "three-shader-material",
   "previewTitle": "Hello Triangle",
-  "aiBrief": "面向 AI 的课程说明：本实验以 hello_triangle 为参考，在浏览器中通过 Three.js ShaderMaterial 推进。按 checkpoint 提问，确认用户理解后优先返回预设 patchId；不要一次性生成完整课程。",
+  "draft": false,
+  "aiBrief": "以 OpenGL hello_triangle 为参考，引导用户理解顶点缓冲、shader 阶段和光栅化插值。默认保留手工维护的课程包，不由批量生成器覆盖。",
   "referenceBrief": [
     "OpenGL 版本中，顶点数据通过 VBO 上传，并由 VAO 记录顶点属性解释方式。",
     "glVertexAttribPointer 的 stride 和 size 决定 GPU 如何从连续内存中解释顶点 attribute。",
     "顶点着色器负责输出裁剪空间位置，片元着色器负责为被图元覆盖的片元输出颜色。",
-    "顶点颜色 attribute 会在光栅化阶段按片元位置插值后传入片元着色器。",
-    "课程包包含 reference/main.cpp，AI 可以参考它理解 OpenGL 原始任务，但不应要求用户在网页中编译 C++。"
+    "顶点颜色 attribute 会在光栅化阶段按片元位置插值后传入片元着色器。"
+  ],
+  "shaderSets": [],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
   ],
   "referenceFiles": [
     {
-      "path": "reference/main.cpp",
-      "role": "OpenGL 原始 hello_triangle 代码"
-    },
-    {
       "path": "reference/CMakeLists.txt",
       "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
     }
   ],
   "teachingRules": [
@@ -39,6 +74,10 @@
       "id": "vertex-buffer-layout",
       "title": "顶点缓冲布局",
       "concept": "顶点缓冲是一段连续内存，attribute 的 size、stride 和 offset 决定 GPU 如何解释这段数据。",
+      "files": [
+        "geometry.json",
+        "main.js"
+      ],
       "question": "如果 position attribute 的 size 为 3，为什么 GPU 每读取一个顶点位置时会连续取 x、y、z 三个 float？",
       "expectedKeywords": [
         "attribute",
@@ -55,6 +94,10 @@
       "id": "triangle-vertices",
       "title": "定义三角形顶点",
       "concept": "顶点缓冲是一段连续数据，attribute 描述 GPU 每次从中读取几个分量。",
+      "files": [
+        "geometry.json",
+        "main.js"
+      ],
       "question": "从 3 个顶点 * 每个 position 3 个 float 出发，为什么一个最小三角形位置缓冲至少需要 9 个 float？",
       "expectedKeywords": [
         "3",
@@ -74,6 +117,11 @@
       "id": "rasterization-role",
       "title": "光栅化的职责",
       "concept": "顶点着色器输出裁剪空间顶点后，光栅化阶段会判断哪些屏幕片元被三角形覆盖。",
+      "files": [
+        "main.js",
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么只有三个顶点位置还不能直接得到屏幕上所有像素的颜色，中间还需要光栅化产生片元？",
       "expectedKeywords": [
         "光栅化",
@@ -88,6 +136,10 @@
       "id": "fragment-color",
       "title": "输出片元颜色",
       "concept": "顶点着色器只处理顶点；光栅化产生片元后，fragment shader 才决定每个片元颜色。",
+      "files": [
+        "fragment.glsl",
+        "scene.json"
+      ],
       "question": "为什么 fragment shader 的输出可以理解为“每个被覆盖片元的颜色函数”？",
       "expectedKeywords": [
         "fragment",
@@ -104,6 +156,10 @@
       "id": "barycentric-interpolation",
       "title": "重心插值",
       "concept": "三角形内部片元的 varying 可写为 a * v0 + b * v1 + c * v2，其中 a + b + c = 1。",
+      "files": [
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么片元越靠近某个顶点，它从该顶点颜色获得的重心权重通常越大？",
       "expectedKeywords": [
         "重心",
@@ -118,6 +174,12 @@
       "id": "vertex-colors",
       "title": "观察顶点颜色插值",
       "concept": "varying 会在光栅化阶段按片元位置插值，fragment shader 收到的不是原始顶点值。",
+      "files": [
+        "geometry.json",
+        "vertex.glsl",
+        "fragment.glsl",
+        "scene.json"
+      ],
       "question": "为什么顶点颜色作为 varying 传入 fragment shader 后，三角形内部会形成连续渐变？",
       "expectedKeywords": [
         "varying",

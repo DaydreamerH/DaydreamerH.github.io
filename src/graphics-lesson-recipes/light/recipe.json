@@ -10,160 +10,379 @@
   "description": "从环境光、漫反射到高光，逐步观察基础 Phong 光照。",
   "previewTitle": "Phong Lighting",
   "lesson": "将基础光照公式拆成环境光、法线方向、漫反射和高光几个可观察阶段。",
-  "aiBrief": "围绕 ambient、normal、Lambert diffuse、view direction 和 specular 组织提问。",
+  "aiBrief": "围绕 scene.json 参数、cube.vertex.glsl 的世界位置/法线输出、cube.fragment.glsl 的 ambient/diffuse/specular 公式和 light.* 光源标记组织提问。",
   "referenceBrief": [
-    "环境光提供基础亮度，但不表达方向。",
-    "漫反射由表面法线和光照方向的夹角决定。",
-    "高光需要观察方向，因为它描述反射方向是否接近眼睛。",
-    "法线必须和光照向量处在同一空间内才能正确点乘。"
+    "cube.vertex.glsl 负责把 position、normal 转到片元阶段需要的空间。",
+    "cube.fragment.glsl 逐步加入 ambient、Lambert diffuse 和 Phong specular。",
+    "scene.json 保存光源位置、相机位置、环境光强度、高光强度和动画参数。",
+    "light.* shader 只用于显示光源标记，帮助观察光源位置与物体明暗的关系。"
   ],
   "starterState": {
     "shape": "cube",
     "mode": "solid",
     "camera": "perspective",
-    "cameraPosition": [2.4, 1.8, 4.2],
-    "color": [0.95, 0.48, 0.2]
+    "cameraPosition": [
+      2.4,
+      1.8,
+      4.2
+    ],
+    "color": [
+      0.95,
+      0.48,
+      0.2
+    ],
+    "includeLightShaders": true,
+    "shaderProgram": "cube"
   },
   "checkpoints": [
     {
       "id": "lighting-equation",
       "title": "Phong 光照结构",
-      "concept": "经典 Phong 模型常写为 color = (ambient + diffuse + specular) * objectColor。",
-      "question": "为什么把光照拆成 ambient、diffuse、specular 三项，比只用一个亮度系数更容易控制材质外观？",
-      "expectedKeywords": ["ambient", "diffuse", "specular", "分量", "材质"],
-      "hint": "三项分别表达基础可见性、朝向光源的亮度和视线相关高光。"
+      "concept": "cube.fragment.glsl 中的 Phong 光照由 ambient、diffuse、specular 三个可单独观察的分量组成。",
+      "question": "如果 cube.fragment.glsl 最终要写 color = (ambient + diffuse + specular) * objectColor，为什么把三项拆开比只在 scene.json 中调一个亮度系数更有教学意义？",
+      "expectedKeywords": [
+        "ambient",
+        "diffuse",
+        "specular",
+        "分量",
+        "材质"
+      ],
+      "hint": "三项分别对应基础可见性、法线朝向和视线相关反射。",
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json"
+      ]
     },
     {
       "id": "ambient",
       "title": "环境光的局限",
-      "concept": "环境光是方向无关的常量项，只能提供基础可见性。",
-      "question": "如果 ambient = k * lightColor 与 normal 无关，为什么只使用环境光会让立方体缺少体积感？",
-      "expectedKeywords": ["ambient", "normal", "方向无关", "均匀", "体积感"],
-      "hint": "所有朝向的面获得相近亮度，形状的朝向差异就不明显。",
+      "concept": "ambient 只依赖 scene.json 的 uAmbientStrength 与 uLightColor，不依赖 cube.vertex.glsl 传来的法线。",
+      "question": "在 cube.fragment.glsl 中，如果 ambient 与 vNormal 无关，为什么只启用 ambient 会让立方体各个面缺少体积感？",
+      "expectedKeywords": [
+        "ambient",
+        "normal",
+        "方向无关",
+        "均匀",
+        "体积感"
+      ],
+      "hint": "所有面得到近似相同的方向无关亮度。",
       "patchId": "01-ambient",
       "expectedObservation": "立方体显示均匀的基础亮度。",
       "state": {
         "shape": "cube",
         "mode": "ambient",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "ambientStrength": 0.22
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "ambientStrength": 0.22,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json",
+        "geometry.json"
+      ]
     },
     {
       "id": "normal-transform",
       "title": "法线变换",
-      "concept": "法线表示表面朝向。非等比缩放时通常要用 normal matrix，即 model matrix 线性部分的逆转置。",
-      "question": "为什么法线不能总是像位置一样直接乘 model matrix，尤其在非等比缩放时？",
-      "expectedKeywords": ["法线", "非等比缩放", "逆转置", "normal matrix", "垂直"],
-      "hint": "法线需要保持与表面切线垂直，直接乘 model matrix 可能破坏这种关系。"
+      "concept": "cube.vertex.glsl 负责输出 vNormal。法线代表表面朝向，不能简单等同于位置。",
+      "question": "为什么 cube.vertex.glsl 中处理 normal 时要关心变换后的方向保持垂直关系，而不能把 normal 当成普通 position 来理解？",
+      "expectedKeywords": [
+        "法线",
+        "非等比缩放",
+        "逆转置",
+        "normal matrix",
+        "垂直"
+      ],
+      "hint": "法线用于夹角计算，关键是方向和垂直关系，不是空间中的点。",
+      "files": [
+        "cube.vertex.glsl",
+        "geometry.json"
+      ]
     },
     {
       "id": "normal-space",
       "title": "法线与空间一致性",
-      "concept": "漫反射需要比较表面法线和光照方向，二者必须处在同一坐标空间。",
-      "question": "为什么 dot(normal, lightDir) 只有在 normal 和 lightDir 位于同一坐标空间时才表示夹角余弦？",
-      "expectedKeywords": ["同一空间", "dot", "夹角", "法线", "lightDir"],
-      "hint": "点积比较的是两个向量在同一坐标基下的方向关系。",
+      "concept": "cube.vertex.glsl 输出的 vWorldPosition/vNormal 必须和 cube.fragment.glsl 中的 uLightPos 处在同一空间。",
+      "question": "为什么 cube.fragment.glsl 里的 dot(normal, lightDir) 只有在 normal 与 lightDir 使用同一坐标空间时才有夹角余弦意义？",
+      "expectedKeywords": [
+        "同一空间",
+        "dot",
+        "夹角",
+        "法线",
+        "lightDir"
+      ],
+      "hint": "点积比较的是同一坐标基下的两个方向。",
       "patchId": "02-normal",
       "expectedObservation": "立方体开始按表面朝向显示不同亮度。",
       "state": {
         "shape": "cube",
         "mode": "diffuse",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2]
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "lambert-cosine",
       "title": "Lambert 余弦项",
-      "concept": "单位向量点积 dot(N, L) = cos(theta)，Lambert 使用 max(dot(N, L), 0) 去掉背光负值。",
-      "question": "为什么 theta 越接近 0 度时 dot(N, L) 越接近 1，表面也应该越亮？",
-      "expectedKeywords": ["theta", "cos", "dot", "法线", "越亮"],
-      "hint": "夹角越小，光线越正对表面，同样光能覆盖的有效面积越小，单位面积能量更高。"
+      "concept": "cube.fragment.glsl 使用 max(dot(N, L), 0.0) 描述 Lambert 余弦项。",
+      "question": "从 dot(N, L)=cos(theta) 出发，为什么 cube.fragment.glsl 中 theta 越接近 0 度时漫反射应越亮？",
+      "expectedKeywords": [
+        "theta",
+        "cos",
+        "dot",
+        "法线",
+        "越亮"
+      ],
+      "hint": "夹角越小，光线越正对表面，单位面积接收的能量越高。",
+      "files": [
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "lambert",
       "title": "Lambert 漫反射",
-      "concept": "Lambert 漫反射使用 max(dot(N, L), 0) 描述入射角对亮度的影响。",
-      "question": "为什么公式 max(dot(N, L), 0) 要把负值截断为 0？",
-      "expectedKeywords": ["max", "负值", "背面", "dot", "漫反射"],
-      "hint": "当光从表面背后照来时，正面不应得到负亮度。",
+      "concept": "cube.fragment.glsl 用 max 截断背光面的负值，避免出现负亮度。",
+      "question": "为什么 cube.fragment.glsl 中的 max(dot(N, L), 0.0) 要把背光面的负值截断为 0？",
+      "expectedKeywords": [
+        "max",
+        "负值",
+        "背面",
+        "dot",
+        "漫反射"
+      ],
+      "hint": "背面受光不应让正面颜色变成负数。",
       "patchId": "03-diffuse",
       "expectedObservation": "面向光源的区域更亮，背向区域更暗。",
       "state": {
         "shape": "cube",
         "mode": "diffuse",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
-        "ambientStrength": 0.16
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
+        "ambientStrength": 0.16,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "specular-vector",
       "title": "镜面反射方向",
-      "concept": "Phong 高光常用 reflect(-L, N) 得到反射方向 R，再用 pow(max(dot(V, R), 0), shininess) 计算高光。",
-      "question": "为什么镜面高光需要比较 viewDir 和 reflectDir，而不是只比较 normal 和 lightDir？",
-      "expectedKeywords": ["viewDir", "reflectDir", "观察方向", "镜面", "Phong"],
-      "hint": "镜面反射描述的是反射光是否朝向观察者。"
+      "concept": "cube.fragment.glsl 通过 uViewPos、vWorldPosition 和 reflectDir 计算视线相关的高光。",
+      "question": "为什么高光需要 cube.fragment.glsl 同时知道 viewDir 和 reflectDir，而不仅仅知道 normal 与 lightDir 的夹角？",
+      "expectedKeywords": [
+        "viewDir",
+        "reflectDir",
+        "观察方向",
+        "镜面",
+        "Phong"
+      ],
+      "hint": "镜面反射是否可见取决于反射方向是否接近观察方向。",
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json"
+      ]
     },
     {
       "id": "specular",
       "title": "视线相关的高光",
-      "concept": "Phong 高光比较反射方向和观察方向，因此会随视角变化。",
-      "question": "从 pow(max(dot(V, R), 0), shininess) 看，为什么 V 和 R 越接近时高光越强？",
-      "expectedKeywords": ["pow", "dot", "V", "R", "高光"],
-      "hint": "单位向量越接近，点积越接近 1，经过幂运算后仍保持较大值。",
+      "concept": "scene.json 启用 light.* 光源标记，同时 cube.fragment.glsl 加入 specular 公式。",
+      "question": "观察 light.* 显示的光源位置后，为什么 cube.fragment.glsl 中 pow(max(dot(V, R), 0.0), shininess) 会让高光集中在特定视角区域？",
+      "expectedKeywords": [
+        "pow",
+        "dot",
+        "V",
+        "R",
+        "高光"
+      ],
+      "hint": "只有 V 和 R 足够接近的片元，幂运算后还能保留明显强度。",
       "patchId": "04-specular",
       "expectedObservation": "立方体表面出现更集中的亮部。",
       "state": {
         "shape": "cube",
         "mode": "phong",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
         "ambientStrength": 0.15,
         "specularStrength": 0.55,
         "shininess": 32,
-        "showLight": true
-      }
+        "showLight": true,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.fragment.glsl",
+        "light.vertex.glsl",
+        "light.fragment.glsl"
+      ]
     },
     {
       "id": "rotating-normal",
       "title": "旋转与法线",
-      "concept": "物体旋转会改变法线在世界空间中的方向，进而改变 dot(N, L) 和 dot(V, R)。",
-      "question": "为什么物体旋转时，即使 lightPos 和 camera.position 不动，N、L、V 的相对关系仍会变化？",
-      "expectedKeywords": ["旋转", "法线", "N", "L", "V", "相对关系"],
-      "hint": "旋转会改变表面朝向，表面朝向改变后与光源和相机的夹角也改变。"
+      "concept": "main.js 根据 scene.json 的 animated 更新物体旋转，cube.vertex.glsl 输出的法线方向随之变化。",
+      "question": "为什么 main.js 旋转物体时，即使 scene.json 中 lightPos 和 camera.position 不动，cube.fragment.glsl 中 N、L、V 的相对关系仍会变化？",
+      "expectedKeywords": [
+        "旋转",
+        "法线",
+        "N",
+        "L",
+        "V",
+        "相对关系"
+      ],
+      "hint": "旋转改变表面法线在世界空间中的方向。",
+      "files": [
+        "main.js",
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "moving-light",
       "title": "旋转中的光照关系",
-      "concept": "物体旋转会改变表面法线与光源、视线的相对关系。",
-      "question": "为什么旋转动画能帮助检查 diffuse 和 specular 是否真的依赖法线方向？",
-      "expectedKeywords": ["旋转", "diffuse", "specular", "法线", "方向"],
-      "hint": "如果光照项正确依赖法线，旋转时明暗和高光应该随表面朝向移动。",
+      "concept": "main.js 的动画让 cube.vertex.glsl 与 cube.fragment.glsl 的光照链路持续接受检验。",
+      "question": "为什么把旋转动画放进 main.js 后，更容易检查 cube.fragment.glsl 的 diffuse 和 specular 是否真的依赖法线方向？",
+      "expectedKeywords": [
+        "旋转",
+        "diffuse",
+        "specular",
+        "法线",
+        "方向"
+      ],
+      "hint": "正确光照会随表面朝向连续移动，错误会显得不自然。",
       "patchId": "05-moving-light",
       "expectedObservation": "立方体持续旋转，明暗和高光随表面方向变化。",
       "state": {
         "shape": "cube",
         "mode": "phong",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
         "ambientStrength": 0.15,
         "specularStrength": 0.55,
         "shininess": 32,
         "showLight": true,
-        "animated": true
-      }
+        "animated": true,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "main.js",
+        "scene.json",
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ]
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "cube.vertex.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的顶点阶段，输出世界坐标、法线或顶点属性",
+      "visible": true
+    },
+    {
+      "path": "cube.fragment.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的片元阶段，计算颜色、光照或材质响应",
+      "visible": true
+    },
+    {
+      "path": "light.vertex.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的顶点阶段，用于显示光源位置",
+      "visible": true
+    },
+    {
+      "path": "light.fragment.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的片元阶段，用光源颜色显示标记",
+      "visible": true
     }
   ]
 }

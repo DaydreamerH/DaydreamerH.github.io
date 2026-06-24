@@ -1,4 +1,4 @@
-import * as THREE from "three";
+﻿import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   autocompletion,
@@ -21,7 +21,7 @@ import {
   rectangularSelection
 } from "@codemirror/view";
 
-type LabFileName = "main.js" | "vertex.glsl" | "fragment.glsl";
+type LabFileName = string;
 type WorkspaceTab = LabFileName | "ai" | "review";
 
 type LabFile = {
@@ -89,6 +89,7 @@ type LessonCheckpoint = {
   id: string;
   title: string;
   concept: string;
+  files?: LabFileName[];
   question: string;
   expectedKeywords: string[];
   hint: string;
@@ -118,6 +119,19 @@ type GraphicsLesson = {
   referenceFiles?: Array<{
     path: string;
     role: string;
+  }>;
+  shaderSets?: Array<{
+    name: string;
+    role?: string;
+    vertex?: string;
+    fragment?: string;
+  }>;
+  workspaceFiles?: Array<{
+    path: LabFileName;
+    role: "entry" | "shader" | "helper" | "data" | "metadata";
+    label?: string;
+    concept?: string;
+    visible?: boolean;
   }>;
   referenceCode?: string;
   teachingRules: string[];
@@ -152,56 +166,6 @@ declare global {
 
 const STORAGE_KEY_PREFIX = "daydreamerh.graphics-lab.lesson";
 const PREVIEW_LAYOUT_KEY = "daydreamerh.graphics-lab.preview-layout";
-
-const fallbackLesson: GraphicsLesson = {
-  id: "fallback",
-  title: "Hello Triangle",
-  category: "CG 实验",
-  level: "intro",
-  createdAt: "2026-06-23",
-  description: "在浏览器中补全一个基础三角形渲染实验。",
-  source: "inline",
-  runtime: "three-shader-material",
-  previewTitle: "Hello Triangle",
-  aiBrief: "基础三角形实验。",
-  referenceBrief: [],
-  referenceCode: "",
-  teachingRules: [],
-  checkpoints: [],
-  starterFiles: {
-    "main.js": `const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setClearColor(0xf8f8f8, 1);
-const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-camera.position.z = 1;
-const geometry = new THREE.BufferGeometry();
-geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
-  0.0, 0.6, 0.0,
-  -0.6, -0.5, 0.0,
-  0.6, -0.5, 0.0
-]), 3));
-const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, side: THREE.DoubleSide });
-const triangle = new THREE.Mesh(geometry, material);
-scene.add(triangle);
-function resize() {
-  const bounds = canvas.parentElement.getBoundingClientRect();
-  renderer.setSize(Math.max(1, Math.floor(bounds.width)), Math.max(1, Math.floor(bounds.height)), false);
-}
-resize();
-renderer.render(scene, camera);
-return () => {
-  geometry.dispose();
-  material.dispose();
-  renderer.dispose();
-};`,
-    "vertex.glsl": "void main() {\n  gl_Position = vec4(position, 1.0);\n}",
-    "fragment.glsl": "void main() {\n  gl_FragColor = vec4(0.13, 0.16, 0.19, 1.0);\n}"
-  },
-  patches: {}
-};
-
-const fileNames: LabFileName[] = ["main.js", "vertex.glsl", "fragment.glsl"];
-
 const jsCompletions = [
   "THREE.Scene",
   "THREE.OrthographicCamera",
@@ -252,9 +216,10 @@ function isDevServerNoise(message: string) {
 }
 
 function labCompletionSource(fileName: LabFileName) {
-  const completions = fileName === "main.js" ? jsCompletions : glslCompletions;
+  const completions = isJavaScriptFile(fileName) ? jsCompletions : isShaderFile(fileName) ? glslCompletions : [];
 
   return (context: CompletionContext) => {
+    if (!completions.length) return null;
     const word = context.matchBefore(/[\w.$]+/);
     if (!word || (word.from === word.to && !context.explicit)) return null;
     return {
@@ -267,53 +232,144 @@ function labCompletionSource(fileName: LabFileName) {
 function parseLesson(root: HTMLElement): GraphicsLesson {
   try {
     const raw = root.dataset.lessonPayload;
-    if (!raw) return fallbackLesson;
+    if (!raw) throw new Error("Missing lesson payload.");
     const lesson = JSON.parse(raw) as GraphicsLesson;
-    if (!lesson.id || !lesson.starterFiles) return fallbackLesson;
+    if (!lesson.id || !lesson.starterFiles) throw new Error("Invalid lesson payload.");
     return lesson;
-  } catch {
-    return fallbackLesson;
+  } catch (error) {
+    root.dataset.labError = error instanceof Error ? error.message : String(error);
+    throw error;
   }
 }
 
-function makeStorageKey(lessonId: string) {
-  return `${STORAGE_KEY_PREFIX}.${lessonId}.v1`;
+function isJavaScriptFile(fileName: LabFileName) {
+  return /\.(c|m)?[jt]s$/i.test(fileName);
 }
 
-function cloneStarterFiles(lesson: GraphicsLesson): Record<LabFileName, LabFile> {
+function isShaderFile(fileName: LabFileName) {
+  return /\.(glsl|vert|frag|vs|fs)$/i.test(fileName);
+}
+
+function getWorkspaceFileMeta(lesson: GraphicsLesson, fileName: LabFileName) {
+  return lesson.workspaceFiles?.find((file) => file.path === fileName);
+}
+
+function getEntryFileName(lesson: GraphicsLesson) {
+  const entryFile = lesson.workspaceFiles?.find((file) => file.role === "entry" && lesson.starterFiles?.[file.path]);
+  if (!entryFile) {
+    throw new Error(`Graphics lesson "${lesson.id}" must declare exactly one workspaceFiles entry with role="entry".`);
+  }
+  return entryFile.path;
+}
+
+function sortLessonFileNames(lesson: GraphicsLesson, names: Iterable<LabFileName>) {
+  const entryFileName = getEntryFileName(lesson);
+  const metadata = new Map((lesson.workspaceFiles ?? []).map((file, index) => [file.path, { ...file, index }]));
+  const roleOrder = new Map([
+    ["entry", 0],
+    ["data", 1],
+    ["metadata", 2],
+    ["shader", 3],
+    ["helper", 4]
+  ]);
+
+  return [...new Set(names)].sort((a, b) => {
+    if (a === entryFileName) return -1;
+    if (b === entryFileName) return 1;
+    const aMeta = metadata.get(a);
+    const bMeta = metadata.get(b);
+    const aRole = roleOrder.get(aMeta?.role ?? "") ?? 9;
+    const bRole = roleOrder.get(bMeta?.role ?? "") ?? 9;
+    if (aRole !== bRole) return aRole - bRole;
+    if (aMeta && bMeta && aMeta.index !== bMeta.index) return aMeta.index - bMeta.index;
+    if (aMeta && !bMeta) return -1;
+    if (!aMeta && bMeta) return 1;
+    return a.localeCompare(b);
+  });
+}
+
+function getLessonFileNames(lesson: GraphicsLesson) {
+  const names = Object.keys(lesson.starterFiles ?? {});
+  const uniqueNames = new Set<string>(names);
+  const entryFileName = getEntryFileName(lesson);
+  if (!uniqueNames.has(entryFileName)) uniqueNames.add(entryFileName);
+  return sortLessonFileNames(lesson, uniqueNames);
+}
+
+function getVisibleLessonFileNames(lesson: GraphicsLesson) {
+  const hiddenFiles = new Set(
+    (lesson.workspaceFiles ?? [])
+      .filter((file) => file.visible === false)
+      .map((file) => file.path)
+  );
+  return getLessonFileNames(lesson).filter((name) => !hiddenFiles.has(name));
+}
+
+function isKnownFileName(fileNames: LabFileName[], fileName: string): fileName is LabFileName {
+  return fileNames.includes(fileName);
+}
+
+function hashText(text = "") {
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(36);
+}
+
+function makeStorageKey(lesson: GraphicsLesson) {
+  const lessonSignature = [
+    ...getLessonFileNames(lesson),
+    ...Object.entries(lesson.starterFiles ?? {}).map(([file, source]) => `${file}:${source.length}:${hashText(source)}`),
+    ...(lesson.workspaceFiles ?? []).map((file) => `${file.path}:${file.role}:${file.visible === false ? "hidden" : "visible"}`),
+    ...Object.keys(lesson.patches ?? {})
+  ]
+    .sort()
+    .join("|");
+  let hash = 0;
+  for (let index = 0; index < lessonSignature.length; index += 1) {
+    hash = (hash * 31 + lessonSignature.charCodeAt(index)) >>> 0;
+  }
+  return `${STORAGE_KEY_PREFIX}.${lesson.id}.v3.${hash.toString(36)}`;
+}
+
+function cloneStarterFiles(lesson: GraphicsLesson, fileNames: LabFileName[]): Record<LabFileName, LabFile> {
   return Object.fromEntries(
     fileNames.map((name) => [
       name,
       {
         name,
         label: name,
-        source: lesson.starterFiles[name] ?? fallbackLesson.starterFiles[name]
+        source: lesson.starterFiles[name] ?? ""
       }
     ])
   ) as Record<LabFileName, LabFile>;
 }
 
-function loadFiles(lesson: GraphicsLesson) {
+function loadFiles(lesson: GraphicsLesson, fileNames: LabFileName[]) {
   try {
-    const saved = window.localStorage.getItem(makeStorageKey(lesson.id));
-    if (!saved) return cloneStarterFiles(lesson);
+    const saved = window.localStorage.getItem(makeStorageKey(lesson));
+    if (!saved) return cloneStarterFiles(lesson, fileNames);
 
     const parsed = JSON.parse(saved) as Partial<Record<LabFileName, string>>;
-    const files = cloneStarterFiles(lesson);
-    fileNames.forEach((name) => {
+    const mergedNames = [...new Set([...fileNames, ...Object.keys(parsed)])];
+    const files = cloneStarterFiles(lesson, mergedNames);
+    mergedNames.forEach((name) => {
       if (typeof parsed[name] === "string") {
-        files[name].source = parsed[name] ?? files[name].source;
+        const starterSource = lesson.starterFiles[name] ?? "";
+        const savedSource = parsed[name] ?? "";
+        files[name].source = savedSource.trim() || !starterSource.trim() ? savedSource : files[name].source;
       }
     });
     return files;
   } catch {
-    return cloneStarterFiles(lesson);
+    return cloneStarterFiles(lesson, fileNames);
   }
 }
 
 function persistFiles(lesson: GraphicsLesson, files: Record<LabFileName, LabFile>) {
-  const payload = Object.fromEntries(fileNames.map((name) => [name, files[name].source]));
-  window.localStorage.setItem(makeStorageKey(lesson.id), JSON.stringify(payload));
+  const payload = Object.fromEntries(Object.values(files).map((file) => [file.name, file.source]));
+  window.localStorage.setItem(makeStorageKey(lesson), JSON.stringify(payload));
 }
 
 function extractJsonObject(text: string) {
@@ -322,7 +378,7 @@ function extractJsonObject(text: string) {
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
   if (start < 0 || end <= start) {
-    throw new Error("AI 没有返回可解析的 JSON。");
+    throw new Error("AI did not return a parseable JSON object.");
   }
   return JSON.parse(candidate.slice(start, end + 1)) as GuideResponse;
 }
@@ -343,10 +399,10 @@ function normalizeGuideResponse(response: GuideResponse): GuideResponse {
 function removeQuestionSentences(message: string, question: string) {
   if (!message || !question) return message;
   return message
-    .split(/(?<=[。！？!?])\s*/)
+    .split(/(?<=[銆傦紒锛??])\s*/)
     .filter((sentence) => {
       const trimmed = sentence.trim();
-      return trimmed && !/[？?]/.test(trimmed) && !trimmed.includes("请回答");
+      return trimmed && !/[锛?]/.test(trimmed) && !trimmed.includes("please answer");
     })
     .join("")
     .trim();
@@ -470,12 +526,51 @@ function renderGuideMarkdown(markdown = "") {
   return html.join("");
 }
 
+function describeWorkspaceFiles(lesson: GraphicsLesson) {
+  const metadata = new Map((lesson.workspaceFiles ?? []).map((file) => [file.path, file]));
+  return getLessonFileNames(lesson)
+    .map((name) => {
+      const file = metadata.get(name);
+      const role = file?.role ?? (name === getEntryFileName(lesson) ? "entry" : name.endsWith(".glsl") ? "shader" : "helper");
+      const concept = file?.concept ? ` | ${file.concept}` : "";
+      const visibility = file?.visible === false ? " | hidden metadata" : "";
+      return `- ${name} | ${role}${concept}${visibility}`;
+    })
+    .join("\n");
+}
+
+function describeShaderSets(lesson: GraphicsLesson) {
+  if (!lesson.shaderSets?.length) return "(无)";
+  return lesson.shaderSets
+    .map((set) => {
+      const stages = [set.vertex ? `vertex=${set.vertex}` : "", set.fragment ? `fragment=${set.fragment}` : ""]
+        .filter(Boolean)
+        .join(", ");
+      return `- ${set.name}${set.role ? ` | ${set.role}` : ""}${stages ? ` | ${stages}` : ""}`;
+    })
+    .join("\n");
+}
+
+function describeCheckpointFiles(checkpoint?: LessonCheckpoint) {
+  if (!checkpoint?.files?.length) return "(鏈０鏄?";
+  return checkpoint.files.map((file) => `- ${file}`).join("\n");
+}
+
+function describePatchableFiles(lesson: GraphicsLesson, fileNames: LabFileName[]) {
+  return fileNames
+    .map((name) => {
+      const file = getWorkspaceFileMeta(lesson, name);
+      return `- ${name}${file?.role ? ` | ${file.role}` : ""}${file?.concept ? ` | ${file.concept}` : ""}`;
+    })
+    .join("\n");
+}
+
 function createEditorState(
   source: string,
   fileName: LabFileName,
   onChange: (source: string) => void
 ) {
-  const languageExtension = fileName === "main.js" ? javascript() : [];
+  const languageExtension = isJavaScriptFile(fileName) ? javascript() : [];
 
   return EditorState.create({
     doc: source,
@@ -548,7 +643,8 @@ function initGraphicsLab(root: HTMLElement) {
   const previewResizeHandle = root.querySelector<HTMLElement>("[data-preview-resize]");
   const canvas = root.querySelector<HTMLCanvasElement>("[data-lab-canvas]");
   const editorHost = root.querySelector<HTMLElement>("[data-editor-host]");
-  const fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
+  const fileTabsContainer = root.querySelector<HTMLElement>("[data-file-tabs]");
+  let fileTabs = [...root.querySelectorAll<HTMLButtonElement>("[data-file-tab]")];
   const guideTab = root.querySelector<HTMLButtonElement>("[data-guide-tab]");
   const changeReviewTab = root.querySelector<HTMLButtonElement>("[data-change-review-tab]");
   const changeReview = root.querySelector<HTMLElement>("[data-change-review]");
@@ -600,8 +696,16 @@ function initGraphicsLab(root: HTMLElement) {
     return;
   }
 
-  let files = loadFiles(lesson);
-  let activeFile: LabFileName = "main.js";
+  let entryFileName = getEntryFileName(lesson);
+  let workspaceFileNames = getLessonFileNames(lesson);
+  let fileNames = getVisibleLessonFileNames(lesson);
+  let files = loadFiles(lesson, workspaceFileNames);
+  workspaceFileNames = getLessonFileNames({ ...lesson, starterFiles: Object.fromEntries(Object.keys(files).map((name) => [name, files[name].source])) });
+  fileNames = getVisibleLessonFileNames({
+    ...lesson,
+    starterFiles: Object.fromEntries(workspaceFileNames.map((name) => [name, files[name].source]))
+  });
+  let activeFile: LabFileName = files[entryFileName] ? entryFileName : fileNames[0];
   let activeWorkspaceTab: WorkspaceTab = "ai";
   let guideConversationStarted = false;
   let cleanup: RuntimeCleanup | undefined;
@@ -771,7 +875,7 @@ function initGraphicsLab(root: HTMLElement) {
       marker.textContent = row.kind === "add" ? "+" : row.kind === "remove" ? "-" : row.kind === "fold" ? "..." : "";
 
       const code = document.createElement("code");
-      code.textContent = row.kind === "fold" ? "部分未展示" : row.text || " ";
+      code.textContent = row.kind === "fold" ? "部分内容未展开" : row.text || " ";
 
       line.append(oldNumber, newNumber, marker, code);
       diff.append(line);
@@ -873,7 +977,7 @@ function initGraphicsLab(root: HTMLElement) {
       name.textContent = entry.file;
       const summary = document.createElement("span");
       const operationLabel = entry.operation === "replace_all" ? "完整替换" : "局部替换";
-      summary.textContent = `${operationLabel} · Line ${entry.startLine}-${entry.endLine}`;
+      summary.textContent = `${operationLabel} 路 Line ${entry.startLine}-${entry.endLine}`;
       button.append(name, summary);
       button.addEventListener("click", () => {
         selectedChangeReviewIndex = index;
@@ -891,7 +995,7 @@ function initGraphicsLab(root: HTMLElement) {
     file.textContent = selectedEntry.file;
     const detail = document.createElement("span");
     const operationLabel = selectedEntry.operation === "replace_all" ? "完整替换" : "局部替换";
-    detail.textContent = `${operationLabel}${selectedEntry.compacted ? " · 变更片段" : ""} · Line ${selectedEntry.startLine}-${selectedEntry.endLine}`;
+    detail.textContent = `${operationLabel}${selectedEntry.compacted ? " / 变更片段" : ""} / Line ${selectedEntry.startLine}-${selectedEntry.endLine}`;
     meta.append(file, detail);
 
     article.append(meta, makeChangeDiffBlock(selectedEntry));
@@ -1205,7 +1309,7 @@ function initGraphicsLab(root: HTMLElement) {
     if (text.includes("错误")) return "error";
     if (text.includes("更新")) return "done";
     if (text.includes("等待回答") || text.includes("自由提问")) return "active";
-    if (text.includes("生成") || text.includes("分析") || text.includes("请求")) return "running";
+    if (text.includes("生成") || text.includes("分析") || text.includes("请求") || text.includes("思考")) return "running";
     return "waiting";
   };
 
@@ -1357,6 +1461,73 @@ function initGraphicsLab(root: HTMLElement) {
     parent: editorHost
   });
 
+  const bindFileTab = (tab: HTMLButtonElement) => {
+    tab.addEventListener("click", () => {
+      const fileName = tab.dataset.file;
+      if (fileName && isKnownFileName(fileNames, fileName)) switchFile(fileName);
+    });
+  };
+
+  const createFileTab = (fileName: LabFileName) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("role", "tab");
+    button.dataset.fileTab = "";
+    button.dataset.file = fileName;
+    button.setAttribute("aria-selected", "false");
+
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("width", "15");
+    icon.setAttribute("height", "15");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("fill", "none");
+    icon.setAttribute("stroke", "currentColor");
+    icon.setAttribute("stroke-width", "2");
+    icon.setAttribute("stroke-linecap", "round");
+    icon.setAttribute("stroke-linejoin", "round");
+    icon.setAttribute("aria-hidden", "true");
+    [["polyline", "16 18 22 12 16 6"], ["polyline", "8 6 2 12 8 18"]].forEach(([tag, points]) => {
+      const polyline = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      polyline.setAttribute("points", points);
+      icon.append(polyline);
+    });
+
+    const label = document.createElement("span");
+    label.textContent = fileName;
+    button.append(icon, label);
+    bindFileTab(button);
+    return button;
+  };
+
+  const syncFileTabs = () => {
+    if (!fileTabsContainer) return;
+    const existing = new Map(fileTabs.map((tab) => [tab.dataset.file ?? "", tab]));
+    fileNames.forEach((fileName) => {
+      if (existing.has(fileName)) return;
+      const tab = createFileTab(fileName);
+      fileTabsContainer.append(tab);
+      fileTabs.push(tab);
+    });
+    fileTabs = fileTabs.filter((tab) => Boolean(tab.isConnected));
+  };
+
+  const ensureFile = (fileName: LabFileName, source = "") => {
+    if (!files[fileName]) {
+      files[fileName] = {
+        name: fileName,
+        label: fileName,
+        source
+      };
+    }
+    if (!fileNames.includes(fileName)) {
+      fileNames = sortLessonFileNames(lesson, [...fileNames, fileName]);
+      syncFileTabs();
+    }
+    return files[fileName];
+  };
+
+  syncFileTabs();
+
   const syncTabs = () => {
     fileTabs.forEach((tab) => {
       const isActive = activeWorkspaceTab !== "ai" && activeWorkspaceTab !== "review" && tab.dataset.file === activeFile;
@@ -1391,6 +1562,7 @@ function initGraphicsLab(root: HTMLElement) {
   };
 
   const switchFile = (fileName: LabFileName) => {
+    ensureFile(fileName);
     activeWorkspaceTab = fileName;
     activeFile = fileName;
     editorHost.hidden = false;
@@ -1409,7 +1581,12 @@ function initGraphicsLab(root: HTMLElement) {
 
   const resetLessonCode = () => {
     stopRuntime();
-    files = cloneStarterFiles(lesson);
+    entryFileName = getEntryFileName(lesson);
+    workspaceFileNames = getLessonFileNames(lesson);
+    fileNames = getVisibleLessonFileNames(lesson);
+    files = cloneStarterFiles(lesson, workspaceFileNames);
+    activeFile = files[activeFile] ? activeFile : files[entryFileName] ? entryFileName : fileNames[0];
+    syncFileTabs();
     completedPatches.clear();
     currentCheckpointIndex = 0;
     lessonFreeMode = false;
@@ -1455,7 +1632,7 @@ function initGraphicsLab(root: HTMLElement) {
   };
 
   const getFilesSnapshot = () =>
-    fileNames.map((name) => `--- ${name} ---\n${files[name].source}`).join("\n\n");
+    fileNames.map((name) => `--- ${name} ---\n${files[name]?.source ?? ""}`).join("\n\n");
 
   const advanceCheckpoint = (patchId?: string, nextCheckpointId?: string): CheckpointAdvanceResult => {
     const previousId = currentCheckpoint()?.id ?? "";
@@ -1488,20 +1665,13 @@ function initGraphicsLab(root: HTMLElement) {
 
   const applyGuidePatches = (patches: GuidePatch[]) => {
     const changedFiles = new Set<LabFileName>();
-    const nextFiles = fileNames.reduce(
-      (snapshot, name) => {
-        snapshot[name] = files[name].source;
-        return snapshot;
-      },
-      {} as Record<LabFileName, string>
-    );
+    const nextFiles = Object.fromEntries(Object.values(files).map((file) => [file.name, file.source])) as Record<LabFileName, string>;
     const changeReviewBatch: ChangeReviewEntry[] = [];
 
     patches.forEach((patch) => {
-      if (!fileNames.includes(patch.file)) {
-        throw new Error(`AI 请求修改不允许的文件：${patch.file}`);
-      }
-      const source = nextFiles[patch.file];
+      ensureFile(patch.file);
+      if (!(patch.file in nextFiles)) nextFiles[patch.file] = files[patch.file].source;
+      const source = nextFiles[patch.file] ?? "";
       if (patch.operation === "replace_all") {
         const preview = compactCodePreview(source, patch.content, 1, 3, 34);
         changeReviewBatch.push({
@@ -1539,10 +1709,11 @@ function initGraphicsLab(root: HTMLElement) {
         changedFiles.add(patch.file);
         return;
       }
-      throw new Error(`不支持的 patch 操作：${patch.operation}`);
+      throw new Error(`涓嶆敮鎸佺殑 patch 鎿嶄綔锛?{patch.operation}`);
     });
 
     changedFiles.forEach((fileName) => {
+      ensureFile(fileName);
       files[fileName].source = nextFiles[fileName];
     });
 
@@ -1580,41 +1751,34 @@ function initGraphicsLab(root: HTMLElement) {
     const checkpoint = currentCheckpoint();
     const errorText = errorBox.textContent || "";
     const freeModeRequest = lessonFreeMode && mode === "answer";
-    const systemPrompt = `你是图形学实验教练，当前网站是纯静态页面，课程内容和代码 patch 已经预设在本地。
+    const systemPrompt = `你是图形学实验教练。课程内容、checkpoint 和本地 patch 已经由静态课程包提供。
 必须遵守：
 1. 每轮最多提出一个问题。
-2. 不要一次性讲完整教程，不要输出长篇代码。
-3. 预设课程推进模式下，当前 checkpoint 有 patchId 且用户回答正确或基本正确时，返回该 patchId，让网页应用本地预设 patch。
-3a. 预设课程推进模式下，不要要求用户手写、补全或粘贴代码；用户只回答概念，代码修改由 patchId 或本地预设 patch 完成。
-3b. 预设课程推进模式下，如果需要继续提问，question 必须使用当前或下一个 checkpoint.question 的原文，不要自行改写问题。
-4. 预设课程推进模式下，当前 checkpoint 没有 patchId 且用户回答正确或基本正确时，不要返回 patches；只返回 nextCheckpointId 指向下一个 checkpoint。
-5. 预设课程推进模式下，用户只回答“不知道”或类似表达时，给一个更具体的递进提示，并重复当前 checkpoint.question；不要返回旧问题、patchId 或 nextCheckpointId。
-6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
-7. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
-7a. 自由实验模式下，不要再回到 checkpoint 提问，不要考察用户，不要返回 patchId 或 nextCheckpointId；用户问概念细节时应直接解释，只有确实缺少必要信息时才提出一个澄清问题。
-8. 只允许修改 main.js、vertex.glsl、fragment.glsl。
-9. 运行环境会向 main.js 注入 THREE、OrbitControls、canvas、vertexShader、fragmentShader、report；不要写 import，也不要写 THREE.OrbitControls。
-10. 如果用户要求移动摄像头、观察 specular 或增加相机交互，优先调整 camera/light/material；需要轨道交互时使用 OrbitControls 参数，或让代码返回 { renderer, camera, scene, render, cleanup } 以便页面顶部轨道控制按钮接管。
-11. 如果需要提问，只能写在 question 字段；message 字段不要包含问号、请回答、下一问等提问句。
-12. start 模式优先使用当前 checkpoint.question 作为唯一问题，不要自行追加同义问题。
-13. patches 只支持两种格式：{"file":"main.js","operation":"replace","target":"原片段","content":"新片段"} 或 {"file":"fragment.glsl","operation":"replace_all","content":"完整文件内容"}。
-14. 只返回 JSON，不返回 Markdown。
+2. 预设课程推进模式下，用户只回答概念；代码变更优先通过本地 patchId 完成。
+3. 如果当前 checkpoint 有 patchId，且用户回答正确或基本正确，只返回该 patchId。
+4. 如果当前 checkpoint 没有 patchId，且用户回答正确或基本正确，只返回 nextCheckpointId。
+5. 如果用户回答错误、不完整或说不知道，给一个紧密相关的提示，并重复当前 checkpoint.question；不要推进 checkpoint。
+6. 如果用户明确说某个概念不懂，只解释这个概念与当前 checkpoint 的直接关系，最多 120 字，然后重复当前问题。
+7. 自由实验模式下，不要再回到 checkpoint 提问；用户问概念就直接解释，用户要求修改效果就返回最小 patches 并设置 runAfterApply=true。
+8. 只能修改课程工作区文件列表中的文件；确需新增辅助文件时，可以在 patches 中给出新文件名。
+9. 当前运行入口文件是 ${entryFileName}；运行环境注入 THREE、OrbitControls、canvas、files、getFile、report。多文件课程必须通过 getFile("file-name") 读取 shader、json 或 helper，不要依赖固定文件名。
+10. message 字段不要包含问题；需要提问只能写在 question 字段。
+11. start 模式必须优先使用当前 checkpoint.question 作为唯一问题。
+12. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
-  "message": "给用户看的简短反馈或过渡说明，最多 80 字，不得包含问题",
+  "message": "给用户看的简短反馈或过渡说明，最多 80 字，不包含问题",
   "question": "唯一的下一步问题，没有则为空字符串",
   "patchId": "要应用的本地预设 patch id，没有则为空字符串",
-  "patches": [{"file": "main.js | vertex.glsl | fragment.glsl", "operation": "replace | replace_all", "target": "replace 时必填", "content": "替换内容"}],
+  "patches": [{"file": "课程文件名或新文件名", "operation": "replace | replace_all", "target": "replace 时必填", "content": "替换内容"}],
   "runAfterApply": true,
   "expectedObservation": "应用 patch 后应观察到的现象",
   "nextCheckpointId": "可选，进入的 checkpoint id"
 }`;
 
     const checkpointPrompt = freeModeRequest
-      ? `当前阶段：自由实验模式。
-课程预设提问已经结束。不要使用 checkpoint 序列继续追问用户，也不要返回 patchId 或 nextCheckpointId。
-如果用户询问 NDC、矩阵、shader、插值、光照等概念，直接结合当前代码解释；如果用户要求改变效果，则返回 patches。`
+      ? `当前阶段：自由实验模式。课程预设提问已经结束。不要使用 checkpoint 序列继续追问用户，不要返回 patchId 或 nextCheckpointId。结合当前代码和课程资料直接回答或返回 patches。`
       : `教学规则：
 ${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
 checkpoint 序列：
@@ -1622,8 +1786,11 @@ ${lesson.checkpoints
   .map((item, index) => `${index + 1}. ${item.id} | ${item.title} | ${item.patchId ? `patchId=${item.patchId}` : "concept-only"}`)
   .join("\n")}
 当前 checkpoint：
-${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
-已完成 patchId：${[...completedPatches].join(", ") || "(无)"}
+${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(无 checkpoint)"}
+当前 checkpoint 关联文件：
+${describeCheckpointFiles(checkpoint)}
+已完成 patchId：
+${[...completedPatches].join(", ") || "(无)"}
 当前阶段：预设课程推进模式。概念 checkpoint 用 nextCheckpointId 推进；代码 checkpoint 用本地 patchId 推进。`;
 
     const lessonPrompt = `课程：${lesson.title}
@@ -1633,6 +1800,13 @@ ${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
 内部参考来源：${lesson.source}
 内部运行环境：${lesson.runtime}
 AI 教学摘要：${lesson.aiBrief}
+课程入口文件：${entryFileName}
+实验工作区文件：
+${describeWorkspaceFiles(lesson)}
+可修改课程文件列表：
+${describePatchableFiles(lesson, fileNames)}
+源课程 shader 关系：
+${describeShaderSets(lesson)}
 参考要点：
 ${lesson.referenceBrief.map((item) => `- ${item}`).join("\n")}
 参考源码摘录：
@@ -1663,7 +1837,7 @@ ${getFilesSnapshot()}`;
     }
 
     setGuideAlert();
-    setGuideState("AI 思考中");
+    setGuideState("AI 鎬濊€冧腑");
 
     const response = await fetch(guideEndpointInput.value.trim(), {
       method: "POST",
@@ -1810,21 +1984,23 @@ ${getFilesSnapshot()}`;
 
     try {
       const tracked = createTrackedThree();
+      const fileSources = Object.fromEntries(Object.values(files).map((file) => [file.name, file.source])) as Record<string, string>;
+      const getFile = (fileName: string) => fileSources[fileName] ?? "";
       const factory = new Function(
         "THREE",
         "OrbitControls",
         "canvas",
-        "vertexShader",
-        "fragmentShader",
+        "files",
+        "getFile",
         "report",
-        `"use strict";\n${files["main.js"].source}`
+        `"use strict";\n${files[entryFileName]?.source ?? ""}`
       );
       const result = factory(
         tracked.THREE,
         OrbitControls,
         canvas,
-        files["vertex.glsl"].source,
-        files["fragment.glsl"].source,
+        Object.freeze({ ...fileSources }),
+        getFile,
         () => undefined
       );
 
@@ -1872,12 +2048,7 @@ ${getFilesSnapshot()}`;
     void runProgram();
   };
 
-  fileTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const fileName = tab.dataset.file as LabFileName | undefined;
-      if (fileName && fileNames.includes(fileName)) switchFile(fileName);
-    });
-  });
+  fileTabs.forEach(bindFileTab);
 
   guideTab?.addEventListener("click", switchGuide);
   changeReviewTab?.addEventListener("click", switchChangeReview);
@@ -1908,8 +2079,8 @@ ${getFilesSnapshot()}`;
 
   sidebarToggleButton?.addEventListener("click", () => {
     const isCollapsed = labWorkspace.classList.toggle("is-sidebar-collapsed");
-    sidebarToggleButton.setAttribute("aria-label", isCollapsed ? "展开文件栏" : "收起文件栏");
-    sidebarToggleButton.setAttribute("title", isCollapsed ? "展开文件栏" : "收起文件栏");
+    sidebarToggleButton.setAttribute("aria-label", isCollapsed ? "展开边栏" : "收起边栏");
+    sidebarToggleButton.setAttribute("title", isCollapsed ? "展开边栏" : "收起边栏");
     sidebarToggleButton.setAttribute("aria-pressed", String(isCollapsed));
     syncGuideChatFrameDuringTransition(520);
     window.setTimeout(() => {
@@ -2028,3 +2199,4 @@ ${getFilesSnapshot()}`;
 }
 
 document.querySelectorAll<HTMLElement>("[data-graphics-lab]").forEach(initGraphicsLab);
+

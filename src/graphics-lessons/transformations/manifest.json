@@ -18,6 +18,46 @@
     "旋转改变方向基，缩放改变坐标相对原点的距离。",
     "动画本质是每帧根据时间更新变换参数。"
   ],
+  "shaderSets": [
+    {
+      "name": "transform",
+      "role": "object/material shader program",
+      "fragment": "reference/transform.fs",
+      "vertex": "reference/transform.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
+  ],
   "referenceFiles": [
     {
       "path": "reference/CMakeLists.txt",
@@ -49,6 +89,10 @@
       "id": "homogeneous-coordinate",
       "title": "齐次坐标与平移",
       "concept": "二维或三维平移通常借助齐次坐标写入矩阵，例如 vec4(position, 1.0) 让平移列参与计算。",
+      "files": [
+        "vertex.glsl",
+        "scene.json"
+      ],
       "question": "为什么普通 3x3 线性变换不能直接表达三维平移，而 4x4 齐次矩阵可以？",
       "expectedKeywords": [
         "齐次坐标",
@@ -63,6 +107,13 @@
       "id": "model-transform",
       "title": "模型矩阵",
       "concept": "模型矩阵把局部坐标变换到世界空间，并可组合平移、旋转、缩放。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "vertex.glsl",
+        "geometry.json",
+        "fragment.glsl"
+      ],
       "question": "若顶点 p_local 通过 p_world = M * p_local 进入世界空间，为什么同一组顶点可以被不同 M 复用成多个实例？",
       "expectedKeywords": [
         "p_world",
@@ -79,6 +130,10 @@
       "id": "matrix-order",
       "title": "矩阵乘法顺序",
       "concept": "矩阵乘法通常不满足交换律，T * R * p 和 R * T * p 表示先后顺序不同的变换链。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "从 T * R * p 与 R * T * p 出发，为什么先旋转再平移和先平移再旋转会得到不同位置？",
       "expectedKeywords": [
         "矩阵乘法",
@@ -93,6 +148,10 @@
       "id": "rotation",
       "title": "旋转与变换顺序",
       "concept": "旋转改变局部坐标轴方向，和其它变换组合时顺序会影响结果。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "为什么旋转矩阵不仅改变顶点位置，也可以理解为改变物体局部坐标轴在世界中的方向？",
       "expectedKeywords": [
         "旋转矩阵",
@@ -109,6 +168,10 @@
       "id": "scale-matrix",
       "title": "缩放矩阵",
       "concept": "缩放矩阵会对坐标分量逐轴乘以缩放系数，非等比缩放会改变形状比例和法线处理。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "如果缩放矩阵为 diag(sx, sy, sz, 1)，为什么顶点的 x、y、z 分量会分别按 sx、sy、sz 改变？",
       "expectedKeywords": [
         "diag",
@@ -124,6 +187,10 @@
       "id": "scale",
       "title": "缩放与坐标距离",
       "concept": "缩放会改变顶点坐标相对原点的距离，非等比缩放还会改变形状比例。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "为什么围绕原点缩放时，离原点越远的顶点产生的位移通常越大？",
       "expectedKeywords": [
         "原点",
@@ -140,6 +207,10 @@
       "id": "time-integration-transform",
       "title": "按时间积分",
       "concept": "动画参数应按真实时间积分，例如 angle(t + dt) = angle(t) + omega * dt。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
       "question": "如果角速度 omega 单位是 rad/s，为什么一帧内增加的角度应是 omega * deltaTime？",
       "expectedKeywords": [
         "omega",
@@ -154,6 +225,10 @@
       "id": "animated-transform",
       "title": "按时间更新变换",
       "concept": "动画是随时间改变变换参数，并在每帧重新渲染。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
       "question": "为什么用 elapsed time 或 deltaTime 驱动旋转，能让不同刷新率设备上的动画速度更一致？",
       "expectedKeywords": [
         "时间",

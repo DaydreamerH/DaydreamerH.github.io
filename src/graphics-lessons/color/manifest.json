@@ -11,12 +11,70 @@
   "runtime": "three-shader-material",
   "previewTitle": "Object Color",
   "draft": false,
-  "aiBrief": "围绕 object color、light color、逐通道相乘和光源位置组织提问。",
+  "aiBrief": "围绕 scene.json 中的颜色参数、cube.fragment.glsl 的逐通道相乘、cube.vertex.glsl 的空间数据传递和 light.* 光源标记组织提问。",
   "referenceBrief": [
-    "物体颜色描述表面对不同颜色光的保留比例。",
-    "光源颜色描述入射光包含哪些颜色通道。",
-    "基础模型中可用 objectColor * lightColor 表达逐通道能量筛选。",
-    "光源位置会进一步影响光照方向和强度分布。"
+    "物体颜色描述表面对不同颜色光的保留比例，光源颜色描述入射光的通道能量。",
+    "cube.fragment.glsl 用 uObjectColor * uLightColor 表达逐通道能量筛选。",
+    "scene.json 保存物体颜色、光源颜色和光源位置，让参数变化与 shader 公式分离。",
+    "light.vertex.glsl 与 light.fragment.glsl 只负责把光源位置可视化，不参与物体颜色计算。"
+  ],
+  "shaderSets": [
+    {
+      "name": "color",
+      "role": "object/material shader program",
+      "fragment": "reference/color.fs",
+      "vertex": "reference/color.vs"
+    },
+    {
+      "name": "light",
+      "role": "light marker shader program",
+      "fragment": "reference/light.fs",
+      "vertex": "reference/light.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "cube.fragment.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的片元阶段，计算颜色、光照或材质响应",
+      "visible": true
+    },
+    {
+      "path": "cube.vertex.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的顶点阶段，输出世界坐标、法线或顶点属性",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "light.fragment.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的片元阶段，用光源颜色显示标记",
+      "visible": true
+    },
+    {
+      "path": "light.vertex.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的顶点阶段，用于显示光源位置",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    }
   ],
   "referenceFiles": [
     {
@@ -56,8 +114,12 @@
     {
       "id": "color-as-vector",
       "title": "颜色向量",
-      "concept": "RGB 颜色可看作三维向量，每个分量表示对应通道的相对强度或反射比例。",
-      "question": "为什么 objectColor * lightColor 通常是逐通道相乘，而不是把两个颜色先转成一个标量再相乘？",
+      "concept": "scene.json 中的 uObjectColor 和 uLightColor 是 RGB 向量；cube.fragment.glsl 对它们逐通道相乘。",
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json"
+      ],
+      "question": "阅读 scene.json 的 uObjectColor、uLightColor 和 cube.fragment.glsl 的乘法关系，为什么颜色应逐通道相乘，而不是先压成一个亮度标量？",
       "expectedKeywords": [
         "RGB",
         "逐通道",
@@ -65,13 +127,17 @@
         "反射",
         "分量"
       ],
-      "hint": "红、绿、蓝光的能量和反射比例可以分别变化。"
+      "hint": "分别思考红、绿、蓝三个通道的入射能量和表面保留比例。"
     },
     {
       "id": "object-color",
       "title": "物体颜色",
-      "concept": "物体颜色可以理解为表面对不同颜色通道的反射比例。",
-      "question": "如果 objectColor = (0.9, 0.4, 0.2)，为什么它表示物体更容易保留红色光而不是蓝色光？",
+      "concept": "uObjectColor 是表面对 RGB 通道的保留比例，真正的公式写在 cube.fragment.glsl。",
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl"
+      ],
+      "question": "当 scene.json 中 uObjectColor = (0.95, 0.48, 0.2) 时，为什么 cube.fragment.glsl 会让物体更偏橙色而不是蓝色？",
       "expectedKeywords": [
         "objectColor",
         "红色",
@@ -79,15 +145,18 @@
         "反射比例",
         "通道"
       ],
-      "hint": "每个分量越大，表示对应颜色通道保留得越多。",
+      "hint": "观察三个通道中哪个分量保留最多，哪个保留最少。",
       "patchId": "01-object-color",
       "expectedObservation": "立方体显示物体基础颜色。"
     },
     {
       "id": "channel-filtering",
       "title": "光谱筛选",
-      "concept": "光源颜色提供入射光通道，物体颜色提供反射比例，最终颜色可近似为逐通道能量筛选。",
-      "question": "若 lightColor 的红色分量很低，为什么再红的物体也很难显示出强红色？",
+      "concept": "cube.fragment.glsl 中的逐通道乘法可以看作光谱筛选：没有入射能量的通道无法被反射出来。",
+      "files": [
+        "cube.fragment.glsl"
+      ],
+      "question": "如果 scene.json 把 uLightColor 的红色分量调得很低，为什么 cube.fragment.glsl 中再高的 uObjectColor.r 也难以产生强红色？",
       "expectedKeywords": [
         "lightColor",
         "红色分量",
@@ -95,13 +164,17 @@
         "反射",
         "相乘"
       ],
-      "hint": "没有足够的红色入射光，物体就没有红色能量可以反射。"
+      "hint": "乘法中任一通道的输入接近 0，最终这个通道也会接近 0。"
     },
     {
       "id": "light-color",
       "title": "光源颜色",
-      "concept": "光源颜色会和物体反射颜色逐通道组合，限制最终可见颜色。",
-      "question": "从 finalColor = objectColor * lightColor 出发，为什么橙色物体在偏蓝光下可能变暗或偏冷？",
+      "concept": "scene.json 改变 uLightColor，cube.fragment.glsl 不变；这能观察参数与公式分离。",
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl"
+      ],
+      "question": "为什么只修改 scene.json 中的 uLightColor，就能让同一段 cube.fragment.glsl 输出偏冷或偏暗的物体颜色？",
       "expectedKeywords": [
         "finalColor",
         "逐通道",
@@ -109,15 +182,20 @@
         "蓝光",
         "相乘"
       ],
-      "hint": "橙色依赖较强红绿通道，偏蓝光会削弱这些通道的输入。",
+      "hint": "shader 公式没有变，变化来自 uniform 参数。",
       "patchId": "02-light-color",
       "expectedObservation": "立方体颜色受光源颜色影响而变化。"
     },
     {
       "id": "light-direction-setup",
       "title": "从颜色到方向光照",
-      "concept": "颜色相乘只处理通道能量，方向光照还需要 lightDir = normalize(lightPos - fragPos)。",
-      "question": "为什么只知道 lightColor 不能计算漫反射，还必须知道 lightDir 或 lightPos？",
+      "concept": "颜色相乘只需要 fragment shader 的颜色参数；进入方向光照前，cube.vertex.glsl 需要为片元阶段准备位置或法线数据。",
+      "files": [
+        "cube.vertex.glsl",
+        "cube.fragment.glsl",
+        "geometry.json"
+      ],
+      "question": "为什么从纯颜色模型过渡到漫反射时，cube.vertex.glsl 必须开始向 cube.fragment.glsl 提供世界位置或法线等空间信息？",
       "expectedKeywords": [
         "lightDir",
         "lightPos",
@@ -125,13 +203,19 @@
         "夹角",
         "漫反射"
       ],
-      "hint": "漫反射亮度取决于表面法线与入射光方向的夹角。"
+      "hint": "漫反射依赖表面朝向和光照方向，而这些不是单纯颜色参数。"
     },
     {
       "id": "light-position",
       "title": "光源位置",
-      "concept": "光源位置为后续方向光照提供 lightDir，是从颜色模型进入光照模型的桥梁。",
-      "question": "为什么 lightDir = normalize(lightPos - fragPos) 必须按片元位置计算，而不是整个物体共用一个固定方向？",
+      "concept": "scene.json 中的 lightMarker 启用 light.vertex.glsl 与 light.fragment.glsl，把光源位置作为独立对象显示。",
+      "files": [
+        "scene.json",
+        "main.js",
+        "light.vertex.glsl",
+        "light.fragment.glsl"
+      ],
+      "question": "为什么光源标记适合使用 light.vertex.glsl/light.fragment.glsl 独立显示，而不是混进 cube.fragment.glsl 的物体着色公式里？",
       "expectedKeywords": [
         "lightDir",
         "fragPos",
@@ -139,7 +223,7 @@
         "片元",
         "方向"
       ],
-      "hint": "点光源到物体不同片元的方向可能不同。",
+      "hint": "一个 shader 程序画物体表面，另一个 shader 程序画光源位置标记，职责不同。",
       "patchId": "03-light-marker",
       "expectedObservation": "画面中出现表示光源位置的小标记。"
     }

@@ -17,6 +17,46 @@
     "model 矩阵把物体放入世界，view 矩阵把世界放到相机坐标系，projection 矩阵定义裁剪和透视。",
     "透视投影依赖齐次坐标和透视除法，让深度影响屏幕空间尺度。"
   ],
+  "shaderSets": [
+    {
+      "name": "coordinate",
+      "role": "object/material shader program",
+      "fragment": "reference/coordinate.fs",
+      "vertex": "reference/coordinate.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
+  ],
   "referenceFiles": [
     {
       "path": "reference/CMakeLists.txt",
@@ -48,6 +88,10 @@
       "id": "space-chain",
       "title": "坐标空间链",
       "concept": "典型顶点变换链可写为 p_clip = P * V * M * p_local。",
+      "files": [
+        "vertex.glsl",
+        "scene.json"
+      ],
       "question": "在 p_clip = P * V * M * p_local 中，为什么 M、V、P 分别不应该混在同一个概念里理解？",
       "expectedKeywords": [
         "M",
@@ -64,6 +108,12 @@
       "id": "local-world",
       "title": "局部空间到世界空间",
       "concept": "局部顶点只描述模型自身形状，model matrix 负责把它放入世界。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么保留局部空间能让同一个 mesh 用不同 model matrix 实例化到多个世界位置？",
       "expectedKeywords": [
         "局部",
@@ -80,6 +130,10 @@
       "id": "depth-and-occlusion",
       "title": "深度与遮挡",
       "concept": "三维几何不仅有屏幕 x、y，还有深度 z；深度参与遮挡和透视比例。",
+      "files": [
+        "geometry.json",
+        "scene.json"
+      ],
       "question": "为什么只看二维平面很难暴露 view/projection 矩阵中的深度错误，而立方体更容易暴露？",
       "expectedKeywords": [
         "深度",
@@ -94,6 +148,11 @@
       "id": "enter-3d",
       "title": "三维方向与深度",
       "concept": "三维物体可以暴露深度、遮挡和不同面的法线方向。",
+      "files": [
+        "geometry.json",
+        "scene.json",
+        "fragment.glsl"
+      ],
       "question": "为什么立方体的多个面能帮助你判断旋转、相机方向和透视是否同时正确？",
       "expectedKeywords": [
         "多个面",
@@ -110,6 +169,10 @@
       "id": "view-inverse",
       "title": "View 是相机变换的逆",
       "concept": "view matrix 通常是相机世界矩阵的逆，把世界点表示到相机局部坐标系中。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "如果相机在世界中向 +x 移动，为什么 view 变换看起来像把世界向 -x 移动？",
       "expectedKeywords": [
         "逆矩阵",
@@ -124,6 +187,10 @@
       "id": "view-transform",
       "title": "世界空间到观察空间",
       "concept": "view matrix 相当于把整个世界变换到以相机为原点的坐标系。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "为什么同一个世界点经过不同 view matrix 后，会得到不同的观察空间坐标？",
       "expectedKeywords": [
         "view matrix",
@@ -140,6 +207,10 @@
       "id": "clip-and-ndc",
       "title": "裁剪空间到 NDC",
       "concept": "projection 输出裁剪空间坐标 p_clip，随后执行 p_ndc = p_clip.xyz / p_clip.w。",
+      "files": [
+        "vertex.glsl",
+        "scene.json"
+      ],
       "question": "为什么透视投影要先保留 w，再用 xyz / w 得到 NDC，而不是直接输出最终屏幕坐标？",
       "expectedKeywords": [
         "w",
@@ -154,6 +225,10 @@
       "id": "projection",
       "title": "裁剪空间与透视除法",
       "concept": "projection matrix 输出裁剪空间坐标，随后透视除法把 xyz 除以 w 得到 NDC。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "为什么更远的物体在透视除法后会占用更小的 NDC 范围？",
       "expectedKeywords": [
         "透视除法",

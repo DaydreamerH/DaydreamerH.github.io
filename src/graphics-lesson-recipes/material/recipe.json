@@ -10,191 +10,442 @@
   "description": "在基础光照上观察材质参数对环境光、漫反射和高光的影响。",
   "previewTitle": "Material Response",
   "lesson": "把材质看成物体对不同光照分量的响应参数，而不是单一颜色。",
-  "aiBrief": "围绕 material ambient/diffuse/specular/shininess 和光照方程组织提问。",
+  "aiBrief": "围绕 scene.json 中的材质参数、cube.fragment.glsl 的材质响应公式、cube.vertex.glsl 的法线/世界坐标输出和 light.* 光源标记组织提问。",
   "referenceBrief": [
-    "材质参数描述物体如何响应不同光照分量。",
-    "ambient、diffuse、specular 可以分别调节环境光、漫反射和镜面反射贡献。",
-    "shininess 是高光指数，控制高光能量集中程度。",
-    "材质和光源共同决定最终颜色。"
+    "材质参数不是单一颜色，而是对 ambient、diffuse、specular 等光照分量的响应。",
+    "scene.json 负责保存材质与光源参数，cube.fragment.glsl 负责把参数代入光照公式。",
+    "cube.vertex.glsl 输出 vNormal 与 vWorldPosition，为材质响应提供空间基础。",
+    "light.* shader 显示光源位置，帮助区分光源参数和物体材质参数。"
   ],
   "starterState": {
     "shape": "cube",
     "mode": "ambient",
     "camera": "perspective",
-    "cameraPosition": [2.4, 1.8, 4.2],
-    "objectColor": [0.95, 0.48, 0.2],
-    "ambientStrength": 0.18
+    "cameraPosition": [
+      2.4,
+      1.8,
+      4.2
+    ],
+    "objectColor": [
+      0.95,
+      0.48,
+      0.2
+    ],
+    "ambientStrength": 0.18,
+    "includeLightShaders": true,
+    "shaderProgram": "cube"
   },
   "checkpoints": [
     {
       "id": "material-light-separation",
       "title": "材质与光源分离",
-      "concept": "材质描述表面对光的响应，光源描述入射光；最终结果由二者共同决定。",
-      "question": "为什么同一个 material 在不同 lightColor 下会变，而同一个 lightColor 照不同 material 也会变？",
-      "expectedKeywords": ["material", "lightColor", "响应", "入射光", "共同决定"],
-      "hint": "一个控制物体如何反射，一个控制有什么光进入。"
+      "concept": "scene.json 同时保存材质参数和光源参数，但 cube.fragment.glsl 会把二者以不同含义代入公式。",
+      "question": "为什么同一个 scene.json 中要区分 material 参数和 lightColor/lightPos，而不是把它们合并成一个颜色常量？",
+      "expectedKeywords": [
+        "material",
+        "lightColor",
+        "响应",
+        "入射光",
+        "共同决定"
+      ],
+      "hint": "一个描述表面如何响应，另一个描述入射光是什么、从哪里来。",
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "material-role",
       "title": "材质不是单一颜色",
-      "concept": "材质描述表面对各类光照分量的响应，光源描述照射条件。",
-      "question": "为什么材质参数通常按 ambient、diffuse、specular 分开，而不是只保存一个 baseColor？",
-      "expectedKeywords": ["ambient", "diffuse", "specular", "baseColor", "响应"],
-      "hint": "同一颜色的物体也可能有不同高光强度、环境响应和漫反射表现。",
+      "concept": "cube.fragment.glsl 会分别使用 ambient、diffuse、specular 材质响应，而不是只使用 baseColor。",
+      "question": "为什么 cube.fragment.glsl 中材质通常要拆成 ambient、diffuse、specular 响应，而不是只从 scene.json 读取一个 baseColor？",
+      "expectedKeywords": [
+        "ambient",
+        "diffuse",
+        "specular",
+        "baseColor",
+        "响应"
+      ],
+      "hint": "同一主体颜色也可能有不同的暗部可见性、高光强度和漫反射表现。",
       "patchId": "01-material-role",
       "expectedObservation": "立方体显示基础材质颜色。",
       "state": {
         "shape": "cube",
         "mode": "color-multiply",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightColor": [1, 1, 1]
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightColor": [
+          1,
+          1,
+          1
+        ],
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl",
+        "geometry.json"
+      ]
     },
     {
       "id": "ambient-bias",
       "title": "环境项偏置",
-      "concept": "ambient 项会整体抬亮物体，过高时会压低方向光照造成的对比。",
-      "question": "在 color = (ambient + diffuse + specular) * objectColor 中，为什么 ambient 过大会削弱 diffuse 的明暗对比？",
-      "expectedKeywords": ["ambient", "diffuse", "对比", "整体抬亮", "明暗"],
-      "hint": "环境项对各个朝向都加亮，方向差异在总和中占比会变小。"
+      "concept": "ambient 是 cube.fragment.glsl 中方向无关的偏置项，过大会稀释 diffuse 的方向差异。",
+      "question": "在 cube.fragment.glsl 的 color = (ambient + diffuse + specular) * objectColor 中，为什么 scene.json 里的 ambientStrength 过大会削弱明暗对比？",
+      "expectedKeywords": [
+        "ambient",
+        "diffuse",
+        "对比",
+        "整体抬亮",
+        "明暗"
+      ],
+      "hint": "方向无关项越大，法线造成的相对差异越不明显。",
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json"
+      ]
     },
     {
       "id": "ambient-material",
       "title": "环境响应",
-      "concept": "ambient 材质分量决定物体在方向无关光照下保留多少基础亮度。",
-      "question": "为什么 ambient 材质分量适合控制暗部可见性，但不适合单独表达物体立体感？",
-      "expectedKeywords": ["ambient", "暗部", "方向无关", "立体感", "可见性"],
-      "hint": "ambient 不随法线方向变化，所以不能提供明确的朝向信息。",
+      "concept": "scene.json 调整 ambient 响应，cube.fragment.glsl 只提供方向无关基础亮度。",
+      "question": "为什么只提高 scene.json 中的 ambient 响应能增强暗部可见性，却不能单独建立清晰立体感？",
+      "expectedKeywords": [
+        "ambient",
+        "暗部",
+        "方向无关",
+        "立体感",
+        "可见性"
+      ],
+      "hint": "立体感主要来自随法线方向变化的项。",
       "patchId": "02-ambient-material",
       "expectedObservation": "立方体显示较弱但可见的环境光层次。",
       "state": {
         "shape": "cube",
         "mode": "ambient",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "ambientStrength": 0.18
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "ambientStrength": 0.18,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "diffuse-albedo",
       "title": "漫反射反照率",
-      "concept": "diffuse 材质分量可近似理解为非金属表面的反照率，决定主体颜色如何调制 Lambert 项。",
-      "question": "为什么非金属材质的主体颜色通常主要乘在 diffuse 项上，而不是主要放在 specular 项上？",
-      "expectedKeywords": ["非金属", "diffuse", "specular", "主体颜色", "反照率"],
-      "hint": "非金属表面的镜面反射通常更接近光源颜色，主体颜色来自次表层散射后的漫反射。"
+      "concept": "cube.fragment.glsl 中 diffuse 材质响应可看作非金属表面的反照率。",
+      "question": "为什么非金属主体颜色更适合在 cube.fragment.glsl 的 diffuse 项中调制，而不是主要塞进 specular 项？",
+      "expectedKeywords": [
+        "非金属",
+        "diffuse",
+        "specular",
+        "主体颜色",
+        "反照率"
+      ],
+      "hint": "非金属的镜面反射通常更接近光源颜色，主体色更多来自漫反射。",
+      "files": [
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "diffuse-material",
       "title": "漫反射响应",
-      "concept": "diffuse 材质分量影响物体在直接光照下的主体颜色。",
-      "question": "从 diffuse = max(dot(N, L), 0) * lightColor 看，为什么 diffuse 材质颜色会影响亮面主体颜色？",
-      "expectedKeywords": ["diffuse", "dot", "lightColor", "材质颜色", "主体颜色"],
-      "hint": "漫反射光照强度先由夹角决定，再由材质反射比例调制。",
+      "concept": "cube.vertex.glsl 提供 vNormal/vWorldPosition，cube.fragment.glsl 用它们计算 diffuse 材质响应。",
+      "question": "为什么 cube.fragment.glsl 计算 diffuse 材质颜色前，必须依赖 cube.vertex.glsl 传来的法线和世界位置？",
+      "expectedKeywords": [
+        "diffuse",
+        "dot",
+        "lightColor",
+        "材质颜色",
+        "主体颜色"
+      ],
+      "hint": "漫反射强度取决于表面朝向和光源方向。",
       "patchId": "03-diffuse-material",
       "expectedObservation": "立方体出现清晰的漫反射明暗。",
       "state": {
         "shape": "cube",
         "mode": "diffuse",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
-        "ambientStrength": 0.16
-      }
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
+        "ambientStrength": 0.16,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.vertex.glsl",
+        "cube.fragment.glsl",
+        "geometry.json"
+      ]
     },
     {
       "id": "specular-locality",
       "title": "镜面项局部性",
-      "concept": "specular 项由 dot(V, R) 的幂控制，只有视线接近反射方向时才明显。",
-      "question": "为什么提高 specularStrength 主要增强高光区域，而不会像 ambient 那样均匀抬亮所有表面？",
-      "expectedKeywords": ["specularStrength", "dot(V,R)", "高光", "局部", "ambient"],
-      "hint": "specular 项本身只在 V 和 R 接近的区域较大。"
+      "concept": "specular 是 cube.fragment.glsl 中由 dot(V,R) 的幂控制的局部亮斑。",
+      "question": "为什么 scene.json 中提高 specularStrength 主要增强局部高光，而不会像 ambient 那样均匀抬亮所有表面？",
+      "expectedKeywords": [
+        "specularStrength",
+        "dot(V,R)",
+        "高光",
+        "局部",
+        "ambient"
+      ],
+      "hint": "specular 只有在视线接近反射方向的区域才大。",
+      "files": [
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "specular-material",
       "title": "镜面响应",
-      "concept": "specular 材质分量控制镜面反射贡献，通常表现为亮斑强度。",
-      "question": "为什么 specular 材质分量改变的是镜面反射能量，而不是直接改变整个物体的基础色？",
-      "expectedKeywords": ["specular", "镜面反射", "能量", "基础色", "高光"],
-      "hint": "基础色更多影响 diffuse，specular 描述反射方向附近的亮斑贡献。",
+      "concept": "scene.json 启用 light.* 标记并调整 specular 参数，cube.fragment.glsl 计算镜面响应。",
+      "question": "对照 light.* 显示的光源位置，为什么 specular 材质分量改变的是镜面反射能量，而不是整个物体的基础色？",
+      "expectedKeywords": [
+        "specular",
+        "镜面反射",
+        "能量",
+        "基础色",
+        "高光"
+      ],
+      "hint": "镜面项描述反射方向附近的亮斑贡献。",
       "patchId": "04-specular-material",
       "expectedObservation": "立方体表面出现更明显的高光。",
       "state": {
         "shape": "cube",
         "mode": "phong",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
         "ambientStrength": 0.16,
         "specularStrength": 0.65,
         "shininess": 24,
-        "showLight": true
-      }
+        "showLight": true,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "cube.fragment.glsl",
+        "light.vertex.glsl",
+        "light.fragment.glsl"
+      ]
     },
     {
       "id": "shininess-power",
       "title": "高光指数曲线",
-      "concept": "shininess 是 specular 幂指数。对 0 到 1 之间的 dot 值，指数越大，除接近 1 的区域外衰减越快。",
-      "question": "如果 dot(V, R) = 0.8，为什么 pow(0.8, 16) 会明显大于 pow(0.8, 96)？",
-      "expectedKeywords": ["pow", "0.8", "shininess", "指数", "衰减"],
-      "hint": "小于 1 的数被反复相乘，指数越大结果越快趋近 0。"
+      "concept": "cube.fragment.glsl 的 shininess 是 pow 的指数，控制 dot(V,R) 曲线衰减速度。",
+      "question": "在 cube.fragment.glsl 中，如果 dot(V,R)=0.8，为什么 pow(0.8,16) 会明显大于 pow(0.8,96)？",
+      "expectedKeywords": [
+        "pow",
+        "0.8",
+        "shininess",
+        "指数",
+        "衰减"
+      ],
+      "hint": "小于 1 的数被反复相乘，指数越大衰减越快。",
+      "files": [
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "shininess",
       "title": "高光指数",
-      "concept": "shininess 指数控制 specular 曲线衰减速度，值越大高光越集中。",
-      "question": "为什么 shininess 变大时，高光范围会变窄，但中心附近可能更显得锐利？",
-      "expectedKeywords": ["shininess", "pow", "变窄", "锐利", "高光"],
-      "hint": "只有 dot(V,R) 非常接近 1 的片元能在高指数下保留明显强度。",
+      "concept": "scene.json 改变 uShininess，cube.fragment.glsl 的公式不变但高光范围改变。",
+      "question": "为什么只修改 scene.json 的 shininess，就能让 cube.fragment.glsl 输出的高光范围变窄、中心更锐利？",
+      "expectedKeywords": [
+        "shininess",
+        "pow",
+        "变窄",
+        "锐利",
+        "高光"
+      ],
+      "hint": "公式不变，幂指数改变了曲线形状。",
       "patchId": "05-shininess",
       "expectedObservation": "高光范围变得更窄、更集中。",
       "state": {
         "shape": "cube",
         "mode": "material",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
         "ambientStrength": 0.12,
         "specularStrength": 0.85,
         "shininess": 96,
-        "showLight": true
-      }
+        "showLight": true,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "material-dynamic-check",
       "title": "动态检查材质",
-      "concept": "动态旋转能持续改变 N、L、V 的夹角，用来检查材质响应是否稳定且方向正确。",
-      "question": "为什么静态截图可能看不出 specular 或 normal 错误，而旋转物体时错误更容易暴露？",
-      "expectedKeywords": ["静态", "旋转", "specular", "normal", "夹角"],
-      "hint": "旋转提供连续变化的观察条件，错误会随时间表现为不自然的高光或明暗运动。"
+      "concept": "main.js 的动态旋转会持续改变 cube.vertex.glsl 输出的法线，再影响 cube.fragment.glsl 的材质响应。",
+      "question": "为什么静态截图可能看不出 normal 或 specular 错误，而 main.js 让物体旋转后错误更容易暴露？",
+      "expectedKeywords": [
+        "静态",
+        "旋转",
+        "specular",
+        "normal",
+        "夹角"
+      ],
+      "hint": "动态过程会连续改变 N、L、V 的夹角。",
+      "files": [
+        "main.js",
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ]
     },
     {
       "id": "material-motion",
       "title": "动态观察材质",
-      "concept": "旋转物体可以检查材质响应是否随法线、光照和视线关系正确变化。",
-      "question": "为什么材质实验最后要观察旋转中的高光，而不是只确认一帧画面里有高光？",
-      "expectedKeywords": ["旋转", "高光", "法线", "视线", "动态"],
-      "hint": "正确的高光应该随着表面法线和视线、光照方向的关系连续移动。",
+      "concept": "main.js、scene.json、cube.vertex.glsl、cube.fragment.glsl 共同构成可观察的动态材质实验。",
+      "question": "为什么材质实验最后要观察旋转中的高光，而不是只确认 cube.fragment.glsl 在一帧画面里画出了亮斑？",
+      "expectedKeywords": [
+        "旋转",
+        "高光",
+        "法线",
+        "视线",
+        "动态"
+      ],
+      "hint": "正确材质响应应随表面法线、视线和光照关系连续变化。",
       "patchId": "06-material-motion",
       "expectedObservation": "立方体旋转时，高光随表面朝向变化。",
       "state": {
         "shape": "cube",
         "mode": "material",
         "camera": "perspective",
-        "cameraPosition": [2.4, 1.8, 4.2],
-        "objectColor": [0.95, 0.48, 0.2],
-        "lightPos": [1.5, 1.8, 2.2],
+        "cameraPosition": [
+          2.4,
+          1.8,
+          4.2
+        ],
+        "objectColor": [
+          0.95,
+          0.48,
+          0.2
+        ],
+        "lightPos": [
+          1.5,
+          1.8,
+          2.2
+        ],
         "ambientStrength": 0.12,
         "specularStrength": 0.85,
         "shininess": 96,
         "showLight": true,
-        "animated": true
-      }
+        "animated": true,
+        "shaderProgram": "cube"
+      },
+      "files": [
+        "main.js",
+        "scene.json",
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ]
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "cube.vertex.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的顶点阶段，输出世界坐标、法线或顶点属性",
+      "visible": true
+    },
+    {
+      "path": "cube.fragment.glsl",
+      "role": "shader",
+      "concept": "物体 shader 的片元阶段，计算颜色、光照或材质响应",
+      "visible": true
+    },
+    {
+      "path": "light.vertex.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的顶点阶段，用于显示光源位置",
+      "visible": true
+    },
+    {
+      "path": "light.fragment.glsl",
+      "role": "shader",
+      "concept": "光源标记 shader 的片元阶段，用光源颜色显示标记",
+      "visible": true
     }
   ]
 }

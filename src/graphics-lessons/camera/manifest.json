@@ -18,6 +18,46 @@
     "FOV 改变透视投影视锥，会影响屏幕空间中的尺度感和可见范围。",
     "delta time 用真实时间归一化每帧更新，避免帧率改变运动速度。"
   ],
+  "shaderSets": [
+    {
+      "name": "camera",
+      "role": "object/material shader program",
+      "fragment": "reference/camera.fs",
+      "vertex": "reference/camera.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
+  ],
   "referenceFiles": [
     {
       "path": "reference/camera.fs",
@@ -49,6 +89,10 @@
       "id": "view-matrix-formula",
       "title": "视图矩阵的含义",
       "concept": "view matrix 可以理解为相机世界变换的逆矩阵，用 p_view = V * p_world 把世界点转到相机坐标系。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "若相机世界位置为 eye，世界点为 p_world，为什么观察空间坐标可以理解为先计算 p_world - eye，再投到相机的右、上、前向基上？",
       "expectedKeywords": [
         "p_world",
@@ -64,6 +108,12 @@
       "id": "camera-position",
       "title": "相机位置与屏幕尺度",
       "concept": "相机位置改变会改变点的观察空间 z 值，透视投影会让屏幕尺度与深度相关。",
+      "files": [
+        "scene.json",
+        "vertex.glsl",
+        "geometry.json",
+        "fragment.glsl"
+      ],
       "question": "在透视投影近似 y_ndc = y_view / (-z_view * tan(fov / 2)) 中，为什么相机远离物体时物体会变小？",
       "expectedKeywords": [
         "z_view",
@@ -81,6 +131,10 @@
       "id": "lookat-basis",
       "title": "lookAt 观察基",
       "concept": "lookAt 通常由 f = normalize(target - eye)、r = normalize(cross(f, up))、u = cross(r, f) 构造相机坐标基。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
       "question": "为什么只知道 eye 不能确定 view matrix，还必须通过 target 和 up 构造 f、r、u 三个相机基向量？",
       "expectedKeywords": [
         "eye",
@@ -96,6 +150,10 @@
       "id": "look-direction",
       "title": "观察方向与构图",
       "concept": "改变 lookAt 方向会改变世界点投到相机右、上、前向基后的坐标。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
       "question": "当相机位置相同但 target 改变时，为什么物体在屏幕上的左右、上下位置会变化？",
       "expectedKeywords": [
         "target",
@@ -112,6 +170,10 @@
       "id": "projection-scale",
       "title": "FOV 与投影缩放",
       "concept": "透视投影矩阵中常见缩放项为 f = 1 / tan(fov / 2)，FOV 越大，f 越小。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ],
       "question": "从 f = 1 / tan(fov / 2) 出发，为什么 FOV 增大后同一个 y_view 会映射到更小的 NDC 位移？",
       "expectedKeywords": [
         "tan",
@@ -127,6 +189,12 @@
       "id": "fov",
       "title": "视锥与可见范围",
       "concept": "FOV 决定视锥开角，改变同一屏幕范围内能容纳的观察空间范围。",
+      "files": [
+        "scene.json",
+        "vertex.glsl",
+        "geometry.json",
+        "fragment.glsl"
+      ],
       "question": "为什么 FOV 变大时画面能容纳更多物体，但边缘物体的透视拉伸也更明显？",
       "expectedKeywords": [
         "视锥",
@@ -143,6 +211,10 @@
       "id": "time-integration",
       "title": "速度与时间积分",
       "concept": "稳定动画应使用 theta(t + dt) = theta(t) + omega * dt，把角速度按真实时间积分。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
       "question": "如果角速度是 omega rad/s，为什么每帧更新应写成 angle += omega * deltaTime，而不是 angle += 常数？",
       "expectedKeywords": [
         "omega",
@@ -158,6 +230,10 @@
       "id": "delta-time",
       "title": "时间步长与帧率",
       "concept": "实时渲染中每帧更新应按时间积分，而不是假设每帧耗时相同。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
       "question": "为什么使用 deltaTime 后，30 FPS 和 144 FPS 下同一个旋转动画仍能保持接近相同的每秒速率？",
       "expectedKeywords": [
         "帧率",

@@ -21,8 +21,9 @@ src/graphics-lessons/<lesson-id>/
   lesson.md
   starter/
     main.js
-    vertex.glsl
-    fragment.glsl
+    scene.json
+    geometry.json
+    <runtime-shader-or-helper-files>
   patches/
     01-topic-name.json
     02-topic-name.json
@@ -34,15 +35,25 @@ src/graphics-lessons/<lesson-id>/
 Required files:
 
 - `manifest.json`: lesson metadata, AI teaching rules, checkpoints, and source notes.
-- `starter/main.js`: initial browser-side experiment code.
-- `starter/vertex.glsl`: initial vertex shader.
-- `starter/fragment.glsl`: initial fragment shader.
+- `starter/main.js`: browser-side experiment entry file.
+- `starter/*`: WebGL-facing shader, scene, geometry, data, or helper files used by the browser experiment.
 - `patches/*.json`: local deterministic code changes applied after correct answers.
 
 Optional files:
 
 - `lesson.md`: user-facing reading material.
 - `reference/*`: source code, source notes, or extracted snippets that help AI understand the original task.
+
+Runtime rule:
+
+- The browser executes the single `workspaceFiles` item whose `role` is `entry`; current generated lessons normally use `starter/main.js`.
+- The entry file receives `THREE`, `OrbitControls`, `canvas`, `files`, `getFile`, and `report`.
+- The runtime does not infer shader names. The entry file must read shader, json, or helper files through `getFile("exact-file-name")`, normally using file names declared in `scene.json`.
+- Complex lessons should use `getFile("some-file.glsl")` when selecting among multiple shader files.
+- Patches may modify any file in the lesson workspace and may add new files with `replace_all`.
+- Do not put raw OpenGL-only files into `starter/` unless they have been converted into runnable WebGL/Three.js lesson files. Raw source files belong in `reference/`.
+- File count is not limited. The lesson author may introduce more starter files when that makes the experiment clearer, for example `scene.json`, `geometry.json`, `cube.vertex.glsl`, `cube.fragment.glsl`, `light.vertex.glsl`, or `light.fragment.glsl`.
+- Every visible starter file must be explained by `workspaceFiles` and connected to at least one checkpoint through `checkpoint.files`. If a file is not part of the learner-facing workflow, keep it in `reference/` instead of `starter/`.
 
 ## Manifest Contract
 
@@ -72,6 +83,28 @@ Required AI-facing fields:
   "referenceBrief": [
     "源代码中的核心概念摘要。"
   ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "cube.fragment.glsl",
+      "role": "shader",
+      "concept": "object material fragment lighting",
+      "visible": true
+    }
+  ],
+  "shaderSets": [
+    {
+      "name": "cube",
+      "role": "object/material shader program",
+      "vertex": "reference/cube.vs",
+      "fragment": "reference/cube.fs"
+    }
+  ],
   "teachingRules": [
     "每轮只提出一个问题。",
     "回答正确或基本正确时，返回当前 checkpoint 的 patchId。",
@@ -81,6 +114,8 @@ Required AI-facing fields:
 }
 ```
 
+`workspaceFiles` describes files that the browser experiment can load and the learner may inspect. `shaderSets` describes the original source shader relationships for AI reference. A file can appear in both concepts only after it has been converted into a runnable starter file; otherwise it stays in `reference/`.
+
 Required checkpoint fields:
 
 ```json
@@ -88,6 +123,7 @@ Required checkpoint fields:
   "id": "triangle-vertices",
   "title": "定义三角形顶点",
   "concept": "这一阶段要理解的概念。",
+  "files": ["geometry.json", "main.js"],
   "question": "只包含一个主问题。",
   "expectedKeywords": ["3", "顶点", "float"],
   "hint": "用户答错或不完整时给出的短提示。",
@@ -95,6 +131,8 @@ Required checkpoint fields:
   "expectedObservation": "应用 patch 后用户应该在画布中看到什么。"
 }
 ```
+
+`checkpoint.files` declares which starter files are taught by that checkpoint. This field is required by the pipeline because every visible starter file must be covered by at least one checkpoint.
 
 ## Patch Contract
 
@@ -117,13 +155,14 @@ Patch files live in `patches/`. A patch is deterministic and must be safe to app
 
 Supported operations:
 
-- `replace`: replace an exact target string in one starter file.
+- `replace`: replace an exact target string in one lesson workspace file.
 - `replace_all`: replace an entire file.
 
 Patch rules:
 
 - One checkpoint should normally apply one patch.
 - A patch may touch multiple files when the concept requires it.
+- A patch may add a new file by using `replace_all` on a file name that does not exist yet.
 - Avoid fragile targets. Put clear TODO blocks in starter code so replacements are stable.
 - Do not rely on AI-generated code for required progress. AI should return `patchId`; the page applies local patch content.
 
@@ -189,7 +228,21 @@ src/graphics-lesson-recipes/<lesson-id>/
   recipe.json
 ```
 
-The recipe is the editable source for a generated lesson. It should contain the lesson id, source folder name, user-facing text, optional `series`/`order`, `starterState`, and checkpoint definitions. The generator converts those fields into a complete `src/graphics-lessons/<lesson-id>/` pack.
+The recipe is the editable source for a generated lesson. It should contain the lesson id, source folder name, user-facing text, optional `series`/`order`, starter files, workspace file metadata, and checkpoint definitions. The generator converts those fields into a complete `src/graphics-lessons/<lesson-id>/` pack.
+
+Generated lesson folders are build artifacts of this pipeline. Running the generator always rewrites the matching `src/graphics-lessons/<lesson-id>/` folder from its recipe; do not add per-lesson "preserve existing" exceptions. Manual changes that must survive regeneration belong in the recipe, source reference files, or another explicitly non-generated location.
+
+There are two ways to define starter code:
+
+- `starterState`: generator shorthand for state-driven lessons. It produces a small multi-file workspace, including `main.js`, `scene.json`, `geometry.json`, and shader files.
+- `starterFiles`: explicit file map for lessons that need custom project structure, several runtime shader files, helper modules, or data files.
+
+Prefer explicit `starterFiles` plus `workspaceFiles` when the source lesson has several shader programs or meaningful helper/data files. Do not rely on the generator to blindly copy OpenGL source shaders into the editor. The lesson authoring AI should convert the source idea into WebGL-facing files, then explain and teach each visible file through checkpoints.
+
+Checkpoint code changes also have two forms:
+
+- `state`: quick shorthand that regenerates the whole state-driven runtime.
+- `changes`: explicit deterministic patch list. Use this for multi-file lessons so each checkpoint can touch only the relevant file(s).
 
 Use `createdAt` in `YYYY-MM-DD` format. This date should reflect the actual creation or update date of the lesson pack. `order` may describe a learning path, but it should not replace real dates for recent-update sorting.
 
@@ -258,9 +311,9 @@ A lesson appears on the WebGL lesson index when it contains:
 
 - `manifest.json`
 - `starter/main.js`
-- `starter/vertex.glsl`
-- `starter/fragment.glsl`
 - at least one `patches/*.json`
+
+`starter/vertex.glsl` and `starter/fragment.glsl` are no longer required. If the original OpenGL lesson has several shader programs, the generated lesson should preserve those relationships as WebGL-facing starter files and expose the original source relationship through `shaderSets`.
 
 The experiment detail page receives only the selected lesson payload. It should not need to know how many other lessons exist.
 
@@ -271,6 +324,8 @@ Before committing a generated lesson:
 - `manifest.json` parses correctly.
 - `category`, `description`, and card text are user-facing, not AI instructions.
 - Every checkpoint asks exactly one main question.
+- Every checkpoint declares `files`.
+- Every visible `starter/` file appears in at least one checkpoint's `files`.
 - Every checkpoint has a matching patch file.
 - Every patch can be applied from the current starter state.
 - The final lesson state renders without shader errors.

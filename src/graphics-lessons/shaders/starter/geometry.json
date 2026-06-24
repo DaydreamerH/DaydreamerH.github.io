@@ -1,0 +1,19 @@
+{
+  "type": "buffer",
+  "attributes": {
+    "position": {
+      "itemSize": 3,
+      "values": [
+        0,
+        0.6,
+        0,
+        -0.6,
+        -0.5,
+        0,
+        0.6,
+        -0.5,
+        0
+      ]
+    }
+  }
+}

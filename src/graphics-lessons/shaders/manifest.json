@@ -18,6 +18,39 @@
     "uniform 适合表达一次 draw call 内保持一致的参数。",
     "shader 的关键不只是语法，而是数据在哪个阶段、以什么频率变化。"
   ],
+  "shaderSets": [],
+  "workspaceFiles": [
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    }
+  ],
   "referenceFiles": [
     {
       "path": "reference/CMakeLists.txt",
@@ -45,6 +78,11 @@
       "id": "stage-frequency",
       "title": "执行频率",
       "concept": "vertex shader 按顶点执行，fragment shader 按片元执行；一个三角形通常只有 3 次顶点执行，却可能覆盖成千上万个片元。",
+      "files": [
+        "main.js",
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "如果一个三角形覆盖了 8000 个片元，为什么把逐像素颜色计算放在 vertex shader 中会丢失很多屏幕细节？",
       "expectedKeywords": [
         "执行频率",
@@ -59,6 +97,10 @@
       "id": "shader-stage-role",
       "title": "区分 shader 阶段",
       "concept": "vertex shader 负责产生裁剪空间位置，fragment shader 负责为光栅化得到的片元输出颜色。",
+      "files": [
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么 gl_Position 必须在 vertex shader 中写出，而 gl_FragColor 或片元输出颜色必须在 fragment shader 中决定？",
       "expectedKeywords": [
         "gl_Position",
@@ -75,6 +117,10 @@
       "id": "attribute-layout",
       "title": "attribute 数据布局",
       "concept": "attribute 表示顶点流中的一列数据，size、stride 和 offset 决定 GPU 如何从连续 buffer 中取出每个顶点的属性。",
+      "files": [
+        "geometry.json",
+        "vertex.glsl"
+      ],
       "question": "若每个顶点按 position.xyz + color.rgb 连续存储，为什么 position 和 color 的 stride 都应跨过 6 个 float？",
       "expectedKeywords": [
         "stride",
@@ -90,6 +136,11 @@
       "id": "vertex-attribute-color",
       "title": "传递顶点颜色",
       "concept": "颜色如果随顶点变化，应作为 attribute 输入，再交给光栅化阶段插值。",
+      "files": [
+        "geometry.json",
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "如果每个顶点都有不同颜色，为什么把颜色写成 attribute 比写死在 fragment shader 中更符合数据变化频率？",
       "expectedKeywords": [
         "每顶点",
@@ -106,6 +157,10 @@
       "id": "uniform-frequency",
       "title": "uniform 的变化频率",
       "concept": "uniform 在一次 draw call 内保持一致，适合表达时间、相机矩阵、材质常量等全局参数。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
       "question": "为什么 modelViewProjection 矩阵通常适合作为 uniform，而顶点位置不适合作为 uniform？",
       "expectedKeywords": [
         "uniform",
@@ -120,6 +175,10 @@
       "id": "uniform-color",
       "title": "使用 uniform 控制颜色",
       "concept": "uniform 表示一次绘制中共享的参数，改变它通常不需要修改顶点缓冲。",
+      "files": [
+        "scene.json",
+        "fragment.glsl"
+      ],
       "question": "当整个物体颜色统一变化时，为什么修改 uniform 比重建顶点 buffer 更合适？",
       "expectedKeywords": [
         "uniform",
@@ -136,6 +195,10 @@
       "id": "barycentric-varying",
       "title": "重心坐标插值",
       "concept": "光栅化通常用重心坐标插值 varying：v = a * v0 + b * v1 + c * v2，且 a + b + c = 1。",
+      "files": [
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么三角形内部某个片元的 varying 可以写成三个顶点输出的加权和，且权重之和为 1？",
       "expectedKeywords": [
         "重心坐标",
@@ -150,6 +213,10 @@
       "id": "varying-interpolation",
       "title": "观察 varying 插值",
       "concept": "varying 在图元内部按屏幕空间插值，fragment shader 收到的是片元位置对应的插值结果。",
+      "files": [
+        "vertex.glsl",
+        "fragment.glsl"
+      ],
       "question": "为什么 varying 从 vertex shader 传到 fragment shader 后，会在三角形内部形成连续渐变，而不是保持三个离散顶点值？",
       "expectedKeywords": [
         "插值",

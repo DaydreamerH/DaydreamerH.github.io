@@ -1,4 +1,4 @@
-export type GraphicsLabFileName = "main.js" | "vertex.glsl" | "fragment.glsl";
+export type GraphicsLabFileName = string;
 
 export type GraphicsLessonPatch = {
   id: string;
@@ -29,12 +29,26 @@ export type GraphicsLesson = {
     path: string;
     role: string;
   }>;
+  shaderSets?: Array<{
+    name: string;
+    role?: string;
+    vertex?: string;
+    fragment?: string;
+  }>;
+  workspaceFiles?: Array<{
+    path: GraphicsLabFileName;
+    role: "entry" | "shader" | "helper" | "data" | "metadata";
+    label?: string;
+    concept?: string;
+    visible?: boolean;
+  }>;
   referenceCode?: string;
   teachingRules: string[];
   checkpoints: Array<{
     id: string;
     title: string;
     concept: string;
+    files?: GraphicsLabFileName[];
     question: string;
     expectedKeywords: string[];
     hint: string;
@@ -70,7 +84,7 @@ const patchModules = import.meta.glob("../graphics-lessons/*/patches/*.json", {
   eager: true
 });
 
-const referenceModules = import.meta.glob("../graphics-lessons/*/reference/main.cpp", {
+const referenceModules = import.meta.glob("../graphics-lessons/*/reference/*", {
   query: "?raw",
   import: "default",
   eager: true
@@ -84,13 +98,7 @@ const getLessonIdFromPath = (path: string) => {
   return match[1];
 };
 
-const getStarterFileName = (path: string): GraphicsLabFileName | null => {
-  const fileName = path.split("/").at(-1);
-  if (fileName === "main.js" || fileName === "vertex.glsl" || fileName === "fragment.glsl") {
-    return fileName;
-  }
-  return null;
-};
+const getStarterFileName = (path: string): GraphicsLabFileName | null => path.split("/").at(-1) ?? null;
 
 const lessonsById = new Map<string, GraphicsLesson>();
 
@@ -98,11 +106,7 @@ for (const [path, raw] of Object.entries(manifestModules)) {
   const manifest = parseJson<Omit<GraphicsLesson, "starterFiles" | "patches">>(raw);
   lessonsById.set(manifest.id, {
     ...manifest,
-    starterFiles: {
-      "main.js": "",
-      "vertex.glsl": "",
-      "fragment.glsl": ""
-    },
+    starterFiles: {},
     patches: {}
   });
 }
@@ -126,7 +130,9 @@ for (const [path, raw] of Object.entries(patchModules)) {
 for (const [path, raw] of Object.entries(referenceModules)) {
   const lesson = lessonsById.get(getLessonIdFromPath(path));
   if (lesson) {
-    lesson.referenceCode = String(raw).trim();
+    const fileName = path.split("/").at(-1) ?? "reference";
+    const content = String(raw).trim();
+    lesson.referenceCode = [lesson.referenceCode, `--- ${fileName} ---\n${content}`].filter(Boolean).join("\n\n");
   }
 }
 

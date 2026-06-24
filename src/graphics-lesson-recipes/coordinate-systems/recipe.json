@@ -26,37 +26,77 @@
       "title": "坐标空间链",
       "concept": "典型顶点变换链可写为 p_clip = P * V * M * p_local。",
       "question": "在 p_clip = P * V * M * p_local 中，为什么 M、V、P 分别不应该混在同一个概念里理解？",
-      "expectedKeywords": ["M", "V", "P", "局部", "世界", "观察", "裁剪"],
-      "hint": "它们分别负责物体摆放、相机观察和投影裁剪，语义不同。"
+      "expectedKeywords": [
+        "M",
+        "V",
+        "P",
+        "局部",
+        "世界",
+        "观察",
+        "裁剪"
+      ],
+      "hint": "它们分别负责物体摆放、相机观察和投影裁剪，语义不同。",
+      "files": [
+        "vertex.glsl",
+        "scene.json"
+      ]
     },
     {
       "id": "local-world",
       "title": "局部空间到世界空间",
       "concept": "局部顶点只描述模型自身形状，model matrix 负责把它放入世界。",
       "question": "为什么保留局部空间能让同一个 mesh 用不同 model matrix 实例化到多个世界位置？",
-      "expectedKeywords": ["局部", "mesh", "model matrix", "实例", "世界"],
+      "expectedKeywords": [
+        "局部",
+        "mesh",
+        "model matrix",
+        "实例",
+        "世界"
+      ],
       "hint": "mesh 数据描述形状，model matrix 描述每个实例的世界变换。",
       "patchId": "01-local-world",
       "expectedObservation": "画面显示带低对比纹理的基础平面。",
       "state": {
         "shape": "quad",
         "mode": "checker"
-      }
+      },
+      "files": [
+        "main.js",
+        "scene.json",
+        "vertex.glsl",
+        "fragment.glsl"
+      ]
     },
     {
       "id": "depth-and-occlusion",
       "title": "深度与遮挡",
       "concept": "三维几何不仅有屏幕 x、y，还有深度 z；深度参与遮挡和透视比例。",
       "question": "为什么只看二维平面很难暴露 view/projection 矩阵中的深度错误，而立方体更容易暴露？",
-      "expectedKeywords": ["深度", "z", "遮挡", "projection", "立方体"],
-      "hint": "立方体有多个面和不同深度，错误的深度关系会直接影响可见面和比例。"
+      "expectedKeywords": [
+        "深度",
+        "z",
+        "遮挡",
+        "projection",
+        "立方体"
+      ],
+      "hint": "立方体有多个面和不同深度，错误的深度关系会直接影响可见面和比例。",
+      "files": [
+        "geometry.json",
+        "scene.json"
+      ]
     },
     {
       "id": "enter-3d",
       "title": "三维方向与深度",
       "concept": "三维物体可以暴露深度、遮挡和不同面的法线方向。",
       "question": "为什么立方体的多个面能帮助你判断旋转、相机方向和透视是否同时正确？",
-      "expectedKeywords": ["多个面", "深度", "方向", "旋转", "透视"],
+      "expectedKeywords": [
+        "多个面",
+        "深度",
+        "方向",
+        "旋转",
+        "透视"
+      ],
       "hint": "不同朝向的面会在屏幕上形成不同的投影形状和遮挡关系。",
       "patchId": "02-enter-3d",
       "expectedObservation": "画面出现一个低对比纹理立方体。",
@@ -64,23 +104,48 @@
         "shape": "cube",
         "mode": "checker",
         "camera": "perspective",
-        "cameraPosition": [2.2, 1.6, 4.2]
-      }
+        "cameraPosition": [
+          2.2,
+          1.6,
+          4.2
+        ]
+      },
+      "files": [
+        "geometry.json",
+        "scene.json",
+        "fragment.glsl"
+      ]
     },
     {
       "id": "view-inverse",
       "title": "View 是相机变换的逆",
       "concept": "view matrix 通常是相机世界矩阵的逆，把世界点表示到相机局部坐标系中。",
       "question": "如果相机在世界中向 +x 移动，为什么 view 变换看起来像把世界向 -x 移动？",
-      "expectedKeywords": ["逆矩阵", "相机", "世界", "相反", "view"],
-      "hint": "观察空间把相机固定在原点，因此需要把世界用相机变换的逆搬过去。"
+      "expectedKeywords": [
+        "逆矩阵",
+        "相机",
+        "世界",
+        "相反",
+        "view"
+      ],
+      "hint": "观察空间把相机固定在原点，因此需要把世界用相机变换的逆搬过去。",
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ]
     },
     {
       "id": "view-transform",
       "title": "世界空间到观察空间",
       "concept": "view matrix 相当于把整个世界变换到以相机为原点的坐标系。",
       "question": "为什么同一个世界点经过不同 view matrix 后，会得到不同的观察空间坐标？",
-      "expectedKeywords": ["view matrix", "观察空间", "相机", "坐标", "相对"],
+      "expectedKeywords": [
+        "view matrix",
+        "观察空间",
+        "相机",
+        "坐标",
+        "相对"
+      ],
       "hint": "观察空间坐标描述的是点相对于当前相机坐标系的位置。",
       "patchId": "03-view-transform",
       "expectedObservation": "立方体从更明显的斜上方被观察。",
@@ -88,23 +153,47 @@
         "shape": "cube",
         "mode": "checker",
         "camera": "perspective",
-        "cameraPosition": [3.0, 2.2, 5.0]
-      }
+        "cameraPosition": [
+          3,
+          2.2,
+          5
+        ]
+      },
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ]
     },
     {
       "id": "clip-and-ndc",
       "title": "裁剪空间到 NDC",
       "concept": "projection 输出裁剪空间坐标 p_clip，随后执行 p_ndc = p_clip.xyz / p_clip.w。",
       "question": "为什么透视投影要先保留 w，再用 xyz / w 得到 NDC，而不是直接输出最终屏幕坐标？",
-      "expectedKeywords": ["w", "透视除法", "NDC", "裁剪空间", "深度"],
-      "hint": "w 携带了透视缩放所需的深度关系，除以 w 后才形成近大远小。"
+      "expectedKeywords": [
+        "w",
+        "透视除法",
+        "NDC",
+        "裁剪空间",
+        "深度"
+      ],
+      "hint": "w 携带了透视缩放所需的深度关系，除以 w 后才形成近大远小。",
+      "files": [
+        "vertex.glsl",
+        "scene.json"
+      ]
     },
     {
       "id": "projection",
       "title": "裁剪空间与透视除法",
       "concept": "projection matrix 输出裁剪空间坐标，随后透视除法把 xyz 除以 w 得到 NDC。",
       "question": "为什么更远的物体在透视除法后会占用更小的 NDC 范围？",
-      "expectedKeywords": ["透视除法", "w", "远", "NDC", "近大远小"],
+      "expectedKeywords": [
+        "透视除法",
+        "w",
+        "远",
+        "NDC",
+        "近大远小"
+      ],
       "hint": "远处点通常对应更大的深度相关分母，同样大小的空间位移会被压得更小。",
       "patchId": "04-projection",
       "expectedObservation": "多个立方体进入视野，空间层次更明显。",
@@ -112,9 +201,49 @@
         "shape": "cube",
         "mode": "checker",
         "camera": "perspective",
-        "cameraPosition": [3.0, 2.2, 5.4],
+        "cameraPosition": [
+          3,
+          2.2,
+          5.4
+        ],
         "objectCount": 3
-      }
+      },
+      "files": [
+        "scene.json",
+        "vertex.glsl"
+      ]
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、读取课程文件、创建材质并驱动渲染循环",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "描述相机、uniform、shader 入口、光源标记和动画参数",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "描述顶点属性、索引和基础几何数据",
+      "visible": true
+    },
+    {
+      "path": "vertex.glsl",
+      "role": "shader",
+      "concept": "默认顶点阶段，负责空间变换和 varying 输出",
+      "visible": true
+    },
+    {
+      "path": "fragment.glsl",
+      "role": "shader",
+      "concept": "默认片元阶段，负责颜色、纹理或光照输出",
+      "visible": true
     }
   ]
 }

@@ -1,0 +1,69 @@
+{
+  "shape": "quad",
+  "mode": "solid",
+  "camera": {
+    "type": "orthographic",
+    "fov": 45,
+    "position": [
+      0,
+      0,
+      3
+    ],
+    "lookAt": [
+      0,
+      0,
+      0
+    ]
+  },
+  "material": {
+    "vertexShader": "vertex.glsl",
+    "fragmentShader": "fragment.glsl"
+  },
+  "lightMarker": {
+    "enabled": false,
+    "vertexShader": "light.vertex.glsl",
+    "fragmentShader": "light.fragment.glsl",
+    "radius": 0.08
+  },
+  "uniforms": {
+    "uColor": [
+      0.13,
+      0.16,
+      0.19
+    ],
+    "uAccentColor": [
+      0.42,
+      0.48,
+      0.52
+    ],
+    "uObjectColor": [
+      0.95,
+      0.48,
+      0.2
+    ],
+    "uLightColor": [
+      1,
+      1,
+      1
+    ],
+    "uLightPos": [
+      1.5,
+      1.8,
+      2.2
+    ],
+    "uMixAmount": 0.35,
+    "uAmbientStrength": 0.18,
+    "uSpecularStrength": 0.45,
+    "uShininess": 32
+  },
+  "mesh": {
+    "count": 1,
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "animated": false
+}
