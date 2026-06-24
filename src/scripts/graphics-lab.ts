@@ -1579,6 +1579,7 @@ function initGraphicsLab(root: HTMLElement) {
   const buildGuideMessages = (mode: "start" | "answer", userText = "") => {
     const checkpoint = currentCheckpoint();
     const errorText = errorBox.textContent || "";
+    const freeModeRequest = lessonFreeMode && mode === "answer";
     const systemPrompt = `你是图形学实验教练，当前网站是纯静态页面，课程内容和代码 patch 已经预设在本地。
 必须遵守：
 1. 每轮最多提出一个问题。
@@ -1590,6 +1591,7 @@ function initGraphicsLab(root: HTMLElement) {
 5. 预设课程推进模式下，用户只回答“不知道”或类似表达时，给一个更具体的递进提示，并重复当前 checkpoint.question；不要返回旧问题、patchId 或 nextCheckpointId。
 6. 预设课程推进模式下，用户明确说某个概念不懂时，只解释这个概念及其与当前 checkpoint 的直接关系，最多 120 字，然后重复当前 checkpoint.question；不要扩展到其它 checkpoint。
 7. 自由实验模式下，允许用户自由提问和要求修改代码；如果用户要求改变画面、shader、动画、交互或渲染效果，优先返回最小 patches，并设置 runAfterApply=true，不要只给文字解释。
+7a. 自由实验模式下，不要再回到 checkpoint 提问，不要考察用户，不要返回 patchId 或 nextCheckpointId；用户问概念细节时应直接解释，只有确实缺少必要信息时才提出一个澄清问题。
 8. 只允许修改 main.js、vertex.glsl、fragment.glsl。
 9. 运行环境会向 main.js 注入 THREE、OrbitControls、canvas、vertexShader、fragmentShader、report；不要写 import，也不要写 THREE.OrbitControls。
 10. 如果用户要求移动摄像头、观察 specular 或增加相机交互，优先调整 camera/light/material；需要轨道交互时使用 OrbitControls 参数，或让代码返回 { renderer, camera, scene, render, cleanup } 以便页面顶部轨道控制按钮接管。
@@ -1609,6 +1611,21 @@ JSON schema:
   "nextCheckpointId": "可选，进入的 checkpoint id"
 }`;
 
+    const checkpointPrompt = freeModeRequest
+      ? `当前阶段：自由实验模式。
+课程预设提问已经结束。不要使用 checkpoint 序列继续追问用户，也不要返回 patchId 或 nextCheckpointId。
+如果用户询问 NDC、矩阵、shader、插值、光照等概念，直接结合当前代码解释；如果用户要求改变效果，则返回 patches。`
+      : `教学规则：
+${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
+checkpoint 序列：
+${lesson.checkpoints
+  .map((item, index) => `${index + 1}. ${item.id} | ${item.title} | ${item.patchId ? `patchId=${item.patchId}` : "concept-only"}`)
+  .join("\n")}
+当前 checkpoint：
+${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
+已完成 patchId：${[...completedPatches].join(", ") || "(无)"}
+当前阶段：预设课程推进模式。概念 checkpoint 用 nextCheckpointId 推进；代码 checkpoint 用本地 patchId 推进。`;
+
     const lessonPrompt = `课程：${lesson.title}
 类别：${lesson.category}
 用户可见描述：${lesson.description}
@@ -1620,16 +1637,7 @@ AI 教学摘要：${lesson.aiBrief}
 ${lesson.referenceBrief.map((item) => `- ${item}`).join("\n")}
 参考源码摘录：
 ${compactReferenceCode(lesson.referenceCode)}
-教学规则：
-${lesson.teachingRules.map((item) => `- ${item}`).join("\n")}
-checkpoint 序列：
-${lesson.checkpoints
-  .map((item, index) => `${index + 1}. ${item.id} | ${item.title} | ${item.patchId ? `patchId=${item.patchId}` : "concept-only"}`)
-  .join("\n")}
-当前 checkpoint：
-${checkpoint ? JSON.stringify(checkpoint, null, 2) : "(已无 checkpoint)"}
-已完成 patchId：${[...completedPatches].join(", ") || "(无)"}
-当前阶段：${lessonFreeMode ? "自由实验模式，用户可以要求解释或修改代码；如果用户要求改变效果，优先返回 patches 让网页直接应用。" : "预设课程推进模式。概念 checkpoint 用 nextCheckpointId 推进；代码 checkpoint 用本地 patchId 推进。"}`;
+${checkpointPrompt}`;
 
     const userPrompt = `模式：${mode}
 用户输入：${userText || "(无)"}
@@ -1687,6 +1695,7 @@ ${getFilesSnapshot()}`;
 
     const parsed = normalizeGuideResponse(extractJsonObject(content));
     const directPatches = parsed.patches ?? [];
+    const allowCourseAdvance = !lessonFreeMode;
 
     if (mode === "start") {
       if (guideLog) guideLog.innerHTML = "";
@@ -1696,7 +1705,7 @@ ${getFilesSnapshot()}`;
     let changedFiles: LabFileName[] = [];
     let checkpointMoved = false;
     let lessonCompleted = false;
-    if (parsed.patchId) {
+    if (allowCourseAdvance && parsed.patchId) {
       const result = applyLessonPatch(parsed.patchId);
       changedFiles = result.changedFiles;
       const advanceResult = advanceCheckpoint(parsed.patchId, parsed.nextCheckpointId);
@@ -1708,16 +1717,18 @@ ${getFilesSnapshot()}`;
       try {
         changedFiles = applyGuidePatches(directPatches);
       } catch (error) {
-        fallbackPatchId = !lessonFreeMode ? currentCheckpoint()?.patchId ?? "" : "";
+        fallbackPatchId = allowCourseAdvance ? currentCheckpoint()?.patchId ?? "" : "";
         if (!fallbackPatchId) throw error;
         const result = applyLessonPatch(fallbackPatchId);
         changedFiles = result.changedFiles;
       }
-      const advanceResult = advanceCheckpoint(fallbackPatchId || undefined, parsed.nextCheckpointId);
-      checkpointMoved = advanceResult.moved;
-      lessonCompleted = advanceResult.completed;
-      if (lessonCompleted) lessonFreeMode = true;
-    } else if (parsed.nextCheckpointId) {
+      if (allowCourseAdvance) {
+        const advanceResult = advanceCheckpoint(fallbackPatchId || undefined, parsed.nextCheckpointId);
+        checkpointMoved = advanceResult.moved;
+        lessonCompleted = advanceResult.completed;
+        if (lessonCompleted) lessonFreeMode = true;
+      }
+    } else if (allowCourseAdvance && parsed.nextCheckpointId) {
       const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
       checkpointMoved = advanceResult.moved;
       lessonCompleted = advanceResult.completed;
@@ -1740,7 +1751,7 @@ ${getFilesSnapshot()}`;
       lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode)
         ? ""
         : lessonFreeMode
-          ? parsed.question
+          ? ""
           : parsed.question
             ? currentCheckpoint()?.question
             : "";
@@ -1767,7 +1778,7 @@ ${getFilesSnapshot()}`;
       await runProgram();
     }
 
-    setGuideState(displayedQuestion ? "等待回答" : lessonCompleted ? "可自由提问" : "已更新");
+    setGuideState(displayedQuestion ? "等待回答" : lessonCompleted || lessonFreeMode ? "可自由提问" : "已更新");
   };
 
   const stopRuntime = () => {
