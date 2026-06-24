@@ -247,9 +247,11 @@ $$(M×nb)⋅(nb×M)$$
 ### 递归 TRSM：消除列依赖
 将待解的瘦长矩阵 X 和已知的三角阵 U 进行水平二分：
 
-$$\begin{bmatrix} X_1 & X_2 \end{bmatrix}
+$$
+\begin{bmatrix} X_1 & X_2 \end{bmatrix}
 \begin{bmatrix} U_{11} & U_{12} \\ 0 & U_{22} \end{bmatrix} =
-\begin{bmatrix} A_1 & A_2 \end{bmatrix}$$
+\begin{bmatrix} A_1 & A_2 \end{bmatrix}
+$$
 
 其中
 - $X_1, X_2$：形状均为 $M \times (N/2)$；作为一个整体，成为待求解的 $L_{21}$.
