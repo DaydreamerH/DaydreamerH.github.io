@@ -212,6 +212,10 @@ const glslCompletions = [
   "clamp"
 ].map((label) => ({ label, type: "keyword" }));
 
+function isDevServerNoise(message: string) {
+  return message.includes("[vite] Error: send was called before connect");
+}
+
 function labCompletionSource(fileName: LabFileName) {
   const completions = fileName === "main.js" ? jsCompletions : glslCompletions;
 
@@ -1002,7 +1006,10 @@ ${getFilesSnapshot()}`;
     setStatus("running", "正在运行当前代码...");
 
     console.error = (...args: unknown[]) => {
-      capturedErrors.push(args.map(String).join(" "));
+      const message = args.map(String).join(" ");
+      if (!isDevServerNoise(message)) {
+        capturedErrors.push(message);
+      }
       originalError.apply(console, args);
     };
 
