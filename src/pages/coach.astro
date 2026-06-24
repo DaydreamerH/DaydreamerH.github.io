@@ -145,7 +145,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       <div class="message-list" aria-label="AI 对话" data-message-list></div>
 
       <form class="answer-box" data-answer-form>
-        <textarea id="answer" rows="4" data-answer-input placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"></textarea>
+        <textarea id="answer" rows="2" data-answer-input placeholder="回答当前问题，或输入你想测试的内容。Ctrl + Enter 提交。"></textarea>
         <div class="composer-toolbar">
           <span data-answer-hint>
             <Sparkles size={15} aria-hidden="true" />
@@ -173,6 +173,10 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     };
 
     const layout = document.querySelector("[data-coach-layout]");
+    const coachSidebar = document.querySelector(".coach-sidebar");
+    const chatPanel = document.querySelector(".coach-layout > .chat-panel");
+    const chatToolbar = document.querySelector(".coach-layout > .chat-panel .chat-toolbar");
+    const leftToggle = document.querySelector("[data-toggle-left]");
     const messageList = document.querySelector("[data-message-list]");
     const answerForm = document.querySelector("[data-answer-form]");
     const answerInput = document.querySelector("[data-answer-input]");
@@ -310,6 +314,100 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       showAlert("");
     }
 
+    function resizeAnswerInput() {
+      answerInput.style.height = "auto";
+      answerInput.style.height = `${Math.min(answerInput.scrollHeight, 180)}px`;
+      syncFixedChatFrame();
+    }
+
+    function syncFixedChatFrame() {
+      if (!layout || !chatPanel || !answerForm || !chatToolbar) return;
+      const sidebarWidth = layout.classList.contains("is-left-collapsed") || layout.classList.contains("is-left-shrinking")
+        ? 0
+        : 260;
+      layout.style.setProperty("--coach-sidebar-width", `${sidebarWidth}px`);
+      const rect = chatPanel.getBoundingClientRect();
+      layout.style.setProperty("--coach-chat-left", `${rect.left}px`);
+      layout.style.setProperty("--coach-chat-width", `${rect.width}px`);
+      chatPanel.style.paddingTop = `${Math.ceil(chatToolbar.offsetHeight + 30)}px`;
+      chatPanel.style.paddingBottom = `${Math.ceil(answerForm.offsetHeight + 42)}px`;
+      if (coachSidebar) {
+        coachSidebar.style.maxHeight = "";
+      }
+    }
+
+    function syncFixedChatFrameDuringTransition(duration = 560) {
+      const startedAt = performance.now();
+      function tick(now) {
+        syncFixedChatFrame();
+        if (now - startedAt < duration) {
+          requestAnimationFrame(tick);
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function scrollLatestMessageIntoView() {
+      const latest = messageList?.lastElementChild;
+      if (!latest || !answerForm) return;
+
+      requestAnimationFrame(() => {
+        syncFixedChatFrame();
+        const latestRect = latest.getBoundingClientRect();
+        const composerTop = answerForm.getBoundingClientRect().top;
+        const safeGap = 24;
+        if (latestRect.bottom > composerTop - safeGap) {
+          window.scrollBy({
+            top: latestRect.bottom - composerTop + safeGap,
+            behavior: "smooth"
+          });
+        }
+      });
+    }
+
+    function expandLeftPanel() {
+      if (!leftToggle || !layout || !layout.classList.contains("is-left-collapsed")) return;
+      layout.classList.remove("is-left-collapsing", "is-left-shrinking", "is-left-expanding", "is-left-revealing");
+      layout.classList.remove("is-left-collapsed");
+      layout.classList.add("is-left-expanding");
+      syncFixedChatFrameDuringTransition(820);
+      leftToggle.setAttribute("aria-label", "折叠左侧面板");
+      leftToggle.setAttribute("aria-expanded", "true");
+      window.setTimeout(() => {
+        layout.classList.remove("is-left-expanding");
+        layout.classList.add("is-left-revealing");
+        syncFixedChatFrameDuringTransition(380);
+        window.setTimeout(() => layout.classList.remove("is-left-revealing"), 360);
+      }, 420);
+    }
+
+    function collapseLeftPanel() {
+      if (
+        !leftToggle ||
+        !layout ||
+        layout.classList.contains("is-left-collapsed") ||
+        layout.classList.contains("is-left-collapsing") ||
+        layout.classList.contains("is-left-shrinking")
+      ) {
+        return;
+      }
+
+      layout.classList.remove("is-left-expanding", "is-left-revealing");
+      layout.classList.add("is-left-collapsing");
+      syncFixedChatFrameDuringTransition(640);
+      leftToggle.setAttribute("aria-label", "展开左侧面板");
+      leftToggle.setAttribute("aria-expanded", "false");
+      window.setTimeout(() => {
+        layout.classList.remove("is-left-collapsing");
+        layout.classList.add("is-left-shrinking");
+      }, 120);
+      window.setTimeout(() => {
+        layout.classList.remove("is-left-shrinking");
+        layout.classList.add("is-left-collapsed");
+        syncFixedChatFrame();
+      }, 540);
+    }
+
     function renderContext() {
       const node = nodes[state.node];
       document.querySelector("[data-context-description]").textContent = node.description;
@@ -373,6 +471,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       clearAlert();
       setStatus("");
       answerInput.value = "";
+      resizeAnswerInput();
       answerHintText.textContent = "填写左侧 API 后，可先生成第一题。";
     }
 
@@ -522,7 +621,9 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           "question"
         );
         messageList.append(createMessage("coach", "AI Coach", question));
+        scrollLatestMessageIntoView();
         answerHintText.textContent = "回答上方题目后提交，获取反馈并进入下一题。";
+        collapseLeftPanel();
         answerInput.focus();
       } catch (error) {
         showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
@@ -530,7 +631,6 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         setStatus("");
         startQuestionButton.disabled = false;
         answerForm.querySelector("button").disabled = false;
-        messageList.scrollTop = messageList.scrollHeight;
       }
     }
 
@@ -551,6 +651,9 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
       clearAlert();
       messageList.append(createMessage("user", "DaydreamerH", answer));
+      answerInput.value = "";
+      resizeAnswerInput();
+      scrollLatestMessageIntoView();
       setStatus("正在分析回答并准备下一题...");
       answerForm.querySelector("button").disabled = true;
       startQuestionButton.disabled = true;
@@ -558,6 +661,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       try {
         const aiFeedback = await requestAiFeedback(node, answer);
         messageList.append(createMessage("coach", "AI Coach", aiFeedback));
+        scrollLatestMessageIntoView();
       } catch (error) {
         showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
       } finally {
@@ -566,10 +670,10 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         startQuestionButton.disabled = false;
       }
 
-      answerInput.value = "";
       answerHintText.textContent = "继续回答最新问题。Ctrl + Enter 提交。";
-      messageList.scrollTop = messageList.scrollHeight;
     });
+
+    answerInput.addEventListener("input", resizeAnswerInput);
 
     answerInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && event.ctrlKey) {
@@ -579,6 +683,11 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     });
 
     startQuestionButton.addEventListener("click", generateFirstQuestion);
+
+    async function restartSession() {
+      resetSession();
+      await generateFirstQuestion();
+    }
 
     function selectNode(id) {
       state.node = id;
@@ -615,29 +724,19 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       setNodePickerExpanded(true);
     });
 
-    document.querySelector("[data-toggle-left]").addEventListener("click", (event) => {
-      const willExpand = layout.classList.contains("is-left-collapsed");
-      layout.classList.remove("is-left-collapsing", "is-left-expanding");
-
-      if (willExpand) {
-        layout.classList.remove("is-left-collapsed");
-        layout.classList.add("is-left-expanding");
-        event.currentTarget.setAttribute("aria-label", "折叠左侧面板");
-        event.currentTarget.setAttribute("aria-expanded", "true");
-        window.setTimeout(() => layout.classList.remove("is-left-expanding"), 360);
+    leftToggle.addEventListener("click", () => {
+      if (layout.classList.contains("is-left-collapsed")) {
+        expandLeftPanel();
         return;
       }
 
-      layout.classList.add("is-left-collapsing");
-      event.currentTarget.setAttribute("aria-label", "展开左侧面板");
-      event.currentTarget.setAttribute("aria-expanded", "false");
-      window.setTimeout(() => {
-        layout.classList.remove("is-left-collapsing");
-        layout.classList.add("is-left-collapsed");
-      }, 180);
+      collapseLeftPanel();
     });
 
-    document.querySelector("[data-reset]").addEventListener("click", resetSession);
+    window.addEventListener("resize", syncFixedChatFrame);
+    document.querySelector("[data-reset]").addEventListener("click", restartSession);
     resetSession();
+    resizeAnswerInput();
+    syncFixedChatFrame();
   </script>
 </BaseLayout>
