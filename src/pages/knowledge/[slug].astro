@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
+import { formatReviewDate, getActiveMarks, getReviewForSlug, performanceLabels } from "../../data/reviews";
 
 const articleImages = import.meta.glob<{ default: ImageMetadata }>(
   "../../content/knowledge/**/*.{avif,gif,jpeg,jpg,png,webp}",
@@ -24,6 +25,10 @@ const bannerPath = doc.data.photos
   ? `../../content/knowledge/${doc.slug}/${doc.data.photos}`
   : "";
 const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
+const review = getReviewForSlug(doc.slug);
+const activeMarks = getActiveMarks(review);
+const reviewSummary = review?.summary;
+const reviewJson = JSON.stringify(review ?? null);
 ---
 
 <BaseLayout title={doc.data.title} description={doc.data.description} coachHref={`/coach/?node=${doc.slug}`}>
@@ -44,6 +49,18 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
       </div>
     </header>
 
+    <aside class:list={["review-summary", review && "is-reviewed"]}>
+      <div>
+        <strong>{review ? "复习记录" : "尚未复习"}</strong>
+        <p>
+          {reviewSummary
+            ? `最近 ${formatReviewDate(reviewSummary.lastReviewedAt)} · ${reviewSummary.lastPerformance ? performanceLabels[reviewSummary.lastPerformance] : "已记录"} · ${activeMarks.length} 处重点回看`
+            : "通过 AI Coach 回顾本文后，这里会显示复习时间、回答表现和原文标注数量。"}
+        </p>
+      </div>
+      <a class="button" href={`/coach/?node=${doc.slug}`}>{review ? "继续复习" : "开始复习"}</a>
+    </aside>
+
     {doc.data.prerequisites.length > 0 && (
       <aside class="prereq-box">
         <strong>前置知识</strong>
@@ -53,8 +70,13 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
       </aside>
     )}
 
-    <div class="article-content">
+    <div class="article-content" data-article-content>
       <Content />
+    </div>
+
+    <div class="review-popover" data-review-popover hidden>
+      <button type="button" data-review-close aria-label="关闭复习标注">×</button>
+      <div data-review-popover-body></div>
     </div>
 
     <section class="article-cta">
@@ -66,4 +88,140 @@ const banner = bannerPath ? articleImages[bannerPath]?.default : undefined;
       <a class="button primary" href={`/coach/?node=${doc.slug}`}>开始测试</a>
     </section>
   </article>
+
+  <script define:vars={{ reviewJson }}>
+    const review = JSON.parse(reviewJson);
+    const articleContent = document.querySelector("[data-article-content]");
+    const popover = document.querySelector("[data-review-popover]");
+    const popoverBody = document.querySelector("[data-review-popover-body]");
+    const closePopover = document.querySelector("[data-review-close]");
+
+    function escapeRegExp(value) {
+      return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function findSession(mark) {
+      return review?.sessions?.find((session) => session.id === mark.sessionId);
+    }
+
+    function normalizeQuote(value) {
+      return value
+        .replace(/[`*_~]/g, "")
+        .replace(/\s+/g, "");
+    }
+
+    function getElementText(element) {
+      return normalizeQuote(element.textContent ?? "");
+    }
+
+    function showMarkDetail(mark, target) {
+      const session = findSession(mark);
+      const questions = session?.questions ?? [];
+      const questionHtml = questions.map((item) => {
+        if (typeof item === "string") {
+          return `<details open><summary>${escapeHtml(item)}</summary></details>`;
+        }
+
+        return `
+          <details open>
+            <summary>${escapeHtml(item.question || "本次问题")}</summary>
+            ${item.answer ? `<p><strong>回答：</strong>${escapeHtml(item.answer)}</p>` : ""}
+            ${item.diagnosis ? `<p><strong>诊断：</strong>${escapeHtml(item.diagnosis)}</p>` : ""}
+          </details>
+        `;
+      }).join("");
+
+      popoverBody.innerHTML = `
+        <p class="eyebrow">${mark.type === "mistake" ? "错误标注" : mark.type === "unclear" ? "模糊标注" : "补充标注"}</p>
+        <h3>${escapeHtml(mark.quote)}</h3>
+        <p>${escapeHtml(mark.reason)}</p>
+        ${session?.coachSummary ? `<p><strong>Coach 总结：</strong>${escapeHtml(session.coachSummary)}</p>` : ""}
+        ${questionHtml}
+      `;
+
+      const rect = target.getBoundingClientRect();
+      popover.hidden = false;
+      popover.style.left = `${Math.min(rect.left, window.innerWidth - popover.offsetWidth - 16)}px`;
+      popover.style.top = `${rect.bottom + window.scrollY + 10}px`;
+    }
+
+    function applyReviewMarks() {
+      if (!articleContent || !review?.marks?.length) return;
+      const marks = review.marks.filter((mark) => mark.status === "active" && mark.quote);
+      if (!marks.length) return;
+
+      const walker = document.createTreeWalker(articleContent, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.nodeValue?.trim()) return NodeFilter.FILTER_REJECT;
+          if (node.parentElement?.closest("code, pre, script, style, .review-mark")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+
+      const textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+      const contentBlocks = Array.from(articleContent.querySelectorAll("p, li, blockquote"));
+
+      for (const mark of marks) {
+        const normalizedQuote = normalizeQuote(mark.quote);
+        const block = contentBlocks.find((element) => getElementText(element).includes(normalizedQuote));
+        if (block && !block.querySelector(`[data-review-mark="${mark.id}"]`)) {
+          const wrapper = document.createElement("button");
+          wrapper.type = "button";
+          wrapper.className = `review-mark review-mark--block review-mark--${mark.type} review-mark--${mark.severity}`;
+          wrapper.dataset.reviewMark = mark.id;
+          wrapper.innerHTML = block.innerHTML;
+          wrapper.addEventListener("click", (event) => showMarkDetail(mark, event.currentTarget));
+          block.replaceChildren(wrapper);
+          continue;
+        }
+
+        const pattern = new RegExp(escapeRegExp(mark.quote), "g");
+        for (const node of textNodes) {
+          const text = node.nodeValue ?? "";
+          if (!pattern.test(text)) continue;
+          pattern.lastIndex = 0;
+          const fragment = document.createDocumentFragment();
+          let lastIndex = 0;
+          for (const match of text.matchAll(pattern)) {
+            if (match.index === undefined) continue;
+            fragment.append(document.createTextNode(text.slice(lastIndex, match.index)));
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `review-mark review-mark--${mark.type} review-mark--${mark.severity}`;
+            button.dataset.reviewMark = mark.id;
+            button.textContent = match[0];
+            button.addEventListener("click", (event) => showMarkDetail(mark, event.currentTarget));
+            fragment.append(button);
+            lastIndex = match.index + match[0].length;
+          }
+          fragment.append(document.createTextNode(text.slice(lastIndex)));
+          node.parentNode?.replaceChild(fragment, node);
+          break;
+        }
+      }
+    }
+
+    closePopover?.addEventListener("click", () => {
+      popover.hidden = true;
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && popover) popover.hidden = true;
+    });
+
+    applyReviewMarks();
+  </script>
 </BaseLayout>

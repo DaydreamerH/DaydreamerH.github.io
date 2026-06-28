@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getCategoryLabel, getLevelLabel } from "../../data/navigation";
+import { getReviewCardCompactLabel, getReviewIndex } from "../../data/reviews";
 import defaultBanner from "../../../default-banner.png";
 
 const articleImages = import.meta.glob<{ default: ImageMetadata }>(
@@ -21,6 +22,7 @@ const docs = (await getCollection("knowledge"))
 
 const categories = [...new Set(docs.map((doc) => doc.data.category))]
   .sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b), "zh-Hans-CN"));
+const reviews = getReviewIndex();
 
 function getBannerSrc(doc: (typeof docs)[number]) {
   if (!doc.data.photos) return defaultBanner.src;
@@ -59,6 +61,9 @@ function getBannerSrc(doc: (typeof docs)[number]) {
         <div class="card-meta">
           <span class="pill">{getCategoryLabel(doc.data.category)}</span>
           <span>{getLevelLabel(doc.data.level)} · {doc.data.minutes} min</span>
+          <span class:list={["review-card-status", reviews[doc.slug] && "is-reviewed"]}>
+            {getReviewCardCompactLabel(reviews[doc.slug])}
+          </span>
         </div>
         <h2><a href={`/knowledge/${doc.slug}/`}>{doc.data.title}</a></h2>
         <p>{doc.data.description}</p>
