@@ -2,7 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ChatSurface from "../components/ChatSurface.astro";
 import { getCollection } from "astro:content";
-import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Sparkles } from "@lucide/astro";
+import { ChevronDown, ChevronUp, Copy, PanelLeftClose, PanelLeftOpen, Sparkles } from "@lucide/astro";
 import { getCategoryLabel, getLevelLabel } from "../data/navigation";
 
 const docs = (await getCollection("knowledge"))
@@ -147,9 +147,39 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           <strong data-session-title>{activeNode.title}</strong>
         </div>
         <div class="toolbar-actions">
+          <button type="button" data-review-draft-toggle hidden>复习草稿</button>
           <button type="button" data-reset>重新开始</button>
         </div>
       </div>
+
+      <aside class="review-draft-panel" data-review-draft-panel hidden slot="toolbar">
+        <div class="review-draft-head">
+          <div>
+            <span>Review Draft</span>
+            <strong data-review-draft-title>待保存的复习记录</strong>
+          </div>
+          <div class="review-draft-actions">
+            <button type="button" data-review-draft-download>下载 JSON</button>
+            <button type="button" data-review-draft-clear>清空</button>
+            <button type="button" data-review-draft-close>关闭</button>
+          </div>
+        </div>
+        <div class="review-draft-guide">
+          <span>使用方式</span>
+          <ol>
+            <li>复习结束后下载 JSON，文件会包含当前文章已暂存的全部回答记录。</li>
+            <li>把下载的 JSON 放到项目根目录后，在终端运行：</li>
+          </ol>
+          <div class="review-draft-command-row">
+            <code data-review-draft-command></code>
+            <button type="button" data-review-draft-copy-command aria-label="复制导入命令" title="复制导入命令">
+              <Copy size={14} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <p data-review-draft-note>复习草稿会暂存在浏览器里，可在结束时一次下载。</p>
+        <pre><code data-review-draft-code></code></pre>
+      </aside>
 
       <span data-answer-hint slot="composer-left">
         <Sparkles size={15} aria-hidden="true" />
@@ -168,7 +198,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const state = {
       node: initialNodeId,
       category: nodes[initialNodeId].category,
-      query: ""
+      query: "",
+      activeQuestion: ""
     };
 
     const layout = document.querySelector("[data-coach-layout]");
@@ -195,6 +226,21 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     const pickerToggle = document.querySelector("[data-toggle-picker]");
     const selectedNodeCard = document.querySelector("[data-selected-node-card]");
     const selectedNodeTitle = document.querySelector("[data-selected-node-title]");
+    const reviewDraftToggle = document.querySelector("[data-review-draft-toggle]");
+    const reviewDraftPanel = document.querySelector("[data-review-draft-panel]");
+    const reviewDraftTitle = document.querySelector("[data-review-draft-title]");
+    const reviewDraftCode = document.querySelector("[data-review-draft-code]");
+    const reviewDraftDownload = document.querySelector("[data-review-draft-download]");
+    const reviewDraftClear = document.querySelector("[data-review-draft-clear]");
+    const reviewDraftClose = document.querySelector("[data-review-draft-close]");
+    const reviewDraftNote = document.querySelector("[data-review-draft-note]");
+    const reviewDraftCommand = document.querySelector("[data-review-draft-command]");
+    const reviewDraftCopyCommand = document.querySelector("[data-review-draft-copy-command]");
+    const reviewDraftState = {
+      raw: "",
+      drafts: [],
+      updatedAt: ""
+    };
 
     function escapeHtml(value) {
       return value
@@ -288,6 +334,194 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       closeCode();
       closeList();
       return html.join("");
+    }
+
+    function isReviewDraft(value) {
+      return value
+        && typeof value === "object"
+        && ["good", "partial", "wrong", "skipped"].includes(value.performance)
+        && Array.isArray(value.questions)
+        && Array.isArray(value.suggestedMarks);
+    }
+
+    function getQuestionFallback() {
+      return state.activeQuestion ? [state.activeQuestion] : [];
+    }
+
+    function normalizeReviewDraft(value, fallbackQuestions = getQuestionFallback()) {
+      const questions = Array.isArray(value.questions)
+        ? value.questions.filter((question) => typeof question === "string" && question.trim()).map((question) => question.trim())
+        : [];
+
+      return {
+        ...value,
+        questions: questions.length ? questions : fallbackQuestions,
+        suggestedMarks: value.suggestedMarks.filter((mark) => {
+          return mark
+            && typeof mark === "object"
+            && typeof mark.quote === "string"
+            && mark.quote.trim()
+            && typeof mark.reason === "string"
+            && mark.reason.trim();
+        }).map((mark) => ({
+          ...mark,
+          quote: mark.quote.trim(),
+          reason: mark.reason.trim()
+        }))
+      };
+    }
+
+    function extractNextQuestion(text) {
+      const normalized = text.replace(/\r\n/g, "\n").trim();
+      const markerMatch = normalized.match(/下一题\s*[：:]\s*([\s\S]+)$/);
+      const candidate = markerMatch ? markerMatch[1] : normalized;
+      const firstLine = candidate
+        .split("\n")
+        .map((line) => line.trim())
+        .find(Boolean);
+
+      return firstLine || "";
+    }
+
+    function extractJsonBlocks(text) {
+      const drafts = [];
+      let cleaned = text.replace(/```(?:json)?\s*([\s\S]*?)```/gi, (full, body) => {
+        const trimmed = body.trim();
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (isReviewDraft(parsed)) {
+            drafts.push(normalizeReviewDraft(parsed));
+            return "";
+          }
+        } catch {
+          // Leave non-JSON or invalid JSON blocks visible in the conversation.
+        }
+        return full;
+      });
+
+      const inlineJsonStart = cleaned.indexOf("{");
+      const inlineJsonEnd = cleaned.lastIndexOf("}");
+      if (!drafts.length && inlineJsonStart !== -1 && inlineJsonEnd > inlineJsonStart) {
+        const candidate = cleaned.slice(inlineJsonStart, inlineJsonEnd + 1).trim();
+        try {
+          const parsed = JSON.parse(candidate);
+          if (isReviewDraft(parsed)) {
+            drafts.push(normalizeReviewDraft(parsed));
+            cleaned = `${cleaned.slice(0, inlineJsonStart)}${cleaned.slice(inlineJsonEnd + 1)}`;
+          }
+        } catch {
+          // Keep the original text when it is ordinary prose containing braces.
+        }
+      }
+
+      return {
+        cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim(),
+        drafts
+      };
+    }
+
+    function getReviewDraftFilename() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${state.node}-coach-feedback-${year}${month}${day}.json`;
+    }
+
+    function buildReviewDraftPayload() {
+      return {
+        slug: state.node,
+        exportedAt: new Date().toISOString(),
+        drafts: reviewDraftState.drafts
+      };
+    }
+
+    function getReviewDraftStorageKey(nodeId = state.node) {
+      return `cgweb:coach-review-drafts:${nodeId}`;
+    }
+
+    function syncReviewDraftCommand() {
+      reviewDraftCommand.textContent = `npm run review:record -- --slug ${state.node} --input ./${getReviewDraftFilename()}`;
+    }
+
+    function updateAnswerHint(defaultText) {
+      if (!reviewDraftState.drafts.length) {
+        answerHintText.textContent = defaultText;
+        return;
+      }
+
+      answerHintText.textContent = `${defaultText} 已暂存 ${reviewDraftState.drafts.length} 条复习草稿，可在右上角一次下载。`;
+    }
+
+    function persistReviewDraftState() {
+      if (!reviewDraftState.drafts.length) {
+        localStorage.removeItem(getReviewDraftStorageKey());
+        return;
+      }
+
+      localStorage.setItem(getReviewDraftStorageKey(), JSON.stringify({
+        slug: state.node,
+        updatedAt: new Date().toISOString(),
+        drafts: reviewDraftState.drafts
+      }));
+    }
+
+    function renderReviewDraftState() {
+      const payload = buildReviewDraftPayload();
+      reviewDraftState.raw = JSON.stringify(payload, null, 2);
+      reviewDraftState.updatedAt = new Date().toLocaleString("zh-CN", { hour12: false });
+      reviewDraftCode.textContent = reviewDraftState.raw;
+      reviewDraftTitle.textContent = `${nodes[state.node].title} · ${reviewDraftState.drafts.length} 条草稿`;
+      syncReviewDraftCommand();
+      reviewDraftNote.textContent = `已暂存 ${reviewDraftState.updatedAt} 的 ${reviewDraftState.drafts.length} 条复习记录草稿。导入后会替换当前文章旧记录。`;
+      reviewDraftToggle.hidden = false;
+      reviewDraftToggle.textContent = `复习草稿 (${reviewDraftState.drafts.length})`;
+      syncFixedChatFrame();
+    }
+
+    function addReviewDrafts(drafts) {
+      reviewDraftState.drafts.push(...drafts);
+      persistReviewDraftState();
+      renderReviewDraftState();
+    }
+
+    function resetReviewDraftUi() {
+      reviewDraftState.raw = "";
+      reviewDraftState.drafts = [];
+      reviewDraftState.updatedAt = "";
+      reviewDraftCode.textContent = "";
+      syncReviewDraftCommand();
+      reviewDraftToggle.hidden = true;
+      reviewDraftToggle.textContent = "复习草稿";
+      reviewDraftPanel.hidden = true;
+    }
+
+    function clearReviewDraft() {
+      resetReviewDraftUi();
+      localStorage.removeItem(getReviewDraftStorageKey());
+      syncFixedChatFrame();
+    }
+
+    function restoreReviewDraftState() {
+      resetReviewDraftUi();
+      const saved = localStorage.getItem(getReviewDraftStorageKey());
+      if (!saved) return false;
+
+      try {
+        const parsed = JSON.parse(saved);
+        const drafts = Array.isArray(parsed.drafts) ? parsed.drafts : [];
+        if (!drafts.length || parsed.slug !== state.node) {
+          localStorage.removeItem(getReviewDraftStorageKey());
+          return false;
+        }
+
+        reviewDraftState.drafts = drafts;
+        renderReviewDraftState();
+        return true;
+      } catch {
+        localStorage.removeItem(getReviewDraftStorageKey());
+        return false;
+      }
     }
 
     function createMessage(role, label, body) {
@@ -467,11 +701,18 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     function resetSession() {
       renderContext();
       messageList.replaceChildren();
+      restoreReviewDraftState();
+      state.activeQuestion = "";
       clearAlert();
       setStatus("");
       answerInput.value = "";
       resizeAnswerInput();
-      answerHintText.textContent = "填写左侧 API 后，可先生成第一题。";
+      updateAnswerHint("填写左侧 API 后，可先生成第一题。");
+    }
+
+    function confirmDiscardReviewDrafts(actionText) {
+      if (!reviewDraftState.drafts.length) return true;
+      return window.confirm(`当前文章还有 ${reviewDraftState.drafts.length} 条未下载的复习草稿。${actionText}会保留浏览器暂存，但当前对话会重置；建议先下载 JSON。仍要继续吗？`);
     }
 
     function normalizeEndpoint(value) {
@@ -551,7 +792,18 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
       const knowledgeContext = buildKnowledgeContext(node);
       const modeInstruction = mode === "question"
         ? "请提出第一道测试题。只输出一个问题和一句答题关注点，不要给答案。"
-        : "请先用 2 到 4 个短要点反馈用户回答，再继续提出下一道测试题。输出里必须包含“下一题：”。";
+        : [
+          "请先反馈用户回答，再继续提出下一道测试题。输出里必须包含“下一题：”。",
+          "如果用户回答存在遗漏、模糊或错误，请额外给出“复习记录草稿”代码块。",
+          "复习记录草稿必须是 JSON，字段包含 performance、score、coachSummary、questions、suggestedMarks。",
+          "questions 必须包含当前问题原文，不能输出空数组。",
+          "performance 只能是 good、partial、wrong、skipped。",
+          "suggestedMarks 中每一项都必须包含 quote、reason、type、severity。",
+          "quote 必须尽量摘取当前文章正文中的原句；reason 用一句话说明用户哪里漏答、误解或值得回看。",
+          "type 只能是 mistake、unclear、note，severity 只能是 low、medium、high。",
+          "不要输出缺少 quote 或 reason 的 suggestedMarks；没有可标注原句时输出空数组。",
+          "如果回答基本掌握且不需要标注，suggestedMarks 输出空数组。"
+        ].join("\n");
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -578,6 +830,8 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
               content: [
                 "知识库上下文：",
                 knowledgeContext,
+                "当前问题：",
+                mode === "feedback" ? state.activeQuestion || "未记录" : "请生成第一题",
                 "用户输入：",
                 answer,
                 "任务要求：",
@@ -619,9 +873,10 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
           "开始测试，请提出第一道题。",
           "question"
         );
+        state.activeQuestion = extractNextQuestion(question);
         messageList.append(createMessage("coach", "AI Coach", question));
         scrollLatestMessageIntoView();
-        answerHintText.textContent = "回答上方题目后提交，获取反馈并进入下一题。";
+        updateAnswerHint("回答上方题目后提交，获取反馈并进入下一题。");
         collapseLeftPanel();
         answerInput.focus();
       } catch (error) {
@@ -659,7 +914,12 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
 
       try {
         const aiFeedback = await requestAiFeedback(node, answer);
-        messageList.append(createMessage("coach", "AI Coach", aiFeedback));
+        const { cleaned, drafts } = extractJsonBlocks(aiFeedback);
+        if (drafts.length) {
+          addReviewDrafts(drafts);
+        }
+        messageList.append(createMessage("coach", "AI Coach", cleaned || "已整理本次复习记录。"));
+        state.activeQuestion = extractNextQuestion(cleaned) || state.activeQuestion;
         scrollLatestMessageIntoView();
       } catch (error) {
         showAlert(`${error.message} 如果浏览器提示跨域或请求没有到达服务商，说明该服务商不允许纯前端直连，需要后续增加代理层。`);
@@ -669,7 +929,7 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
         startQuestionButton.disabled = false;
       }
 
-      answerHintText.textContent = "继续回答最新问题。Ctrl + Enter 提交。";
+      updateAnswerHint("继续回答最新问题。Ctrl + Enter 提交。");
     });
 
     answerInput.addEventListener("input", resizeAnswerInput);
@@ -684,11 +944,14 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     startQuestionButton.addEventListener("click", generateFirstQuestion);
 
     async function restartSession() {
+      if (!confirmDiscardReviewDrafts("重新开始")) return;
       resetSession();
       await generateFirstQuestion();
     }
 
     function selectNode(id) {
+      if (id === state.node) return;
+      if (!confirmDiscardReviewDrafts("切换文章")) return;
       state.node = id;
       state.category = nodes[id].category;
       state.query = "";
@@ -721,6 +984,46 @@ const nodesJson = JSON.stringify(Object.fromEntries(knowledgeNodes.map((node) =>
     });
     selectedNodeCard.addEventListener("click", () => {
       setNodePickerExpanded(true);
+    });
+
+    reviewDraftToggle.addEventListener("click", () => {
+      reviewDraftPanel.hidden = !reviewDraftPanel.hidden;
+      syncFixedChatFrame();
+    });
+
+    reviewDraftClose.addEventListener("click", () => {
+      reviewDraftPanel.hidden = true;
+      syncFixedChatFrame();
+    });
+
+    reviewDraftCopyCommand.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(reviewDraftCommand.textContent);
+        reviewDraftNote.textContent = "已复制导入命令。确认 JSON 位于项目根目录后即可运行。";
+      } catch {
+        reviewDraftNote.textContent = "复制命令失败，请手动选中上方命令复制。";
+      }
+    });
+
+    reviewDraftDownload.addEventListener("click", () => {
+      if (!reviewDraftState.raw) return;
+      const blob = new Blob([`${reviewDraftState.raw}\n`], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = getReviewDraftFilename();
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      reviewDraftNote.textContent = `已下载 ${getReviewDraftFilename()}。把它放到项目根目录，运行上方命令导入后再提交。`;
+    });
+
+    reviewDraftClear.addEventListener("click", () => {
+      if (!reviewDraftState.drafts.length) return;
+      if (!window.confirm(`确定清空当前文章的 ${reviewDraftState.drafts.length} 条复习草稿吗？这只会清空浏览器暂存，不会修改项目文件。`)) return;
+      clearReviewDraft();
+      answerHintText.textContent = "复习草稿已清空。可以继续当前对话，或重新开始。";
     });
 
     leftToggle.addEventListener("click", () => {
