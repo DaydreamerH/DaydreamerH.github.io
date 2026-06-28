@@ -1,0 +1,61 @@
+{
+  "shape": "cube",
+  "mode": "lighting-maps",
+  "camera": {
+    "type": "perspective",
+    "fov": 45,
+    "position": [
+      2.4,
+      1.8,
+      4.2
+    ],
+    "lookAt": [
+      0,
+      0,
+      0
+    ]
+  },
+  "material": {
+    "vertexShader": "cube.vertex.glsl",
+    "fragmentShader": "cube.fragment.glsl"
+  },
+  "textures": {
+    "diffuse": "diffuse-map.txt",
+    "specular": "specular-map.txt"
+  },
+  "lightMarker": {
+    "enabled": true,
+    "vertexShader": "light.vertex.glsl",
+    "fragmentShader": "light.fragment.glsl",
+    "radius": 0.08
+  },
+  "uniforms": {
+    "uBaseColor": [
+      0.95,
+      0.48,
+      0.2
+    ],
+    "uLightColor": [
+      1,
+      1,
+      1
+    ],
+    "uLightPos": [
+      1.2,
+      1,
+      2
+    ],
+    "uAmbientStrength": 0.34,
+    "uSpecularStrength": 1.25,
+    "uShininess": 44
+  },
+  "mesh": {
+    "rotation": [
+      0.35,
+      0.55,
+      0
+    ],
+    "scale": 1
+  },
+  "animated": false
+}

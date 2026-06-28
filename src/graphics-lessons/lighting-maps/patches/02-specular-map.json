@@ -1,0 +1,18 @@
+{
+  "id": "02-specular-map",
+  "description": "箱体高光集中在镜面贴图允许的区域，整体仍保持 container.png 的基色。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"uSpecularStrength\": 1.25,",
+      "content": "\"uSpecularStrength\": 1.7,"
+    },
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"uShininess\": 44",
+      "content": "\"uShininess\": 32"
+    }
+  ]
+}

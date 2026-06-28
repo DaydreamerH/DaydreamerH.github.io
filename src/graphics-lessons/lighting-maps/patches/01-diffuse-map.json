@@ -1,0 +1,12 @@
+{
+  "id": "01-diffuse-map",
+  "description": "箱体显示 container.png 的表面图案，明暗仍由光照方向调制。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"uAmbientStrength\": 0.34,",
+      "content": "\"uAmbientStrength\": 0.42,"
+    }
+  ]
+}

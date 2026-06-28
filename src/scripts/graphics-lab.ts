@@ -150,6 +150,7 @@ type GuideResponse = {
   runAfterApply?: boolean;
   expectedObservation?: string;
   nextCheckpointId?: string;
+  answerCorrect?: boolean;
 };
 
 declare global {
@@ -292,6 +293,7 @@ function sortLessonFileNames(lesson: GraphicsLesson, names: Iterable<LabFileName
 function getLessonFileNames(lesson: GraphicsLesson) {
   const names = Object.keys(lesson.starterFiles ?? {});
   const uniqueNames = new Set<string>(names);
+  (lesson.workspaceFiles ?? []).forEach((file) => uniqueNames.add(file.path));
   const entryFileName = getEntryFileName(lesson);
   if (!uniqueNames.has(entryFileName)) uniqueNames.add(entryFileName);
   return sortLessonFileNames(lesson, uniqueNames);
@@ -393,7 +395,8 @@ function normalizeGuideResponse(response: GuideResponse): GuideResponse {
     patches: Array.isArray(response.patches) ? response.patches : [],
     runAfterApply: Boolean(response.runAfterApply),
     expectedObservation: response.expectedObservation ?? "",
-    nextCheckpointId: response.nextCheckpointId ?? ""
+    nextCheckpointId: response.nextCheckpointId ?? "",
+    answerCorrect: Boolean(response.answerCorrect)
   };
 }
 
@@ -1793,7 +1796,9 @@ function initGraphicsLab(root: HTMLElement) {
 10. 当前运行入口文件是 ${entryFileName}；运行环境注入 THREE、OrbitControls、canvas、files、getFile、report。多文件课程必须通过 getFile("file-name") 读取 shader、json 或 helper，不要依赖固定文件名。
 11. message 字段不要包含问题；需要提问只能写在 question 字段。
 12. start 模式必须优先使用当前 checkpoint.question 作为唯一问题。
-13. 只返回 JSON，不返回 Markdown。
+13. 用户回答正确或基本正确时设置 answerCorrect=true；回答错误、不完整或说不知道时设置 answerCorrect=false。
+14. 如果当前 checkpoint 是最后一个，且用户回答正确或基本正确，返回 type="summary"、answerCorrect=true、message 为结束反馈，不要返回 question、patchId 或 nextCheckpointId。
+15. 只返回 JSON，不返回 Markdown。
 JSON schema:
 {
   "type": "question | feedback | code_patch | summary",
@@ -1803,7 +1808,8 @@ JSON schema:
   "patches": [{"file": "课程文件名或新文件名", "operation": "replace | replace_all", "target": "replace 时必填", "content": "替换内容"}],
   "runAfterApply": true,
   "expectedObservation": "应用 patch 后应观察到的现象",
-  "nextCheckpointId": "可选，进入的 checkpoint id"
+  "nextCheckpointId": "可选，进入的 checkpoint id",
+  "answerCorrect": true
 }`;
 
     const checkpointPrompt = freeModeRequest
@@ -1908,6 +1914,12 @@ ${getFilesSnapshot()}`;
     const parsed = normalizeGuideResponse(extractJsonObject(content));
     const directPatches = parsed.patches ?? [];
     const allowCourseAdvance = !lessonFreeMode;
+    const checkpointIndexBeforeResponse = currentCheckpointIndex;
+    const isLastCheckpointBeforeResponse = checkpointIndexBeforeResponse === lesson.checkpoints.length - 1;
+    const terminalAnswerCorrect =
+      mode === "answer" &&
+      isLastCheckpointBeforeResponse &&
+      (parsed.answerCorrect || parsed.type === "summary");
 
     if (mode === "start") {
       if (guideLog) guideLog.innerHTML = "";
@@ -1940,11 +1952,22 @@ ${getFilesSnapshot()}`;
         lessonCompleted = advanceResult.completed;
         if (lessonCompleted) lessonFreeMode = true;
       }
-    } else if (allowCourseAdvance && parsed.nextCheckpointId) {
+    } else if (allowCourseAdvance && parsed.nextCheckpointId && !terminalAnswerCorrect) {
       const advanceResult = advanceCheckpoint(undefined, parsed.nextCheckpointId);
       checkpointMoved = advanceResult.moved;
       lessonCompleted = advanceResult.completed;
       if (lessonCompleted) lessonFreeMode = true;
+    }
+
+    if (
+      allowCourseAdvance &&
+      terminalAnswerCorrect &&
+      !lessonCompleted &&
+      !parsed.patchId &&
+      !directPatches.length
+    ) {
+      lessonCompleted = true;
+      lessonFreeMode = true;
     }
 
     let preparedObservationFiles: LabFileName[] = [];
@@ -1968,7 +1991,7 @@ ${getFilesSnapshot()}`;
       !directPatches.length &&
       Boolean(currentCheckpoint());
     const parsedQuestion =
-      lessonCompleted || (shouldRepeatCurrentQuestion && !lessonFreeMode)
+      lessonCompleted || (terminalAnswerCorrect && isLastCheckpointBeforeResponse) || (shouldRepeatCurrentQuestion && !lessonFreeMode)
         ? ""
         : lessonFreeMode
           ? ""

@@ -143,6 +143,8 @@ Required checkpoint fields:
 
 Choose the flow from the learning goal. Do not make every checkpoint a code patch, and do not ask users to explain a visual result before the result exists.
 
+For the final checkpoint, completion is only reached when the learner answers that final question correctly or basically correctly. The guide response should return `type: "summary"` and `answerCorrect: true`, with a short completion message and no `question`, `patchId`, or `nextCheckpointId`. If the answer is wrong, incomplete, or the learner says they do not know, repeat the same final question with a targeted hint instead of ending the lesson.
+
 ## Patch Contract
 
 Patch files live in `patches/`. A patch is deterministic and must be safe to apply locally.
@@ -242,12 +244,16 @@ The recipe is the editable source for a generated lesson. It should contain the 
 
 Generated lesson folders are build artifacts of this pipeline. Running the generator always rewrites the matching `src/graphics-lessons/<lesson-id>/` folder from its recipe; do not add per-lesson "preserve existing" exceptions. Manual changes that must survive regeneration belong in the recipe, source reference files, or another explicitly non-generated location.
 
-There are two ways to define starter code:
+There are several ways to define starter code:
 
 - `starterState`: generator shorthand for state-driven lessons. It produces a small multi-file workspace, including `main.js`, `scene.json`, `geometry.json`, and shader files.
 - `starterFiles`: explicit file map for lessons that need custom project structure, several runtime shader files, helper modules, or data files.
+- `starterFilePaths`: explicit file map whose values are repository paths. Use this when a custom lesson has longer `main.js`, shader, json, or helper files that should remain readable outside the recipe JSON.
+- `starterAssets`: static asset map for image or binary source files. The generator reads the source file and writes a text data URL into `starter/<path>`, so the browser lesson remains fully static and can still load the original texture through `getFile("<path>")`.
 
-Prefer explicit `starterFiles` plus `workspaceFiles` when the source lesson has several shader programs or meaningful helper/data files. Do not rely on the generator to blindly copy OpenGL source shaders into the editor. The lesson authoring AI should convert the source idea into WebGL-facing files, then explain and teach each visible file through checkpoints.
+Prefer explicit `starterFilePaths` or `starterFiles` plus `workspaceFiles` when the source lesson has several shader programs, meaningful helper/data files, or real texture assets. Do not rely on the generator to blindly copy OpenGL source shaders into the editor. The lesson authoring AI should convert the source idea into WebGL-facing files, then explain and teach each visible file through checkpoints.
+
+For texture lessons, keep original image files in the source project or another stable repository location, declare them through `starterAssets`, and mark the generated data URL files as `visible: false` unless inspecting the raw encoded asset is itself part of the lesson. If the source OpenGL code uses `container.png` and `container_specular.png`, the browser lesson should use those same images unless there is a deliberate teaching reason to replace them.
 
 Checkpoint code changes also have two forms:
 

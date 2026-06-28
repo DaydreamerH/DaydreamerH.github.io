@@ -50,6 +50,12 @@ function writeFile(root, relativePath, content) {
   writeFileSync(target, `${String(content).trim()}\n`, "utf8");
 }
 
+function writeTextFile(root, relativePath, content) {
+  const target = join(root, relativePath);
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, String(content), "utf8");
+}
+
 function stableJson(value) {
   return JSON.stringify(value, null, 2);
 }
@@ -143,13 +149,53 @@ function entryFileNameFromRecipe(recipe) {
 function starterFilesFromRecipe(recipe) {
   return {
     ...(recipe.starterState ? filesFromState(recipe.starterState, entryFileNameFromRecipe(recipe)) : {}),
-    ...(recipe.starterFiles ?? {})
+    ...starterFilePathsFromRecipe(recipe),
+    ...(recipe.starterFiles ?? {}),
+    ...starterAssetsFromRecipe(recipe)
   };
+}
+
+function starterFilePathsFromRecipe(recipe) {
+  const files = {};
+  for (const [file, source] of Object.entries(recipe.starterFilePaths ?? {})) {
+    const sourcePath = join(workspace, source);
+    if (!existsSync(sourcePath)) {
+      throw new Error(`Recipe ${recipe.id} starter file source is missing: ${sourcePath}`);
+    }
+    files[file] = readFileSync(sourcePath, "utf8");
+  }
+  return files;
+}
+
+function mimeTypeFromFileName(fileName) {
+  const extension = extname(fileName).toLowerCase();
+  if (extension === ".png") return "image/png";
+  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
+  if (extension === ".webp") return "image/webp";
+  return "application/octet-stream";
+}
+
+function starterAssetsFromRecipe(recipe) {
+  const assets = {};
+  for (const asset of recipe.starterAssets ?? []) {
+    if (!asset.path || !asset.source) {
+      throw new Error(`Recipe ${recipe.id} starterAssets entries must provide path and source.`);
+    }
+    const sourcePath = join(workspace, asset.source);
+    if (!existsSync(sourcePath)) {
+      throw new Error(`Recipe ${recipe.id} starter asset is missing: ${sourcePath}`);
+    }
+    const mimeType = asset.mimeType || mimeTypeFromFileName(asset.source);
+    const encoded = readFileSync(sourcePath).toString("base64");
+    assets[asset.path] = `data:${mimeType};base64,${encoded}`;
+  }
+  return assets;
 }
 
 function inferWorkspaceFileRole(fileName, entryFileName) {
   if (fileName === entryFileName) return "entry";
   if (fileName.endsWith(".glsl")) return "shader";
+  if (fileName.endsWith(".txt")) return "data";
   if (fileName.endsWith(".json")) return "metadata";
   return "helper";
 }
@@ -162,6 +208,7 @@ function inferWorkspaceFileConcept(fileName, entryFileName) {
   if (fileName === "fragment.glsl") return "default fragment color shader";
   if (fileName.endsWith(".vertex.glsl")) return `${fileName.replace(".vertex.glsl", "")} vertex stage`;
   if (fileName.endsWith(".fragment.glsl")) return `${fileName.replace(".fragment.glsl", "")} fragment stage`;
+  if (fileName.endsWith(".txt")) return "static lesson data asset";
   if (fileName.endsWith(".json")) return "lesson metadata consumed by runtime or AI";
   return "lesson helper file";
 }
@@ -892,7 +939,7 @@ function generateLesson(recipe, options) {
   writeFile(outDir, "lesson.md", `# ${recipe.title}\n\n${recipe.lesson ?? recipe.description}`);
 
   for (const [file, content] of Object.entries(starterFiles)) {
-    writeFile(outDir, `starter/${file}`, content);
+    writeTextFile(outDir, `starter/${file}`, content);
   }
 
   for (const checkpoint of recipe.checkpoints.filter((item) => item.patchId)) {

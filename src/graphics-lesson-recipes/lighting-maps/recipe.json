@@ -1,0 +1,264 @@
+{
+  "id": "lighting-maps",
+  "source": "11_lighting_maps",
+  "title": "Lighting Maps",
+  "category": "材质贴图",
+  "series": "LearnOpenGL 基础",
+  "order": 11,
+  "level": "intermediate",
+  "createdAt": "2026-06-28",
+  "description": "使用漫反射贴图和镜面贴图分别控制物体基色与高光区域，观察材质空间中的局部差异。",
+  "previewTitle": "Diffuse and Specular Maps",
+  "lesson": "本实验把 LearnOpenGL 的 Lighting Maps 转写为浏览器中的 Three.js ShaderMaterial。重点不是加载图片本身，而是理解 UV 坐标如何把材质属性从常量扩展为按位置变化的函数。",
+  "aiBrief": "围绕 cube.vertex.glsl 的 UV/法线/世界坐标输出、cube.fragment.glsl 中 diffuseMap 与 specularMap 的不同职责、scene.json 中贴图资源绑定和 OpenGL 源代码的 texture(material.diffuse/specular, TexCoords) 组织提问。用户回答正确后只返回预设 patchId 或 nextCheckpointId，不自由改写课程主流程。",
+  "referenceBrief": [
+    "OpenGL 源代码每个顶点包含 position、normal、texcoord，stride 为 8 个 float。",
+    "container.png 作为 material.diffuse，提供每个片元的漫反射颜色。",
+    "container_specular.png 作为 material.specular，提供每个片元的镜面反射强度掩码。",
+    "cube.fs 中 ambient 与 diffuse 都采样 diffuse map；specular 单独采样 specular map。",
+    "shininess 控制高光角度分布，specular map 控制高光能出现在哪些材质区域。"
+  ],
+  "starterFilePaths": {
+    "main.js": "src/graphics-lesson-recipes/lighting-maps/starter/main.js",
+    "scene.json": "src/graphics-lesson-recipes/lighting-maps/starter/scene.json",
+    "geometry.json": "src/graphics-lesson-recipes/lighting-maps/starter/geometry.json",
+    "cube.vertex.glsl": "src/graphics-lesson-recipes/lighting-maps/starter/cube.vertex.glsl",
+    "cube.fragment.glsl": "src/graphics-lesson-recipes/lighting-maps/starter/cube.fragment.glsl",
+    "light.vertex.glsl": "src/graphics-lesson-recipes/lighting-maps/starter/light.vertex.glsl",
+    "light.fragment.glsl": "src/graphics-lesson-recipes/lighting-maps/starter/light.fragment.glsl"
+  },
+  "starterAssets": [
+    {
+      "path": "diffuse-map.txt",
+      "source": "OpenGLProject/images/container.png",
+      "mimeType": "image/png"
+    },
+    {
+      "path": "specular-map.txt",
+      "source": "OpenGLProject/images/container_specular.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "装配场景、从课程文件读取 data URL 贴图、创建 ShaderMaterial 并驱动渲染",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "声明相机、光源、shader 路由和 diffuse/specular 贴图资源",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明立方体几何，实际 UV 与 normal 由 Three.js BoxGeometry 生成",
+      "visible": true
+    },
+    {
+      "path": "cube.vertex.glsl",
+      "role": "shader",
+      "concept": "输出世界坐标、法线和 UV，供片元阶段做贴图光照",
+      "visible": true
+    },
+    {
+      "path": "cube.fragment.glsl",
+      "role": "shader",
+      "concept": "采样漫反射贴图和镜面贴图，并组合 ambient/diffuse/specular",
+      "visible": true
+    },
+    {
+      "path": "light.vertex.glsl",
+      "role": "shader",
+      "concept": "光源标记的顶点阶段",
+      "visible": false
+    },
+    {
+      "path": "light.fragment.glsl",
+      "role": "shader",
+      "concept": "光源标记的片元阶段",
+      "visible": false
+    },
+    {
+      "path": "diffuse-map.txt",
+      "role": "data",
+      "concept": "container.png 的 data URL，用作漫反射贴图",
+      "visible": false
+    },
+    {
+      "path": "specular-map.txt",
+      "role": "data",
+      "concept": "container_specular.png 的 data URL，用作镜面贴图",
+      "visible": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "texture-as-material-function",
+      "title": "贴图是材质函数",
+      "concept": "贴图把原本单个材质常量变成随 UV 坐标变化的函数，片元阶段按位置采样材质属性。",
+      "question": "为什么说 diffuse map 不是简单替换物体颜色，而是把 diffuseColor 从常量变成了 f(UV) 这样的材质函数？",
+      "expectedKeywords": [
+        "UV",
+        "片元",
+        "采样",
+        "函数",
+        "位置"
+      ],
+      "hint": "对每个片元来说，shader 会用自己的 vUv 查询贴图，因此不同位置得到不同材质值。",
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl",
+        "diffuse-map.txt"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "uv-carrying",
+      "title": "UV 随顶点进入片元阶段",
+      "concept": "顶点阶段把 uv 写入 varying，光栅化会对三角形内部片元插值 UV，再交给片元 shader 采样。",
+      "question": "从 cube.vertex.glsl 的 vUv = uv 出发，为什么同一张 container.png 能稳定贴到立方体各个面上，而不是每个像素随机取色？",
+      "expectedKeywords": [
+        "vUv",
+        "插值",
+        "三角形",
+        "片元",
+        "采样"
+      ],
+      "hint": "UV 是顶点属性，经过光栅化插值后，每个片元都有连续的纹理坐标。",
+      "files": [
+        "geometry.json",
+        "cube.vertex.glsl",
+        "cube.fragment.glsl"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "diffuse-map",
+      "title": "漫反射贴图参与基色",
+      "concept": "ambient 与 diffuse 都使用 diffuse map，让物体不同位置具有不同基础颜色。",
+      "question": "观察箱体表面的图案后，为什么 ambient 和 diffuse 都应该乘以 diffuseColor，而不是只让 diffuse 项使用贴图？",
+      "expectedKeywords": [
+        "ambient",
+        "diffuse",
+        "基色",
+        "贴图",
+        "材质"
+      ],
+      "hint": "环境光虽然不依赖方向，但仍然照亮同一个表面材质；表面基色来自 diffuse map。",
+      "patchId": "01-diffuse-map",
+      "expectedObservation": "箱体显示 container.png 的表面图案，明暗仍由光照方向调制。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"uAmbientStrength\": 0.34,",
+          "content": "\"uAmbientStrength\": 0.42,"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl",
+        "diffuse-map.txt"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "specular-map-role",
+      "title": "镜面贴图是高光掩码",
+      "concept": "specular map 不改变漫反射基色，而是控制哪些位置可以产生更强的镜面高光。",
+      "question": "为什么 container_specular.png 更适合乘在 specular 项上，而不是直接乘在 diffuse 项上？",
+      "expectedKeywords": [
+        "specular",
+        "高光",
+        "掩码",
+        "diffuse",
+        "材质区域"
+      ],
+      "hint": "漫反射描述粗糙表面的主体颜色，镜面贴图描述哪些局部更像金属或光滑表面。",
+      "files": [
+        "cube.fragment.glsl",
+        "specular-map.txt"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "specular-map",
+      "title": "局部高光控制",
+      "concept": "镜面贴图与 Phong 高光公式相乘，决定高光既受角度影响，也受材质局部属性影响。",
+      "question": "当 specularMask 乘到 specular 项上后，为什么高光不再均匀出现在整个箱体表面，而会被贴图中的明暗区域限制？",
+      "expectedKeywords": [
+        "specularMask",
+        "乘法",
+        "高光",
+        "局部",
+        "贴图"
+      ],
+      "hint": "如果某个 UV 位置的 specularMask 接近 0，即使角度项很大，该片元的高光也会被压低。",
+      "patchId": "02-specular-map",
+      "expectedObservation": "箱体高光集中在镜面贴图允许的区域，整体仍保持 container.png 的基色。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"uSpecularStrength\": 1.25,",
+          "content": "\"uSpecularStrength\": 1.7,"
+        },
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"uShininess\": 44",
+          "content": "\"uShininess\": 32"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "cube.fragment.glsl",
+        "specular-map.txt"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "shininess-vs-mask",
+      "title": "高光宽度与高光区域",
+      "concept": "shininess 控制角度项 pow(dot(V,R), shininess) 的分布，specular map 控制材质空间中的反射强度。",
+      "question": "从 pow(max(dot(viewDir, reflectDir), 0.0), shininess) 出发，为什么 shininess 和 specular map 不能互相替代？",
+      "expectedKeywords": [
+        "shininess",
+        "dot",
+        "角度",
+        "specular map",
+        "空间"
+      ],
+      "hint": "一个改变视线与反射方向的角度响应，另一个改变 UV 位置上的材质强弱。",
+      "files": [
+        "cube.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "texture-units-to-samplers",
+      "title": "纹理单元与 sampler",
+      "concept": "OpenGL 源代码把 diffuseMap 绑定到 texture0、specularMap 绑定到 texture1；WebGL 版本用两个 sampler uniform 表达同样的资源分离。",
+      "question": "为什么 material.diffuse 和 material.specular 需要作为两个 sampler 分开绑定，而不是把两张图预先混成一张颜色贴图？",
+      "expectedKeywords": [
+        "sampler",
+        "diffuse",
+        "specular",
+        "独立",
+        "调试"
+      ],
+      "hint": "两张贴图服务于不同公式分量，分开绑定可以独立调节、替换和观察。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "cube.fragment.glsl"
+      ],
+      "flow": "question_only"
+    }
+  ]
+}
