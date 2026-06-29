@@ -48,32 +48,75 @@ const categories = [...new Set(graphicsLessonSummaries.map((lesson) => lesson.ca
     ))}
   </section>
 
+  <nav class="pagination" id="lesson-pagination" aria-label="实验课程分页">
+    <button type="button" data-lesson-page-prev>上一页</button>
+    <span data-lesson-page-summary></span>
+    <button type="button" data-lesson-page-next>下一页</button>
+  </nav>
+
   <p class="empty-state" id="lesson-empty-state" hidden>没有匹配的实验课程。</p>
 
   <script>
+    const pageSize = 9;
     const searchInput = document.querySelector("#lesson-search");
     const categoryFilter = document.querySelector("#lesson-category-filter");
     const cards = Array.from(document.querySelectorAll(".lesson-library-card"));
     const emptyState = document.querySelector("#lesson-empty-state");
+    const pagination = document.querySelector("#lesson-pagination");
+    const pagePrev = document.querySelector("[data-lesson-page-prev]");
+    const pageNext = document.querySelector("[data-lesson-page-next]");
+    const pageSummary = document.querySelector("[data-lesson-page-summary]");
+
+    let currentPage = 1;
+    let filteredCards = cards;
 
     function applyFilters() {
       const query = searchInput.value.trim().toLowerCase();
       const category = categoryFilter.value;
-      let visibleCount = 0;
-
-      for (const card of cards) {
+      filteredCards = cards.filter((card) => {
         const matchesQuery = !query || card.dataset.title.includes(query);
         const matchesCategory = category === "all" || card.dataset.category === category;
-        const isVisible = matchesQuery && matchesCategory;
-        card.hidden = !isVisible;
-        if (isVisible) visibleCount += 1;
+        return matchesQuery && matchesCategory;
+      });
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const total = filteredCards.length;
+      const pageCount = Math.max(1, Math.ceil(total / pageSize));
+      currentPage = Math.min(currentPage, pageCount);
+      const start = (currentPage - 1) * pageSize;
+      const visibleCards = new Set(filteredCards.slice(start, start + pageSize));
+
+      for (const card of cards) {
+        card.hidden = !visibleCards.has(card);
       }
 
-      emptyState.hidden = visibleCount !== 0;
+      emptyState.hidden = total !== 0;
+      pagination.hidden = total <= pageSize;
+      pagePrev.disabled = currentPage <= 1;
+      pageNext.disabled = currentPage >= pageCount;
+      pageSummary.textContent = total
+        ? `第 ${currentPage} / ${pageCount} 页 · ${total} 个实验`
+        : "没有实验";
     }
 
     searchInput.addEventListener("input", applyFilters);
     categoryFilter.addEventListener("change", applyFilters);
+    pagePrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderPage();
+      }
+    });
+    pageNext.addEventListener("click", () => {
+      const pageCount = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+      if (currentPage < pageCount) {
+        currentPage += 1;
+        renderPage();
+      }
+    });
 
     function bindCardTilt(card) {
       card.addEventListener("pointermove", (event) => {

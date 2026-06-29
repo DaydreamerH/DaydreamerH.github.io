@@ -1,0 +1,11 @@
+{
+  "id": "01-point-light",
+  "description": "画面出现光源标记，靠近光源的箱体更亮，不同箱体的受光方向随空间位置变化。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace_all",
+      "content": "{\n  \"shape\": \"multi-cube\",\n  \"mode\": \"point\",\n  \"camera\": {\n    \"type\": \"perspective\",\n    \"fov\": 45,\n    \"position\": [\n      3.4,\n      2.2,\n      5.2\n    ],\n    \"lookAt\": [\n      0,\n      0.2,\n      -2\n    ]\n  },\n  \"material\": {\n    \"vertexShader\": \"cube.vertex.glsl\",\n    \"fragmentShader\": \"point.fragment.glsl\"\n  },\n  \"textures\": {\n    \"diffuse\": \"diffuse-map.txt\",\n    \"specular\": \"specular-map.txt\"\n  },\n  \"lightMarker\": {\n    \"enabled\": true,\n    \"vertexShader\": \"light.vertex.glsl\",\n    \"fragmentShader\": \"light.fragment.glsl\",\n    \"radius\": 0.09\n  },\n  \"uniforms\": {\n    \"uLightColor\": [\n      1,\n      1,\n      1\n    ],\n    \"uLightDirection\": [\n      -0.2,\n      -1,\n      -0.3\n    ],\n    \"uLightPos\": [\n      1.2,\n      1,\n      2\n    ],\n    \"uSpotDirection\": [\n      -0.45,\n      -0.2,\n      -1\n    ],\n    \"uAmbient\": [\n      0.2,\n      0.2,\n      0.2\n    ],\n    \"uDiffuse\": [\n      0.5,\n      0.5,\n      0.5\n    ],\n    \"uSpecular\": [\n      1,\n      1,\n      1\n    ],\n    \"uConstant\": 1,\n    \"uLinear\": 0.09,\n    \"uQuadratic\": 0.032,\n    \"uCutOff\": 0.976296,\n    \"uOuterCutOff\": 0.953717,\n    \"uShininess\": 32\n  },\n  \"mesh\": {\n    \"scale\": 1\n  },\n  \"animated\": false\n}"
+    }
+  ]
+}

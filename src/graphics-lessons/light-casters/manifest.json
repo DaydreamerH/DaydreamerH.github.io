@@ -1,0 +1,371 @@
+{
+  "id": "light-casters",
+  "title": "Light Casters",
+  "category": "光照模型",
+  "series": "LearnOpenGL 基础",
+  "order": 12,
+  "level": "intermediate",
+  "createdAt": "2026-06-29",
+  "description": "比较方向光、点光源和聚光灯的光线方向、距离衰减与角度裁剪，理解不同 light caster 的数学模型。",
+  "source": "OpenGLProject/src/12_light_casters",
+  "runtime": "three-shader-material",
+  "previewTitle": "Directional / Point / Spot Light",
+  "draft": false,
+  "aiBrief": "围绕三个原始可执行程序 directional.cpp、point_cube.cpp、spot_cube.cpp 的差异组织教学：方向光使用固定 direction，点光使用 position 和 attenuation，聚光灯在点光基础上增加 direction、cutOff、outerCutOff 和 intensity。用户回答正确后只返回预设 patchId 或 nextCheckpointId，不自由改写课程主流程。",
+  "referenceBrief": [
+    "directional.cpp 使用 directional_cube.fs，核心是 light.direction，没有 light.position，也没有距离衰减。",
+    "point_cube.cpp 使用 point_cube.fs，核心是 light.position 与 1/(constant + linear*d + quadratic*d*d) 衰减。",
+    "spot_cube.cpp 使用 spot_cube.fs，在点光衰减上加入 theta、cutOff、outerCutOff 与 intensity。",
+    "三个程序共享 cube.vs、container.png 和 container_specular.png，片元 shader 都组合 ambient、diffuse、specular。",
+    "浏览器课程用 scene.json 切换 fragment shader 和光源配置，以一个实验页比较三种模型。"
+  ],
+  "shaderSets": [
+    {
+      "name": "cube",
+      "role": "object/material shader program",
+      "vertex": "reference/cube.vs"
+    },
+    {
+      "name": "directional_cube",
+      "role": "object/material shader program",
+      "fragment": "reference/directional_cube.fs"
+    },
+    {
+      "name": "light",
+      "role": "light marker shader program",
+      "fragment": "reference/light.fs",
+      "vertex": "reference/light.vs"
+    },
+    {
+      "name": "point_cube",
+      "role": "object/material shader program",
+      "fragment": "reference/point_cube.fs"
+    },
+    {
+      "name": "spot_cube",
+      "role": "object/material shader program",
+      "fragment": "reference/spot_cube.fs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "cube.vertex.glsl",
+      "role": "shader",
+      "concept": "输出世界坐标、法线和 UV，为三种 light caster 共享片元输入",
+      "visible": true
+    },
+    {
+      "path": "diffuse-map.txt",
+      "role": "data",
+      "concept": "container.png 的 data URL，用作漫反射贴图",
+      "visible": false
+    },
+    {
+      "path": "directional.fragment.glsl",
+      "role": "shader",
+      "concept": "方向光片元 shader：用固定方向计算 diffuse/specular，不考虑距离衰减",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明多个箱体的位置、旋转和缩放，用于观察光照随空间变化的差异",
+      "visible": true
+    },
+    {
+      "path": "light.fragment.glsl",
+      "role": "shader",
+      "concept": "光源标记的片元阶段",
+      "visible": false
+    },
+    {
+      "path": "light.vertex.glsl",
+      "role": "shader",
+      "concept": "光源标记的顶点阶段",
+      "visible": false
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "读取课程配置、创建多箱体场景、按 scene.json 选择 light caster shader 并汇报运行状态",
+      "visible": true
+    },
+    {
+      "path": "point.fragment.glsl",
+      "role": "shader",
+      "concept": "点光源片元 shader：用光源位置计算方向，并乘以距离衰减",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "声明当前光源类型、shader 路由、相机、光源参数和贴图资源",
+      "visible": true
+    },
+    {
+      "path": "specular-map.txt",
+      "role": "data",
+      "concept": "container_specular.png 的 data URL，用作镜面贴图",
+      "visible": false
+    },
+    {
+      "path": "spot.fragment.glsl",
+      "role": "shader",
+      "concept": "聚光灯片元 shader：在点光源基础上加入角度裁剪和软边缘强度",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/cube.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/directional.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/directional_cube.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_cube.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_cube.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/spot_cube.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/spot_cube.fs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "shared-lighting-inputs",
+      "title": "共享的片元输入",
+      "concept": "三种光源模型都需要片元世界坐标、法线、UV 和观察位置，只是光线方向与权重来源不同。",
+      "files": [
+        "cube.vertex.glsl",
+        "directional.fragment.glsl",
+        "point.fragment.glsl",
+        "spot.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Light Casters 课程必须在 cube.vertex.glsl 中输出世界坐标 vWorldPosition，而不能只把裁剪空间 gl_Position 交给片元 shader？",
+      "expectedKeywords": [
+        "世界坐标",
+        "光源位置",
+        "距离",
+        "方向",
+        "片元"
+      ],
+      "hint": "点光源和聚光灯需要在每个片元中计算 light.position - FragPos，FragPos 必须在同一个空间中。"
+    },
+    {
+      "id": "directional-vector",
+      "title": "方向光的方向向量",
+      "concept": "方向光近似无限远光源，每个片元看到的入射方向相同，因此 shader 使用 -light.direction。",
+      "files": [
+        "directional.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "从 directional.fragment.glsl 的 lightDir = normalize(-uLightDirection) 出发，为什么方向光不需要计算 light.position - vWorldPosition？",
+      "expectedKeywords": [
+        "无限远",
+        "平行光",
+        "方向相同",
+        "位置无关",
+        "normalize"
+      ],
+      "hint": "方向光描述的是一束平行光，所有片元共享入射方向，片元位置不会改变光线方向。"
+    },
+    {
+      "id": "directional-no-attenuation",
+      "title": "方向光没有距离衰减",
+      "concept": "方向光只改变角度项，不因片元离某个位置更远而变暗。",
+      "files": [
+        "directional.fragment.glsl",
+        "geometry.json"
+      ],
+      "flow": "question_only",
+      "question": "观察多个箱体后，为什么方向光模型中远处箱体不会因为距离光源更远而额外变暗？",
+      "expectedKeywords": [
+        "没有位置",
+        "没有距离",
+        "attenuation",
+        "平行光",
+        "光强"
+      ],
+      "hint": "directional shader 里没有 distance，也没有 1/(constant + linear*d + quadratic*d²) 这样的项。"
+    },
+    {
+      "id": "point-light-switch",
+      "title": "切换到点光源",
+      "concept": "点光源用光源位置减去片元位置得到每个片元自己的入射方向，同时显示光源标记。",
+      "files": [
+        "scene.json",
+        "point.fragment.glsl",
+        "geometry.json"
+      ],
+      "flow": "observe_then_question",
+      "question": "切换到点光源后，为什么不同箱体表面的亮面方向不再只由一个全局平行方向决定？",
+      "expectedKeywords": [
+        "light.position",
+        "FragPos",
+        "每个片元",
+        "方向变化",
+        "局部"
+      ],
+      "hint": "点光源的 lightDir 来自 uLightPos - vWorldPosition，片元位置变了，方向也会变。",
+      "patchId": "01-point-light",
+      "expectedObservation": "画面出现光源标记，靠近光源的箱体更亮，不同箱体的受光方向随空间位置变化。"
+    },
+    {
+      "id": "attenuation-formula",
+      "title": "距离衰减公式",
+      "concept": "点光源用 constant、linear、quadratic 组成经验衰减曲线，quadratic 项让远距离光强下降更明显。",
+      "files": [
+        "point.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "从 attenuation = 1 / (constant + linear * d + quadratic * d * d) 出发，为什么 quadratic 项会让远处物体比近处物体更快变暗？",
+      "expectedKeywords": [
+        "d²",
+        "平方",
+        "分母",
+        "距离",
+        "衰减"
+      ],
+      "hint": "当 d 变大时，d² 的增长速度快于 d，会更快抬高分母，从而压低 attenuation。"
+    },
+    {
+      "id": "attenuation-scope",
+      "title": "衰减影响全部光照分量",
+      "concept": "在点光源模型中，ambient、diffuse、specular 最终一起乘以 attenuation，表示光源能量随距离减弱。",
+      "files": [
+        "point.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 point.fragment.glsl 把 ambient + diffuse + specular 的结果整体乘以 attenuation，而不是只衰减 diffuse？",
+      "expectedKeywords": [
+        "能量",
+        "距离",
+        "ambient",
+        "specular",
+        "统一"
+      ],
+      "hint": "这里的 attenuation 表示来自点光源的整体贡献随距离变弱，不只是 Lambert 项变弱。"
+    },
+    {
+      "id": "spot-light-switch",
+      "title": "切换到聚光灯",
+      "concept": "聚光灯在点光源基础上增加方向和角度阈值，只让光锥内的片元获得强光。",
+      "files": [
+        "scene.json",
+        "spot.fragment.glsl",
+        "geometry.json"
+      ],
+      "flow": "observe_then_question",
+      "question": "切换到聚光灯后，为什么有些离光源不远的箱体仍然会明显变暗？",
+      "expectedKeywords": [
+        "光锥",
+        "方向",
+        "theta",
+        "cutOff",
+        "角度"
+      ],
+      "hint": "聚光灯不仅看距离，还看片元方向是否落在光源朝向的锥体内。",
+      "patchId": "02-spot-light",
+      "expectedObservation": "画面变成手电筒式照明，只有光锥方向附近的箱体获得主要 diffuse/specular。"
+    },
+    {
+      "id": "spot-soft-edge",
+      "title": "聚光灯软边缘",
+      "concept": "cutOff 与 outerCutOff 之间用线性归一化得到 intensity，避免光锥边缘硬切。",
+      "files": [
+        "spot.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 intensity = clamp((theta - outerCutOff) / (cutOff - outerCutOff), 0, 1) 能形成聚光灯软边缘，而不是突然从亮变黑？",
+      "expectedKeywords": [
+        "theta",
+        "outerCutOff",
+        "cutOff",
+        "插值",
+        "clamp"
+      ],
+      "hint": "当 theta 落在内外角之间时，分式会产生 0 到 1 之间的连续权重。"
+    },
+    {
+      "id": "animated-spot-comparison",
+      "title": "动态比较光锥",
+      "concept": "缓慢摆动聚光灯方向，让用户观察 spot direction 改变时，受光区域如何随角度项移动。",
+      "files": [
+        "scene.json",
+        "spot.fragment.glsl",
+        "main.js"
+      ],
+      "flow": "observe_then_question",
+      "question": "当聚光方向缓慢摆动时，哪些变化来自点光源的距离衰减，哪些变化来自聚光灯的角度 intensity？",
+      "expectedKeywords": [
+        "距离衰减",
+        "角度",
+        "intensity",
+        "光锥",
+        "分离"
+      ],
+      "hint": "距离衰减主要跟光源位置到片元的距离有关；光锥变化主要跟 theta 和 cutOff 的关系有关。",
+      "patchId": "03-animated-spot",
+      "expectedObservation": "聚光灯方向缓慢摆动，受光区域随光锥移动，但距离较远处仍保持较弱。"
+    },
+    {
+      "id": "model-comparison",
+      "title": "三种 Light Caster 的模型边界",
+      "concept": "方向光、点光源、聚光灯分别增加位置和角度约束，表达不同物理近似与控制需求。",
+      "files": [
+        "directional.fragment.glsl",
+        "point.fragment.glsl",
+        "spot.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果按输入变量和公式复杂度比较，directional、point、spot 三种 light caster 分别多引入了哪些约束？为什么这会改变画面中的空间分布？",
+      "expectedKeywords": [
+        "direction",
+        "position",
+        "attenuation",
+        "cutOff",
+        "空间分布"
+      ],
+      "hint": "方向光只有方向；点光源增加位置和距离；聚光灯再增加朝向和角度阈值。"
+    }
+  ]
+}
