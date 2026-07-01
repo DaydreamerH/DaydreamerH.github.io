@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/astro-cli.mjs dev --host 127.0.0.1",
-    "build": "node scripts/astro-cli.mjs build",
+    "build": "node scripts/generate-card-banners.mjs && node scripts/astro-cli.mjs build",
     "preview": "node scripts/astro-cli.mjs preview --host 127.0.0.1",
     "new:post": "node scripts/new-post.mjs",
     "review:record": "node scripts/record-review.mjs",
     "generate:graphics-lessons": "node scripts/generate-graphics-lesson.mjs",
+    "generate:card-banners": "node scripts/generate-card-banners.mjs",
     "test:graphics-lab": "node scripts/verify-graphics-lab.mjs"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "sharp": "^0.34.5",
     "typescript": "^5.8.3"
   }
 }

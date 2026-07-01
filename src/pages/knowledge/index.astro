@@ -25,6 +25,10 @@ const categories = [...new Set(docs.map((doc) => doc.data.category))]
 const reviews = getReviewIndex();
 
 function getBannerSrc(doc: (typeof docs)[number]) {
+  const cardBannerPath = `../../content/knowledge/${doc.slug}/card-banner.webp`;
+  const cardBanner = articleImages[cardBannerPath]?.default.src;
+  if (cardBanner) return cardBanner;
+
   if (!doc.data.photos) return defaultBanner.src;
   const bannerPath = `../../content/knowledge/${doc.slug}/${doc.data.photos}`;
   return articleImages[bannerPath]?.default.src ?? defaultBanner.src;
