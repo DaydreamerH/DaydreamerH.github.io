@@ -1,0 +1,12 @@
+{
+  "id": "02-reflect-cubemap",
+  "description": "立方体表面开始反射天空盒颜色，转动视角时反射区域随观察方向变化。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"reflectAmount\": 0.0",
+      "content": "\"reflectAmount\": 0.85"
+    }
+  ]
+}

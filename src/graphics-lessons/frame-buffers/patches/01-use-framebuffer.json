@@ -1,0 +1,12 @@
+{
+  "id": "01-use-framebuffer",
+  "description": "渲染路径切换到 WebGLRenderTarget，再由 screen quad 原样显示到默认 framebuffer。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"useFramebuffer\": false,",
+      "content": "\"useFramebuffer\": true,"
+    }
+  ]
+}

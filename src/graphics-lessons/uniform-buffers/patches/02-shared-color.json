@@ -1,0 +1,12 @@
+{
+  "id": "02-shared-color",
+  "description": "四个 cube 统一切换为同一种青色，模拟多个对象读取同一个 Color uniform block。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"useSharedColor\": false,",
+      "content": "\"useSharedColor\": true,"
+    }
+  ]
+}

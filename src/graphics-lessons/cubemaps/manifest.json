@@ -1,0 +1,254 @@
+{
+  "id": "cubemaps",
+  "title": "Cubemaps",
+  "category": "环境映射",
+  "series": "LearnOpenGL 高级",
+  "order": 20,
+  "level": "advanced",
+  "createdAt": "2026-07-02",
+  "description": "使用六张天空盒图片构成立方体贴图，并用反射向量采样环境颜色。",
+  "source": "OpenGLProject/src/20_cubemaps",
+  "runtime": "three-shader-material",
+  "previewTitle": "Skybox Reflection",
+  "draft": false,
+  "aiBrief": "围绕 loadCubemap 的六面贴图、skybox.vs 的 pos.xyww、移除 view 矩阵平移以及 cube.fs 中 reflect(I, Normal) 组织教学。",
+  "referenceBrief": [
+    "OpenGL 源码加载 right/left/top/bottom/front/back 六张图片到 GL_TEXTURE_CUBE_MAP。",
+    "skybox 顶点 shader 使用 gl_Position = pos.xyww，让天空盒深度靠近远平面。",
+    "绘制 skybox 时通常移除 view 矩阵平移，只保留相机旋转。",
+    "反射材质中 I = normalize(Position - cameraPos)，R = reflect(I, normalize(Normal))，再用 R 采样 cubemap。"
+  ],
+  "shaderSets": [
+    {
+      "name": "cube",
+      "role": "object/material shader program",
+      "fragment": "reference/cube.fs",
+      "vertex": "reference/cube.vs"
+    },
+    {
+      "name": "skybox",
+      "role": "object/material shader program",
+      "fragment": "reference/skybox.fs",
+      "vertex": "reference/skybox.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "cube-reflect.fragment.glsl",
+      "role": "shader",
+      "concept": "使用 reflect(I, N) 得到 cubemap 采样方向",
+      "visible": true
+    },
+    {
+      "path": "cube-reflect.vertex.glsl",
+      "role": "shader",
+      "concept": "输出世界坐标和世界法线，用于计算观察向量和反射向量",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明反射立方体的初始旋转",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "读取六面 data URL，创建 CubeTexture、skybox pass 和反射立方体",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制是否显示 skybox、是否使用环境反射以及 cubemap 六面顺序",
+      "visible": true
+    },
+    {
+      "path": "skybox-back.txt",
+      "role": "data",
+      "concept": "cubemap -Z 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox-bottom.txt",
+      "role": "data",
+      "concept": "cubemap -Y 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox-front.txt",
+      "role": "data",
+      "concept": "cubemap +Z 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox-left.txt",
+      "role": "data",
+      "concept": "cubemap -X 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox-right.txt",
+      "role": "data",
+      "concept": "cubemap +X 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox-top.txt",
+      "role": "data",
+      "concept": "cubemap +Y 面 data URL",
+      "visible": false
+    },
+    {
+      "path": "skybox.fragment.glsl",
+      "role": "shader",
+      "concept": "按方向向量采样 cubemap 输出天空盒颜色",
+      "visible": true
+    },
+    {
+      "path": "skybox.vertex.glsl",
+      "role": "shader",
+      "concept": "移除 view 平移并使用 pos.xyww 把天空盒放到远平面",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/cube.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/cube.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/skybox.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/skybox.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/skybox.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "six-directions",
+      "title": "六个方向的纹理",
+      "concept": "Cubemap 用方向向量而不是二维 UV 来选择六张图中的采样位置。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "skybox.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 cubemap 采样使用的是三维方向向量，而不是普通 2D 纹理的 UV 坐标？",
+      "expectedKeywords": [
+        "方向",
+        "六面",
+        "三维",
+        "UV",
+        "采样"
+      ],
+      "hint": "环境贴图表示从一点向任意方向看过去的颜色。"
+    },
+    {
+      "id": "show-skybox",
+      "title": "显示天空盒",
+      "concept": "天空盒是一个围绕相机的巨大立方体，只表达远处环境方向，不参与普通物体位置变化。",
+      "files": [
+        "scene.json",
+        "main.js",
+        "skybox.vertex.glsl",
+        "skybox.fragment.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "观察天空盒后，为什么 skybox 的 view 矩阵应该去掉平移，只保留相机旋转？",
+      "expectedKeywords": [
+        "平移",
+        "旋转",
+        "相机",
+        "远处环境",
+        "方向"
+      ],
+      "hint": "你移动相机不应该真的靠近天空；转动相机才应该改变看到的方向。",
+      "patchId": "01-show-skybox",
+      "expectedObservation": "场景出现由六张图片组成的天空盒，拖动相机时它表现为远处环境。"
+    },
+    {
+      "id": "xyww-depth",
+      "title": "天空盒深度",
+      "concept": "pos.xyww 让天空盒经过透视除法后 z 接近 1，使其处于远平面附近。",
+      "files": [
+        "skybox.vertex.glsl",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "从 gl_Position = pos.xyww 出发，为什么天空盒会被放在深度范围的远端？",
+      "expectedKeywords": [
+        "xyww",
+        "透视除法",
+        "z",
+        "w",
+        "远平面"
+      ],
+      "hint": "透视除法后 z_ndc = w / w = 1。"
+    },
+    {
+      "id": "reflection-vector",
+      "title": "反射向量采样",
+      "concept": "反射材质用视线方向和表面法线计算反射方向，再从 cubemap 中取环境颜色。",
+      "files": [
+        "scene.json",
+        "geometry.json",
+        "cube-reflect.vertex.glsl",
+        "cube-reflect.fragment.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "为什么 cube.fs 里要先计算 I = Position - cameraPos，再用 reflect(I, Normal) 得到采样方向？",
+      "expectedKeywords": [
+        "观察向量",
+        "法线",
+        "reflect",
+        "方向",
+        "环境"
+      ],
+      "hint": "镜面反射方向由入射视线和表面法线共同决定。",
+      "patchId": "02-reflect-cubemap",
+      "expectedObservation": "立方体表面开始反射天空盒颜色，转动视角时反射区域随观察方向变化。"
+    },
+    {
+      "id": "normal-space",
+      "title": "法线空间一致性",
+      "concept": "反射计算要求 Position、cameraPos 和 Normal 在同一个空间中。",
+      "files": [
+        "cube-reflect.vertex.glsl",
+        "cube-reflect.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么反射 shader 要输出世界坐标和世界法线，而不能把模型空间 normal 直接拿来和 world cameraPos 计算？",
+      "expectedKeywords": [
+        "同一空间",
+        "世界坐标",
+        "法线",
+        "cameraPos",
+        "反射"
+      ],
+      "hint": "向量运算必须在同一个坐标空间中才有几何意义。"
+    }
+  ]
+}

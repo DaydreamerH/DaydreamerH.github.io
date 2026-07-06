@@ -1,0 +1,230 @@
+{
+  "id": "frame-buffers",
+  "title": "Frame Buffers",
+  "category": "后处理",
+  "series": "LearnOpenGL 高级",
+  "order": 19,
+  "level": "advanced",
+  "createdAt": "2026-07-02",
+  "description": "把场景先渲染到离屏颜色纹理，再用屏幕四边形做反色或灰度后处理。",
+  "source": "OpenGLProject/src/19_frame_buffers",
+  "runtime": "three-shader-material",
+  "previewTitle": "Render Target Post Process",
+  "draft": false,
+  "aiBrief": "围绕 glGenFramebuffers、glBindFramebuffer、颜色附件纹理、深度模板 renderbuffer、再绘制 screen quad 的二阶段流程组织教学。",
+  "referenceBrief": [
+    "OpenGL 源码先创建 framebuffer，并把纹理作为 GL_COLOR_ATTACHMENT0。",
+    "场景渲染阶段绑定自定义 framebuffer，而不是默认窗口 framebuffer。",
+    "第二阶段绑定默认 framebuffer，绘制一个覆盖屏幕的 quad，采样上一阶段颜色纹理。",
+    "shader_screen.fs 中 vec3(1)-texture(...) 是典型后处理：它只依赖屏幕纹理，不依赖原场景几何。"
+  ],
+  "shaderSets": [
+    {
+      "name": "shader_screen",
+      "role": "object/material shader program",
+      "fragment": "reference/shader_screen.fs",
+      "vertex": "reference/shader_screen.vs"
+    },
+    {
+      "name": "shader",
+      "role": "object/material shader program",
+      "fragment": "reference/shader.fs",
+      "vertex": "reference/shader.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "container-texture.txt",
+      "role": "data",
+      "concept": "container.png 的 data URL",
+      "visible": false
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明箱体位置，用于产生可观察的场景颜色纹理",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "创建 WebGLRenderTarget，并在场景 pass 与屏幕 pass 之间切换渲染目标",
+      "visible": true
+    },
+    {
+      "path": "scene.fragment.glsl",
+      "role": "shader",
+      "concept": "场景 pass 片元 shader，采样物体或地面贴图",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制是否使用离屏 framebuffer 以及屏幕后处理效果",
+      "visible": true
+    },
+    {
+      "path": "scene.vertex.glsl",
+      "role": "shader",
+      "concept": "场景 pass 顶点 shader，传递 UV 并输出裁剪空间位置",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "concept": "屏幕 pass 片元 shader，采样 framebuffer 颜色纹理并应用后处理",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "concept": "屏幕 pass 顶点 shader，直接输出 NDC 全屏四边形",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "concept": "wall.jpg 的 data URL",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/frame_buffers.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader_screen.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader_screen.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "two-pass-rendering",
+      "title": "两阶段渲染",
+      "concept": "Framebuffer 后处理把场景渲染和屏幕合成拆成两个 pass。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "scene.vertex.glsl",
+        "scene.fragment.glsl",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 framebuffer 后处理不能只靠原来的物体 fragment shader 完成，而要多画一次 screen quad？",
+      "expectedKeywords": [
+        "两阶段",
+        "屏幕纹理",
+        "screen quad",
+        "后处理",
+        "整张画面"
+      ],
+      "hint": "反色、灰度这类效果要读取已经渲染完成的整张画面。"
+    },
+    {
+      "id": "enable-render-target",
+      "title": "渲染到颜色附件",
+      "concept": "第一阶段把场景颜色写入离屏纹理，而不是直接写入默认窗口颜色缓冲。",
+      "files": [
+        "scene.json",
+        "main.js",
+        "screen.fragment.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "观察画面几乎不变时，为什么仍然可以说渲染路径已经从默认 framebuffer 变成了离屏颜色附件？",
+      "expectedKeywords": [
+        "离屏",
+        "颜色附件",
+        "纹理",
+        "默认 framebuffer",
+        "采样"
+      ],
+      "hint": "最终显示仍然相同，是因为第二阶段把离屏纹理原样采样回屏幕。",
+      "patchId": "01-use-framebuffer",
+      "expectedObservation": "渲染路径切换到 WebGLRenderTarget，再由 screen quad 原样显示到默认 framebuffer。"
+    },
+    {
+      "id": "screen-space-coordinates",
+      "title": "屏幕空间四边形",
+      "concept": "screen quad 的顶点已经位于 NDC，因此不再需要 model/view/projection。",
+      "files": [
+        "screen.vertex.glsl",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "为什么 shader_screen.vs 可以直接输出 vec4(aPos.x, aPos.y, 0, 1)，而不使用相机矩阵？",
+      "expectedKeywords": [
+        "NDC",
+        "屏幕空间",
+        "quad",
+        "相机",
+        "矩阵"
+      ],
+      "hint": "第二阶段不是把物体放进 3D 世界，而是在屏幕上贴一张已经渲染好的纹理。"
+    },
+    {
+      "id": "invert-postprocess",
+      "title": "反色后处理",
+      "concept": "后处理 shader 对颜色纹理的每个片元做函数变换，例如 1-color。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "为什么反色效果写在 screen.fragment.glsl 中会影响整张画面，而不是只影响某一个箱体？",
+      "expectedKeywords": [
+        "屏幕纹理",
+        "整张画面",
+        "片元",
+        "后处理",
+        "采样"
+      ],
+      "hint": "screen shader 采样的是第一阶段完成后的整张颜色附件。",
+      "patchId": "02-invert-screen",
+      "expectedObservation": "最终画面被反色，说明 screen pass 正在处理 framebuffer 颜色纹理。"
+    },
+    {
+      "id": "depth-attachment",
+      "title": "深度附件",
+      "concept": "离屏 framebuffer 仍需要深度信息，否则第一阶段场景遮挡会出错。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 framebuffer 示例除了颜色纹理，还通常需要 depth/stencil renderbuffer？",
+      "expectedKeywords": [
+        "深度",
+        "遮挡",
+        "第一阶段",
+        "renderbuffer",
+        "附件"
+      ],
+      "hint": "场景 pass 仍然是 3D 渲染，箱体和地面之间需要深度测试。"
+    }
+  ]
+}

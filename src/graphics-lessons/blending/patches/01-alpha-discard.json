@@ -1,0 +1,11 @@
+{
+  "id": "01-alpha-discard",
+  "description": "透明平面切换成草叶贴图，空白区域被直接丢弃，只留下硬边草叶形状。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace_all",
+      "content": "{\n  \"mode\": \"alpha-discard\",\n  \"camera\": { \"type\": \"perspective\", \"fov\": 45, \"position\": [0.2, 1.2, 4.2], \"lookAt\": [0.0, 0.0, -0.8] },\n  \"plane\": { \"color\": [0.68, 0.68, 0.68] },\n  \"material\": {\n    \"vertexShader\": \"blending.vertex.glsl\",\n    \"fragmentShader\": \"alpha-blend.fragment.glsl\",\n    \"texture\": \"grass-texture.txt\",\n    \"transparent\": false,\n    \"depthWrite\": true,\n    \"discardThreshold\": 0.1,\n    \"tint\": [1.0, 1.0, 1.0]\n  },\n  \"sortBackToFront\": false\n}"
+    }
+  ]
+}

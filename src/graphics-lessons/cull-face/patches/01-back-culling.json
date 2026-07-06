@@ -1,0 +1,12 @@
+{
+  "id": "01-back-culling",
+  "description": "材质改为只绘制正面，背面三角形被剔除；从外部看立方体仍基本完整。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"cullFace\": \"none\",",
+      "content": "\"cullFace\": \"back\","
+    }
+  ]
+}

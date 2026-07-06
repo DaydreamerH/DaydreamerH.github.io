@@ -1,0 +1,12 @@
+{
+  "id": "02-invert-screen",
+  "description": "最终画面被反色，说明 screen pass 正在处理 framebuffer 颜色纹理。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"effect\": 0",
+      "content": "\"effect\": 1"
+    }
+  ]
+}

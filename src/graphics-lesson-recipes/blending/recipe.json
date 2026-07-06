@@ -1,0 +1,218 @@
+{
+  "id": "blending",
+  "source": "17_blending",
+  "title": "Blending",
+  "category": "透明与混合",
+  "series": "LearnOpenGL 高级",
+  "order": 17,
+  "level": "intermediate",
+  "createdAt": "2026-07-02",
+  "description": "比较 alpha discard、alpha blending 和透明物体排序，理解透明片元如何进入颜色缓冲。",
+  "previewTitle": "Alpha Discard / Blend",
+  "lesson": "本实验把 LearnOpenGL 的 grass 与 transparent window 两个示例合并成一个浏览器实验。重点是区分直接丢弃片元、按 alpha 混合颜色以及透明物体需要从远到近绘制。",
+  "aiBrief": "围绕 grass.cpp 的 discard、window.cpp 的 glEnable(GL_BLEND)、glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) 和按相机距离排序的 map 组织教学。课程主流程只用本地 patchId 推进。",
+  "referenceBrief": [
+    "grass.cpp 使用 grass.fs：当 texColor.a < 0.1 时 discard，片元不写颜色也不写深度。",
+    "window.cpp 开启 GL_BLEND，并使用 SRC_ALPHA 与 ONE_MINUS_SRC_ALPHA 组合源颜色和目标颜色。",
+    "透明窗户按照 camera.Position 到窗口位置的距离排序，从远到近绘制。",
+    "透明物体通常关闭深度写入或小心排序，否则近处透明片元可能阻挡远处透明片元参与混合。"
+  ],
+  "starterFilePaths": {
+    "main.js": "src/graphics-lesson-recipes/blending/starter/main.js",
+    "scene.json": "src/graphics-lesson-recipes/blending/starter/scene.json",
+    "geometry.json": "src/graphics-lesson-recipes/blending/starter/geometry.json",
+    "blending.vertex.glsl": "src/graphics-lesson-recipes/blending/starter/blending.vertex.glsl",
+    "alpha-blend.fragment.glsl": "src/graphics-lesson-recipes/blending/starter/alpha-blend.fragment.glsl"
+  },
+  "starterAssets": [
+    {
+      "path": "grass-texture.txt",
+      "source": "OpenGLProject/images/grass.png",
+      "mimeType": "image/png"
+    },
+    {
+      "path": "window-texture.txt",
+      "source": "OpenGLProject/images/blending_transparent_window.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "创建地面和多张透明 billboard，并根据 scene.json 控制 discard、blend、depthWrite 与排序",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制透明材质模式、透明贴图、深度写入和从远到近排序",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明多个透明平面的空间位置，用于观察排序与混合问题",
+      "visible": true
+    },
+    {
+      "path": "blending.vertex.glsl",
+      "role": "shader",
+      "concept": "传递 UV 并把透明平面变换到裁剪空间",
+      "visible": true
+    },
+    {
+      "path": "alpha-blend.fragment.glsl",
+      "role": "shader",
+      "concept": "读取透明贴图，按阈值 discard 或输出带 alpha 的片元颜色",
+      "visible": true
+    },
+    {
+      "path": "grass-texture.txt",
+      "role": "data",
+      "concept": "grass.png 的 data URL，用于 alpha discard 示例",
+      "visible": false
+    },
+    {
+      "path": "window-texture.txt",
+      "role": "data",
+      "concept": "transparent window 图片的 data URL，用于 alpha blending 示例",
+      "visible": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "alpha-is-material-data",
+      "title": "Alpha 是材质数据",
+      "concept": "透明度来自贴图 alpha 通道，它和 RGB 一样是片元阶段采样得到的材质属性。",
+      "question": "为什么透明窗口不能只看 RGB 颜色，还必须在片元 shader 中采样 alpha 通道？",
+      "expectedKeywords": [
+        "alpha",
+        "透明",
+        "片元",
+        "采样",
+        "贴图"
+      ],
+      "hint": "窗口玻璃和空白区域的可见程度不同，这个信息存在纹理 alpha 中。",
+      "files": [
+        "alpha-blend.fragment.glsl",
+        "blending.vertex.glsl",
+        "window-texture.txt"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "discard-grass",
+      "title": "丢弃完全透明片元",
+      "concept": "discard 会让片元停止参与后续测试和写入，适合草叶这种硬边透明。",
+      "question": "观察草叶边缘后，为什么 grass.fs 选择 texColor.a < 0.1 就 discard，而不是把 alpha 交给混合公式？",
+      "expectedKeywords": [
+        "discard",
+        "片元",
+        "alpha",
+        "硬边",
+        "写入"
+      ],
+      "hint": "草叶空白区域不应该留下颜色，也不应该写入深度。",
+      "patchId": "01-alpha-discard",
+      "expectedObservation": "透明平面切换成草叶贴图，空白区域被直接丢弃，只留下硬边草叶形状。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace_all",
+          "content": "{\n  \"mode\": \"alpha-discard\",\n  \"camera\": { \"type\": \"perspective\", \"fov\": 45, \"position\": [0.2, 1.2, 4.2], \"lookAt\": [0.0, 0.0, -0.8] },\n  \"plane\": { \"color\": [0.68, 0.68, 0.68] },\n  \"material\": {\n    \"vertexShader\": \"blending.vertex.glsl\",\n    \"fragmentShader\": \"alpha-blend.fragment.glsl\",\n    \"texture\": \"grass-texture.txt\",\n    \"transparent\": false,\n    \"depthWrite\": true,\n    \"discardThreshold\": 0.1,\n    \"tint\": [1.0, 1.0, 1.0]\n  },\n  \"sortBackToFront\": false\n}"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "alpha-blend.fragment.glsl",
+        "main.js"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "blend-equation",
+      "title": "透明混合公式",
+      "concept": "GL_SRC_ALPHA 与 GL_ONE_MINUS_SRC_ALPHA 表示结果颜色等于源颜色乘 alpha 加目标颜色乘 1-alpha。",
+      "question": "从 C = src.rgb * src.a + dst.rgb * (1 - src.a) 出发，为什么半透明窗户必须知道已经在颜色缓冲里的 dst 颜色？",
+      "expectedKeywords": [
+        "源颜色",
+        "目标颜色",
+        "颜色缓冲",
+        "alpha",
+        "混合"
+      ],
+      "hint": "半透明不是替换背景，而是把当前片元和已有背景按权重相加。",
+      "patchId": "02-alpha-blend",
+      "expectedObservation": "透明窗口开始与地面和其他窗口混合，玻璃区域可以看到背后的颜色。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"transparent\": false,\n    \"depthWrite\": true,\n    \"discardThreshold\": -1.0,",
+          "content": "\"transparent\": true,\n    \"depthWrite\": true,\n    \"discardThreshold\": -1.0,"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "alpha-blend.fragment.glsl"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "sort-transparent",
+      "title": "从远到近绘制",
+      "concept": "透明混合依赖目标颜色，因此多个透明物体通常需要从远到近绘制。",
+      "question": "为什么 window.cpp 要按 camera.Position 到每个窗口的距离排序，而不直接沿用数组中的绘制顺序？",
+      "expectedKeywords": [
+        "从远到近",
+        "排序",
+        "目标颜色",
+        "颜色缓冲",
+        "透明"
+      ],
+      "hint": "近处窗口混合时，需要远处窗口已经写入颜色缓冲。",
+      "patchId": "03-sort-transparent",
+      "expectedObservation": "透明窗口改为从远到近排序，并关闭透明平面的深度写入，重叠区域更稳定。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"depthWrite\": true,\n    \"discardThreshold\": -1.0,",
+          "content": "\"depthWrite\": false,\n    \"discardThreshold\": -1.0,"
+        },
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"sortBackToFront\": false",
+          "content": "\"sortBackToFront\": true"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "main.js",
+        "geometry.json"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "depth-and-transparency",
+      "title": "深度写入与透明",
+      "concept": "透明物体仍然可以做深度测试，但写入深度会阻止后续透明片元参与混合。",
+      "question": "为什么透明物体常保留 depthTest，却要谨慎关闭 depthWrite？",
+      "expectedKeywords": [
+        "depthTest",
+        "depthWrite",
+        "遮挡",
+        "透明",
+        "混合"
+      ],
+      "hint": "透明物体要被不透明物体遮挡，但它本身不一定应该阻止后面的透明片元混合。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only"
+    }
+  ]
+}

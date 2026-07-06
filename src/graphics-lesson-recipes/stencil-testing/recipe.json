@@ -1,0 +1,107 @@
+{
+  "id": "stencil-testing",
+  "source": "16_stencil_testing",
+  "title": "Stencil Testing",
+  "category": "渲染管线",
+  "series": "LearnOpenGL 高级",
+  "order": 16,
+  "level": "advanced",
+  "createdAt": "2026-07-01",
+  "description": "用模板缓冲理解多 pass 渲染中的区域标记，并观察常见的物体描边做法。",
+  "previewTitle": "Stencil Outline",
+  "lesson": "本实验对应 LearnOpenGL 的 Stencil Testing。浏览器版本用放大的背面轮廓近似展示模板描边效果，同时把 OpenGL 中的模板写入、模板比较和第二遍绘制拆成问题。",
+  "aiBrief": "围绕 glEnable(GL_STENCIL_TEST)、glStencilFunc、glStencilOp、glStencilMask、第一遍写入模板和第二遍放大描边组织教学。浏览器效果是对模板轮廓的等价可视化，不要声称 Three.js 直接暴露了同一套 OpenGL 调用。",
+  "referenceBrief": [
+    "OpenGL 源码先绘制地面且 glStencilMask(0x00)，避免地面写入模板。",
+    "绘制正常箱体时 glStencilFunc(GL_ALWAYS, 1, 0xFF)，让箱体区域写入模板值 1。",
+    "第二遍绘制放大箱体时使用 GL_NOTEQUAL，只在模板值不等于 1 的区域画轮廓。",
+    "第二遍关闭深度测试，让轮廓能稳定显示在物体外侧。",
+    "浏览器实验用 outlinePass 模拟第二遍放大绘制，用 maskPreview 辅助解释模板区域。"
+  ],
+  "starterFilePaths": {
+    "main.js": "src/graphics-lesson-recipes/stencil-testing/starter/main.js",
+    "scene.json": "src/graphics-lesson-recipes/stencil-testing/starter/scene.json",
+    "geometry.json": "src/graphics-lesson-recipes/stencil-testing/starter/geometry.json",
+    "stencil.vertex.glsl": "src/graphics-lesson-recipes/stencil-testing/starter/stencil.vertex.glsl",
+    "stencil.fragment.glsl": "src/graphics-lesson-recipes/stencil-testing/starter/stencil.fragment.glsl"
+  },
+  "workspaceFiles": [
+    { "path": "main.js", "role": "entry", "concept": "创建基础绘制、模板掩码预览和放大轮廓 pass 的浏览器近似实现", "visible": true },
+    { "path": "scene.json", "role": "data", "concept": "控制掩码预览、轮廓 pass、轮廓缩放和材质颜色", "visible": true },
+    { "path": "geometry.json", "role": "data", "concept": "声明两个箱体的位置，形成可观察的模板描边对象", "visible": true },
+    { "path": "stencil.vertex.glsl", "role": "shader", "concept": "执行基本模型视图投影变换，供基础 pass 和轮廓 pass 共用", "visible": true },
+    { "path": "stencil.fragment.glsl", "role": "shader", "concept": "输出基础颜色或轮廓颜色，模拟模板测试后允许绘制的区域", "visible": true }
+  ],
+  "checkpoints": [
+    {
+      "id": "stencil-as-mask",
+      "title": "模板缓冲是掩码",
+      "concept": "模板缓冲不是颜色，它保存每个像素位置的整数标记，用来决定后续 pass 是否能写入。",
+      "question": "为什么模板缓冲更像一张屏幕空间的整数掩码，而不是一张要显示出来的颜色贴图？",
+      "expectedKeywords": ["屏幕空间", "整数", "掩码", "测试", "颜色"],
+      "hint": "模板值本身不直接显示，后续绘制会用它做条件判断。",
+      "files": ["main.js", "scene.json", "geometry.json", "stencil.fragment.glsl"],
+      "flow": "question_only"
+    },
+    {
+      "id": "mask-write",
+      "title": "写入模板区域",
+      "concept": "第一遍绘制物体时把物体覆盖过的屏幕区域写成模板值 1。",
+      "question": "为什么 OpenGL 示例绘制箱体时使用 GL_ALWAYS 写入模板值 1，而绘制地面时要关闭模板写入？",
+      "expectedKeywords": ["箱体区域", "地面", "写入", "模板值", "轮廓"],
+      "hint": "如果地面也写入模板，第二遍轮廓判断就会把大面积地面也当成已标记区域。",
+      "patchId": "01-mask-preview",
+      "expectedObservation": "箱体表面出现浅青色掩码预览，表示第一遍绘制会写入模板的区域。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"enabled\": false,\n    \"color\": [0.0, 0.68, 0.71],\n    \"alpha\": 0.16,",
+          "content": "\"enabled\": true,\n    \"color\": [0.0, 0.68, 0.71],\n    \"alpha\": 0.16,"
+        }
+      ],
+      "files": ["scene.json", "main.js"],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "second-pass-outline",
+      "title": "第二遍放大绘制",
+      "concept": "描边常用第二遍绘制放大物体，只在模板不等于物体本体区域的地方输出轮廓色。",
+      "question": "为什么模板描边要第二遍绘制一个略微放大的箱体，而不是直接把第一遍箱体改成轮廓颜色？",
+      "expectedKeywords": ["第二遍", "放大", "外侧", "本体", "轮廓"],
+      "hint": "第一遍负责正常物体，第二遍只补上物体外侧多出来的一圈。",
+      "patchId": "02-outline-pass",
+      "expectedObservation": "箱体外侧出现青色轮廓，像 OpenGL 示例中 GL_NOTEQUAL 通过的区域。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"outlinePass\": {\n    \"enabled\": false,",
+          "content": "\"outlinePass\": {\n    \"enabled\": true,"
+        }
+      ],
+      "files": ["scene.json", "main.js", "stencil.vertex.glsl"],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "stencil-notequal",
+      "title": "GL_NOTEQUAL 的含义",
+      "concept": "第二遍使用不等于 1 的模板测试，放大物体与原物体重合的内部区域会被拒绝，只留下外圈。",
+      "question": "为什么第二遍轮廓 pass 使用 GL_NOTEQUAL 而不是 GL_EQUAL？",
+      "expectedKeywords": ["不等于", "外圈", "原物体", "拒绝", "重合区域"],
+      "hint": "原物体覆盖区域模板值是 1，外侧多出来的一圈不是 1。",
+      "files": ["main.js", "scene.json", "stencil.fragment.glsl"],
+      "flow": "question_only"
+    },
+    {
+      "id": "depth-disabled-outline",
+      "title": "轮廓 pass 的深度状态",
+      "concept": "示例中第二遍关闭深度测试，让放大的轮廓不会被原物体深度挡掉。",
+      "question": "为什么 OpenGL 示例在绘制放大轮廓时会临时 glDisable(GL_DEPTH_TEST)，画完后再恢复深度测试？",
+      "expectedKeywords": ["深度测试", "轮廓", "放大", "遮挡", "恢复"],
+      "hint": "放大的轮廓几何和原物体很接近，如果深度测试仍然开启，很多外圈片元可能被已有深度拒绝。",
+      "files": ["main.js", "scene.json"],
+      "flow": "question_only"
+    }
+  ]
+}

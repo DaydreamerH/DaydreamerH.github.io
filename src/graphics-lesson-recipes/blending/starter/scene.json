@@ -1,0 +1,15 @@
+{
+  "mode": "opaque-order-problem",
+  "camera": { "type": "perspective", "fov": 45, "position": [0.2, 1.2, 4.2], "lookAt": [0.0, 0.0, -0.8] },
+  "plane": { "color": [0.68, 0.68, 0.68] },
+  "material": {
+    "vertexShader": "blending.vertex.glsl",
+    "fragmentShader": "alpha-blend.fragment.glsl",
+    "texture": "window-texture.txt",
+    "transparent": false,
+    "depthWrite": true,
+    "discardThreshold": -1.0,
+    "tint": [1.0, 1.0, 1.0]
+  },
+  "sortBackToFront": false
+}

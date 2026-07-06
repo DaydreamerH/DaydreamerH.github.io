@@ -1,0 +1,9 @@
+{
+  "mode": "double-sided",
+  "camera": { "type": "perspective", "fov": 45, "position": [2.5, 1.8, 3.8], "lookAt": [0, 0, 0] },
+  "material": { "vertexShader": "cull-face.vertex.glsl", "fragmentShader": "cull-face.fragment.glsl", "color": [0.0, 0.68, 0.71], "backHint": 0.0 },
+  "cullFace": "none",
+  "frontFace": "ccw",
+  "showWireframe": true,
+  "animated": true
+}

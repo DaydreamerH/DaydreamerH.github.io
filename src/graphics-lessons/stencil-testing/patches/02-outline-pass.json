@@ -1,0 +1,12 @@
+{
+  "id": "02-outline-pass",
+  "description": "箱体外侧出现青色轮廓，像 OpenGL 示例中 GL_NOTEQUAL 通过的区域。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"outlinePass\": {\n    \"enabled\": false,",
+      "content": "\"outlinePass\": {\n    \"enabled\": true,"
+    }
+  ]
+}

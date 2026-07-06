@@ -1,0 +1,12 @@
+{
+  "id": "02-point-lights",
+  "description": "四个点光源被加入后，靠近光源的箱体局部更亮，并出现不同颜色的混合。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"usePointLights\": false,\n    \"useSpotLight\": false,\n    \"showPointMarkers\": false,",
+      "content": "\"usePointLights\": true,\n    \"useSpotLight\": false,\n    \"showPointMarkers\": true,"
+    }
+  ]
+}

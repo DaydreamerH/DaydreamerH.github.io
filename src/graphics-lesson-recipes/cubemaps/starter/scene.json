@@ -1,0 +1,10 @@
+{
+  "mode": "cubemap-reflection",
+  "camera": { "type": "perspective", "fov": 45, "position": [2.4, 1.5, 3.8], "lookAt": [0, 0, 0] },
+  "cubemap": { "faces": ["right", "left", "top", "bottom", "front", "back"] },
+  "cubeMaterial": { "vertexShader": "cube-reflect.vertex.glsl", "fragmentShader": "cube-reflect.fragment.glsl", "reflectAmount": 0.0 },
+  "skyboxMaterial": { "vertexShader": "skybox.vertex.glsl", "fragmentShader": "skybox.fragment.glsl" },
+  "showSkybox": false,
+  "useSceneBackground": false,
+  "animated": true
+}

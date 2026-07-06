@@ -1,0 +1,140 @@
+{
+  "id": "multiple-lights",
+  "source": "13_multiple_lights",
+  "title": "Multiple Lights",
+  "category": "光照模型",
+  "series": "LearnOpenGL 基础",
+  "order": 13,
+  "level": "advanced",
+  "createdAt": "2026-07-01",
+  "description": "把方向光、点光源和聚光灯叠加在同一场景中，比较多光源片元结果的累加方式。",
+  "previewTitle": "Directional + Point + Spot",
+  "lesson": "本实验对应 LearnOpenGL 的 Multiple Lights。浏览器版本保留漫反射贴图、镜面贴图、方向光、四个点光源和一个聚光灯，重点观察每种光源如何独立计算贡献，再在片元阶段相加。",
+  "aiBrief": "围绕 OpenGL 源码中 DirLight、PointLight[4]、SpotLight 和 Material 的结构组织教学。代码主流程必须使用本地 patchId 推进；不要让 AI 临时重写多光源 shader。用户回答不知道时只给当前 checkpoint 紧密提示并重复问题。",
+  "referenceBrief": [
+    "OpenGL 源码 cube.fs 中先计算方向光，再循环四个 PointLight，最后加 SpotLight。",
+    "每种光源都共享 normal、viewDir、diffuse map、specular map 和 shininess。",
+    "点光源和聚光灯都使用 1/(constant + linear*d + quadratic*d*d) 距离衰减。",
+    "聚光灯在点光源基础上额外使用 theta、cutOff、outerCutOff 计算边缘强度。",
+    "浏览器实验用 scene.json 切换 useDirLight、usePointLights 和 useSpotLight，以便分阶段观察叠加结果。"
+  ],
+  "starterFilePaths": {
+    "main.js": "src/graphics-lesson-recipes/multiple-lights/starter/main.js",
+    "scene.json": "src/graphics-lesson-recipes/multiple-lights/starter/scene.json",
+    "geometry.json": "src/graphics-lesson-recipes/multiple-lights/starter/geometry.json",
+    "cube.vertex.glsl": "src/graphics-lesson-recipes/multiple-lights/starter/cube.vertex.glsl",
+    "multiple.fragment.glsl": "src/graphics-lesson-recipes/multiple-lights/starter/multiple.fragment.glsl"
+  },
+  "starterAssets": [
+    {
+      "path": "diffuse-map.txt",
+      "source": "OpenGLProject/images/container.png",
+      "mimeType": "image/png"
+    },
+    {
+      "path": "specular-map.txt",
+      "source": "OpenGLProject/images/container_specular.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "workspaceFiles": [
+    { "path": "main.js", "role": "entry", "concept": "装配多箱体场景、读取贴图和多光源配置，并把光源数组传给 ShaderMaterial", "visible": true },
+    { "path": "scene.json", "role": "data", "concept": "声明方向光、四个点光源、聚光灯、贴图资源和当前启用的光源组合", "visible": true },
+    { "path": "geometry.json", "role": "data", "concept": "声明多个箱体的位置、旋转和缩放，用于比较光照随空间变化的效果", "visible": true },
+    { "path": "cube.vertex.glsl", "role": "shader", "concept": "输出世界坐标、法线和 UV，为所有光源模型提供共享片元输入", "visible": true },
+    { "path": "multiple.fragment.glsl", "role": "shader", "concept": "分别计算方向光、点光源和聚光灯，并把结果累加成最终片元颜色", "visible": true },
+    { "path": "diffuse-map.txt", "role": "data", "concept": "container.png 的 data URL，用作漫反射贴图", "visible": false },
+    { "path": "specular-map.txt", "role": "data", "concept": "container_specular.png 的 data URL，用作镜面贴图", "visible": false }
+  ],
+  "checkpoints": [
+    {
+      "id": "shared-fragment-inputs",
+      "title": "共享片元输入",
+      "concept": "多光源不是多套几何数据，而是在同一片元上重复评估不同光源贡献。",
+      "question": "为什么 Multiple Lights 中仍然只需要 cube.vertex.glsl 输出一份 vWorldPosition、vNormal 和 vUv，就能计算方向光、点光源和聚光灯？",
+      "expectedKeywords": ["片元", "共享", "法线", "世界坐标", "UV"],
+      "hint": "每种光源都在同一个片元位置上计算，只是光线方向、衰减和角度权重不同。",
+      "files": ["cube.vertex.glsl", "multiple.fragment.glsl", "geometry.json"],
+      "flow": "question_only"
+    },
+    {
+      "id": "directional-contribution",
+      "title": "方向光贡献",
+      "concept": "方向光近似无限远光源，所有片元使用相同入射方向，不需要距离衰减。",
+      "question": "从 multiple.fragment.glsl 的 calcDirectional 出发，为什么方向光可以直接用 -uDirDirection，而不需要知道每个箱体离光源多远？",
+      "expectedKeywords": ["无限远", "平行", "方向", "距离", "衰减"],
+      "hint": "方向光模拟太阳这类远处光源，片元之间的光线方向近似相同。",
+      "patchId": "01-directional-light",
+      "expectedObservation": "场景出现统一方向的明暗变化，但远近箱体不会因为离光源距离不同而明显变暗。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace_all",
+          "content": "{\n  \"shape\": \"multi-cube\",\n  \"mode\": \"directional\",\n  \"camera\": { \"type\": \"perspective\", \"fov\": 45, \"position\": [4.2, 2.8, 6.4], \"lookAt\": [0.2, 0.2, -2.8] },\n  \"material\": { \"vertexShader\": \"cube.vertex.glsl\", \"fragmentShader\": \"multiple.fragment.glsl\", \"shininess\": 32 },\n  \"textures\": { \"diffuse\": \"diffuse-map.txt\", \"specular\": \"specular-map.txt\" },\n  \"lights\": {\n    \"ambientBase\": [0.08, 0.08, 0.08],\n    \"useDirLight\": true,\n    \"usePointLights\": false,\n    \"useSpotLight\": false,\n    \"showPointMarkers\": false,\n    \"showSpotMarker\": false,\n    \"dirLight\": { \"direction\": [-0.2, -1.0, -0.3], \"ambient\": [0.05, 0.05, 0.05], \"diffuse\": [0.4, 0.4, 0.4], \"specular\": [0.5, 0.5, 0.5] },\n    \"pointLights\": [\n      { \"position\": [0.7, 0.2, 2.0], \"ambient\": [0.05, 0.05, 0.05], \"diffuse\": [0.8, 0.8, 0.8], \"specular\": [1.0, 1.0, 1.0], \"constant\": 1.0, \"linear\": 0.09, \"quadratic\": 0.032 },\n      { \"position\": [2.3, -3.3, -4.0], \"ambient\": [0.05, 0.05, 0.05], \"diffuse\": [0.8, 0.62, 0.48], \"specular\": [1.0, 0.8, 0.65], \"constant\": 1.0, \"linear\": 0.09, \"quadratic\": 0.032 },\n      { \"position\": [-4.0, 2.0, -12.0], \"ambient\": [0.05, 0.05, 0.05], \"diffuse\": [0.45, 0.68, 1.0], \"specular\": [0.7, 0.82, 1.0], \"constant\": 1.0, \"linear\": 0.09, \"quadratic\": 0.032 },\n      { \"position\": [0.0, 0.0, -3.0], \"ambient\": [0.05, 0.05, 0.05], \"diffuse\": [0.75, 1.0, 0.7], \"specular\": [0.8, 1.0, 0.8], \"constant\": 1.0, \"linear\": 0.09, \"quadratic\": 0.032 }\n    ],\n    \"spotLight\": { \"position\": [4.2, 2.8, 6.4], \"direction\": [-0.35, -0.25, -1.0], \"ambient\": [0.0, 0.0, 0.0], \"diffuse\": [1.0, 1.0, 1.0], \"specular\": [1.0, 1.0, 1.0], \"constant\": 1.0, \"linear\": 0.09, \"quadratic\": 0.032, \"cutOff\": 0.976296, \"outerCutOff\": 0.953717 }\n  },\n  \"animated\": false\n}"
+        }
+      ],
+      "files": ["scene.json", "multiple.fragment.glsl"],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "point-light-attenuation",
+      "title": "点光源距离衰减",
+      "concept": "点光源从位置发光，片元越远，光强越受 constant/linear/quadratic 衰减项影响。",
+      "question": "为什么 calcPoint 中需要 1.0 / (constant + linear*d + quadratic*d*d)，而方向光不需要这个公式？",
+      "expectedKeywords": ["距离", "衰减", "点光源", "平方", "方向光"],
+      "hint": "点光源能量从一个位置向外扩散，距离越远，同一面积接收到的能量越少。",
+      "patchId": "02-point-lights",
+      "expectedObservation": "四个点光源被加入后，靠近光源的箱体局部更亮，并出现不同颜色的混合。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"usePointLights\": false,\n    \"useSpotLight\": false,\n    \"showPointMarkers\": false,",
+          "content": "\"usePointLights\": true,\n    \"useSpotLight\": false,\n    \"showPointMarkers\": true,"
+        }
+      ],
+      "files": ["scene.json", "main.js", "multiple.fragment.glsl"],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "specular-accumulation",
+      "title": "镜面项也会累加",
+      "concept": "多光源结果不是只叠加 diffuse；每个光源都有自己的 ambient、diffuse 和 specular。",
+      "question": "当多个点光源同时启用时，为什么 specular 高光也要按每个光源分别计算后相加，而不是只在最后统一算一次？",
+      "expectedKeywords": ["viewDir", "lightDir", "reflect", "每个光源", "高光"],
+      "hint": "高光方向依赖当前光源的 lightDir，不同光源的反射方向不同。",
+      "files": ["multiple.fragment.glsl", "scene.json"],
+      "flow": "question_only"
+    },
+    {
+      "id": "spot-light-cone",
+      "title": "聚光灯锥体",
+      "concept": "聚光灯在点光源基础上增加方向与内外截止角，用 intensity 形成软边缘。",
+      "question": "为什么 calcSpot 要用 theta、uSpotCutOff 和 uSpotOuterCutOff 计算 intensity，而不能只复用点光源的距离衰减？",
+      "expectedKeywords": ["角度", "锥体", "cutOff", "outerCutOff", "软边缘"],
+      "hint": "距离只能描述远近，不能判断片元是否落在手电筒光锥内部。",
+      "patchId": "03-spot-light",
+      "expectedObservation": "聚光灯加入后，画面中出现朝向场景中心的局部照明区域，边缘会逐渐变暗。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"useSpotLight\": false,\n    \"showPointMarkers\": true,\n    \"showSpotMarker\": false,",
+          "content": "\"useSpotLight\": true,\n    \"showPointMarkers\": true,\n    \"showSpotMarker\": true,"
+        }
+      ],
+      "files": ["scene.json", "main.js", "multiple.fragment.glsl"],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "lighting-sum",
+      "title": "多光源求和",
+      "concept": "最终颜色是材质在多个入射光下的响应之和，需要控制强度避免过曝。",
+      "question": "为什么 main 函数中把方向光、四个点光源和聚光灯结果直接相加是合理的，但也可能造成局部过亮？",
+      "expectedKeywords": ["线性叠加", "能量", "多个光源", "过曝", "强度"],
+      "hint": "每个光源都是额外入射能量，线性空间中可以累加，但显示器颜色范围有限。",
+      "files": ["multiple.fragment.glsl", "scene.json"],
+      "flow": "question_only"
+    }
+  ]
+}

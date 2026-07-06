@@ -1,0 +1,12 @@
+{
+  "id": "02-front-culling",
+  "description": "可见面切换为背面，立方体呈现更像内部壳层的效果。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"cullFace\": \"back\",",
+      "content": "\"cullFace\": \"front\","
+    }
+  ]
+}

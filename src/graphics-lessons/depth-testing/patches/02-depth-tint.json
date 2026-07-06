@@ -1,0 +1,18 @@
+{
+  "id": "02-depth-tint",
+  "description": "远处箱体带有更明显的青色深度提示，但遮挡仍由深度测试决定。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"depthTint\": 0.0\n  }",
+      "content": "\"depthTint\": 0.45\n  }"
+    },
+    {
+      "file": "depth.fragment.glsl",
+      "operation": "replace",
+      "target": "float depthHint = smoothstep(-5.0, 2.0, -vWorldPosition.z);",
+      "content": "float depthHint = smoothstep(-1.0, 5.0, -vWorldPosition.z);"
+    }
+  ]
+}

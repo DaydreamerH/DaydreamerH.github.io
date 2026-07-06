@@ -1,0 +1,179 @@
+{
+  "id": "uniform-buffers",
+  "source": "21_uniform_buffers",
+  "title": "Uniform Buffers",
+  "category": "GPU 数据管理",
+  "series": "LearnOpenGL 高级",
+  "order": 21,
+  "level": "advanced",
+  "createdAt": "2026-07-02",
+  "description": "用共享矩阵和共享颜色模拟 uniform block 的职责，理解多对象如何复用同一组 uniform 数据。",
+  "previewTitle": "Shared Uniform Data",
+  "lesson": "本实验对应 LearnOpenGL 的 Uniform Buffers。浏览器版本不直接暴露 UBO API，而是用共享 uniform 对象模拟 Matrices 与 Color 两个 uniform block 的数据复用关系。",
+  "aiBrief": "围绕 layout(std140, binding=0) uniform Matrices、layout(std140, binding=1) uniform Color、glBindBufferRange 和 glBufferSubData 组织教学。提醒 AI：浏览器 starter 是概念等价演示，不声称 Three.js ShaderMaterial 直接使用 OpenGL UBO。",
+  "referenceBrief": [
+    "OpenGL 源码把 projection 和 view 放进 binding=0 的 Matrices uniform block。",
+    "每帧用 glBufferSubData 更新 view 矩阵，所有使用该 block 的 shader 都能读到同一份 view。",
+    "Color block 绑定在 binding=1，片元 shader 通过 layout(std140, binding=1) uniform Color 读取 vec4 color。",
+    "model 矩阵仍是普通 uniform，因为每个物体实例的 model 通常不同。"
+  ],
+  "starterFilePaths": {
+    "main.js": "src/graphics-lesson-recipes/uniform-buffers/starter/main.js",
+    "scene.json": "src/graphics-lesson-recipes/uniform-buffers/starter/scene.json",
+    "geometry.json": "src/graphics-lesson-recipes/uniform-buffers/starter/geometry.json",
+    "ubo-cube.vertex.glsl": "src/graphics-lesson-recipes/uniform-buffers/starter/ubo-cube.vertex.glsl",
+    "ubo-cube.fragment.glsl": "src/graphics-lesson-recipes/uniform-buffers/starter/ubo-cube.fragment.glsl"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "创建多个 cube，并让它们共享相机矩阵和可选共享颜色 uniform",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制 cube 数量、是否启用共享颜色以及共享颜色值",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明多个 cube 的位置、旋转与局部颜色",
+      "visible": true
+    },
+    {
+      "path": "ubo-cube.vertex.glsl",
+      "role": "shader",
+      "concept": "使用 projection/view/model 矩阵把顶点变换到裁剪空间",
+      "visible": true
+    },
+    {
+      "path": "ubo-cube.fragment.glsl",
+      "role": "shader",
+      "concept": "在共享颜色和局部颜色之间切换，模拟 Color uniform block",
+      "visible": true
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "why-share-matrices",
+      "title": "共享 view/projection",
+      "concept": "同一帧中，多数物体共享 view 和 projection，只有 model 随物体变化。",
+      "question": "为什么 projection 和 view 适合放入 Matrices uniform block，而 model 通常仍作为每个物体单独设置的 uniform？",
+      "expectedKeywords": [
+        "projection",
+        "view",
+        "model",
+        "共享",
+        "每个物体"
+      ],
+      "hint": "相机矩阵对整帧一致，model 矩阵描述每个物体自己的位置和旋转。",
+      "files": [
+        "main.js",
+        "ubo-cube.vertex.glsl"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "multiple-cubes-share-camera",
+      "title": "多个物体共享相机",
+      "concept": "增加物体数量后，它们仍使用同一份相机 view/projection 数据。",
+      "question": "观察四个 cube 同时出现后，为什么移动相机时它们会一起受同一组 view/projection 影响？",
+      "expectedKeywords": [
+        "共享",
+        "view",
+        "projection",
+        "相机",
+        "多个物体"
+      ],
+      "hint": "相机变换描述世界到观察空间的关系，不属于某一个 cube。",
+      "patchId": "01-four-cubes",
+      "expectedObservation": "场景从一个 cube 扩展为四个 cube，它们共享相同相机矩阵但各自有 model 位置。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"cubeCount\": 1,",
+          "content": "\"cubeCount\": 4,"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "geometry.json",
+        "main.js"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "std140-layout",
+      "title": "std140 布局",
+      "concept": "std140 通过固定对齐规则让 CPU 写入的 buffer 与 shader 读取的 uniform block 对齐。",
+      "question": "为什么 uniform block 需要 std140 这样的布局规则，而不能让 CPU 和 GPU 各自随意排列成员？",
+      "expectedKeywords": [
+        "对齐",
+        "CPU",
+        "GPU",
+        "布局",
+        "读取"
+      ],
+      "hint": "如果两端对成员偏移理解不同，shader 读到的矩阵或颜色就会错位。",
+      "files": [
+        "ubo-cube.vertex.glsl",
+        "ubo-cube.fragment.glsl",
+        "main.js"
+      ],
+      "flow": "question_only"
+    },
+    {
+      "id": "shared-color-block",
+      "title": "共享颜色 block",
+      "concept": "多个 shader 实例可以读同一个 Color block，因此一次更新会影响所有绑定该 block 的对象。",
+      "question": "开启共享颜色后，为什么所有 cube 会一起变成同一种颜色，而不是只改变一个 cube？",
+      "expectedKeywords": [
+        "共享",
+        "Color block",
+        "binding",
+        "所有",
+        "uniform"
+      ],
+      "hint": "它们读取的是同一个共享 uniform 数据源，而不是各自独立的局部颜色。",
+      "patchId": "02-shared-color",
+      "expectedObservation": "四个 cube 统一切换为同一种青色，模拟多个对象读取同一个 Color uniform block。",
+      "changes": [
+        {
+          "file": "scene.json",
+          "operation": "replace",
+          "target": "\"useSharedColor\": false,",
+          "content": "\"useSharedColor\": true,"
+        }
+      ],
+      "files": [
+        "scene.json",
+        "main.js",
+        "ubo-cube.fragment.glsl"
+      ],
+      "flow": "observe_then_question"
+    },
+    {
+      "id": "bind-buffer-range",
+      "title": "绑定点与数据范围",
+      "concept": "glBindBufferRange 把 buffer 的一段数据绑定到指定 binding point，shader block 通过 binding 查找它。",
+      "question": "为什么 OpenGL 要用 glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, ...) 指定 binding=0，而不是只创建一个 buffer 就结束？",
+      "expectedKeywords": [
+        "binding",
+        "buffer",
+        "范围",
+        "shader",
+        "uniform block"
+      ],
+      "hint": "创建 buffer 只是分配数据；绑定点告诉 shader 的 uniform block 应该从哪里读取。",
+      "files": [
+        "main.js",
+        "ubo-cube.vertex.glsl"
+      ],
+      "flow": "question_only"
+    }
+  ]
+}

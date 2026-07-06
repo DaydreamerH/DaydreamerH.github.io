@@ -1,0 +1,172 @@
+{
+  "id": "cull-face",
+  "title": "Cull Face",
+  "category": "渲染管线",
+  "series": "LearnOpenGL 高级",
+  "order": 18,
+  "level": "intermediate",
+  "createdAt": "2026-07-02",
+  "description": "通过正面绕序和面剔除观察 GPU 为什么可以跳过不可见三角形。",
+  "source": "OpenGLProject/src/18_CullFace",
+  "runtime": "three-shader-material",
+  "previewTitle": "Face Culling",
+  "draft": false,
+  "aiBrief": "围绕 glEnable(GL_CULL_FACE)、glCullFace(GL_BACK)、glFrontFace(GL_CCW) 组织教学。强调面剔除基于屏幕空间三角形绕序，而不是基于法线颜色或材质。",
+  "referenceBrief": [
+    "OpenGL 源码开启 GL_CULL_FACE，并设置 glCullFace(GL_BACK)。",
+    "glFrontFace(GL_CCW) 表示屏幕空间逆时针三角形被视为正面。",
+    "面剔除发生在光栅化前，可以减少背面三角形的片元工作。",
+    "如果模型顶点绕序或变换翻转，正面/背面的判断会随之变化。"
+  ],
+  "shaderSets": [
+    {
+      "name": "cull_face",
+      "role": "object/material shader program",
+      "fragment": "reference/cull_face.fs",
+      "vertex": "reference/cull_face.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "cull-face.fragment.glsl",
+      "role": "shader",
+      "concept": "给可见三角形上色，帮助观察剔除后的表面",
+      "visible": true
+    },
+    {
+      "path": "cull-face.vertex.glsl",
+      "role": "shader",
+      "concept": "把立方体顶点变换到裁剪空间，并传出局部位置做可视提示",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明立方体初始旋转，用于观察不同面被剔除后的可见结果",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "创建立方体、切换 FrontSide/BackSide/DoubleSide 并报告剔除状态",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制 cullFace、frontFace、线框和动画状态",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/cull_face.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/cull_face.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "triangle-winding",
+      "title": "三角形绕序",
+      "concept": "正面不是模型文件中的固定标签，而是顶点投影到屏幕后形成的顺/逆时针顺序。",
+      "files": [
+        "cull-face.vertex.glsl",
+        "geometry.json",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "为什么 glFrontFace(GL_CCW) 判断的是屏幕空间三角形顶点绕序，而不是直接读取模型法线？",
+      "expectedKeywords": [
+        "屏幕空间",
+        "绕序",
+        "顶点",
+        "逆时针",
+        "法线"
+      ],
+      "hint": "面剔除发生在光栅化前，硬件可以从投影后的三角形顶点顺序判断正反面。"
+    },
+    {
+      "id": "enable-back-culling",
+      "title": "剔除背面",
+      "concept": "当只从外部观察封闭模型时，背面三角形通常不会贡献可见片元。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
+      "flow": "observe_then_question",
+      "question": "开启 GL_BACK 剔除后，为什么从立方体外部看画面变化很小，但 GPU 可以少处理一部分三角形？",
+      "expectedKeywords": [
+        "背面",
+        "外部",
+        "不可见",
+        "片元",
+        "性能"
+      ],
+      "hint": "封闭物体的背面被正面挡住，即使绘制出来也通常不会成为最终颜色。",
+      "patchId": "01-back-culling",
+      "expectedObservation": "材质改为只绘制正面，背面三角形被剔除；从外部看立方体仍基本完整。"
+    },
+    {
+      "id": "front-culling",
+      "title": "剔除正面",
+      "concept": "剔除正面会留下背面，常用于观察壳体内部或构建特殊轮廓效果。",
+      "files": [
+        "scene.json",
+        "main.js",
+        "cull-face.fragment.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "如果把 glCullFace 从 GL_BACK 改为 GL_FRONT，为什么从外部看会像只剩下立方体内侧？",
+      "expectedKeywords": [
+        "正面",
+        "背面",
+        "内部",
+        "剔除",
+        "外部"
+      ],
+      "hint": "GL_FRONT 会丢掉面向相机的三角形，只留下原本朝里的背面。",
+      "patchId": "02-front-culling",
+      "expectedObservation": "可见面切换为背面，立方体呈现更像内部壳层的效果。"
+    },
+    {
+      "id": "front-face-flip",
+      "title": "绕序翻转",
+      "concept": "负缩放或错误导入可能翻转绕序，导致本应可见的面被当成背面。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
+      "flow": "observe_then_question",
+      "question": "为什么模型做一次 x 方向负缩放后，原先的 CCW 正面判断可能需要改成 CW？",
+      "expectedKeywords": [
+        "负缩放",
+        "翻转",
+        "绕序",
+        "CCW",
+        "CW"
+      ],
+      "hint": "镜像变换会改变三角形顶点在屏幕上的顺逆时针方向。",
+      "patchId": "03-flip-front-face",
+      "expectedObservation": "立方体发生镜像翻转，正反面判断随 frontFace 配置改变。"
+    }
+  ]
+}

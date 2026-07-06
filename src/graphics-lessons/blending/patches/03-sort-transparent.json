@@ -1,0 +1,18 @@
+{
+  "id": "03-sort-transparent",
+  "description": "透明窗口改为从远到近排序，并关闭透明平面的深度写入，重叠区域更稳定。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"depthWrite\": true,\n    \"discardThreshold\": -1.0,",
+      "content": "\"depthWrite\": false,\n    \"discardThreshold\": -1.0,"
+    },
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"sortBackToFront\": false",
+      "content": "\"sortBackToFront\": true"
+    }
+  ]
+}

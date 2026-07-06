@@ -1,0 +1,8 @@
+{
+  "mode": "direct-scene",
+  "camera": { "type": "perspective", "fov": 45, "position": [2.8, 1.7, 4.2], "lookAt": [0.0, 0.0, -0.6] },
+  "textures": { "cube": "container-texture.txt", "floor": "wall-texture.txt" },
+  "material": { "vertexShader": "scene.vertex.glsl", "fragmentShader": "scene.fragment.glsl", "cubeTint": [1.0, 1.0, 1.0], "floorTint": [0.86, 0.86, 0.86] },
+  "screen": { "vertexShader": "screen.vertex.glsl", "fragmentShader": "screen.fragment.glsl", "effect": 0 },
+  "useFramebuffer": false
+}

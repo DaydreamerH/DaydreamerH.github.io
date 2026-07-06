@@ -1,0 +1,12 @@
+{
+  "id": "01-four-cubes",
+  "description": "场景从一个 cube 扩展为四个 cube，它们共享相同相机矩阵但各自有 model 位置。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"cubeCount\": 1,",
+      "content": "\"cubeCount\": 4,"
+    }
+  ]
+}

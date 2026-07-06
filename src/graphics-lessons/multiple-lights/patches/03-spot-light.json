@@ -1,0 +1,12 @@
+{
+  "id": "03-spot-light",
+  "description": "聚光灯加入后，画面中出现朝向场景中心的局部照明区域，边缘会逐渐变暗。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"useSpotLight\": false,\n    \"showPointMarkers\": true,\n    \"showSpotMarker\": false,",
+      "content": "\"useSpotLight\": true,\n    \"showPointMarkers\": true,\n    \"showSpotMarker\": true,"
+    }
+  ]
+}

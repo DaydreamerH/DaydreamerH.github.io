@@ -1,0 +1,52 @@
+{
+  "shape": "multi-cube",
+  "mode": "ambient-only",
+  "camera": {
+    "type": "perspective",
+    "fov": 45,
+    "position": [4.2, 2.8, 6.4],
+    "lookAt": [0.2, 0.2, -2.8]
+  },
+  "material": {
+    "vertexShader": "cube.vertex.glsl",
+    "fragmentShader": "multiple.fragment.glsl",
+    "shininess": 32
+  },
+  "textures": {
+    "diffuse": "diffuse-map.txt",
+    "specular": "specular-map.txt"
+  },
+  "lights": {
+    "ambientBase": [0.12, 0.12, 0.12],
+    "useDirLight": false,
+    "usePointLights": false,
+    "useSpotLight": false,
+    "showPointMarkers": false,
+    "showSpotMarker": false,
+    "dirLight": {
+      "direction": [-0.2, -1.0, -0.3],
+      "ambient": [0.05, 0.05, 0.05],
+      "diffuse": [0.4, 0.4, 0.4],
+      "specular": [0.5, 0.5, 0.5]
+    },
+    "pointLights": [
+      { "position": [0.7, 0.2, 2.0], "ambient": [0.05, 0.05, 0.05], "diffuse": [0.8, 0.8, 0.8], "specular": [1.0, 1.0, 1.0], "constant": 1.0, "linear": 0.09, "quadratic": 0.032 },
+      { "position": [2.3, -3.3, -4.0], "ambient": [0.05, 0.05, 0.05], "diffuse": [0.8, 0.62, 0.48], "specular": [1.0, 0.8, 0.65], "constant": 1.0, "linear": 0.09, "quadratic": 0.032 },
+      { "position": [-4.0, 2.0, -12.0], "ambient": [0.05, 0.05, 0.05], "diffuse": [0.45, 0.68, 1.0], "specular": [0.7, 0.82, 1.0], "constant": 1.0, "linear": 0.09, "quadratic": 0.032 },
+      { "position": [0.0, 0.0, -3.0], "ambient": [0.05, 0.05, 0.05], "diffuse": [0.75, 1.0, 0.7], "specular": [0.8, 1.0, 0.8], "constant": 1.0, "linear": 0.09, "quadratic": 0.032 }
+    ],
+    "spotLight": {
+      "position": [4.2, 2.8, 6.4],
+      "direction": [-0.35, -0.25, -1.0],
+      "ambient": [0.0, 0.0, 0.0],
+      "diffuse": [1.0, 1.0, 1.0],
+      "specular": [1.0, 1.0, 1.0],
+      "constant": 1.0,
+      "linear": 0.09,
+      "quadratic": 0.032,
+      "cutOff": 0.976296,
+      "outerCutOff": 0.953717
+    }
+  },
+  "animated": false
+}

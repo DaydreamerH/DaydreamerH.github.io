@@ -1,0 +1,12 @@
+{
+  "id": "01-mask-preview",
+  "description": "箱体表面出现浅青色掩码预览，表示第一遍绘制会写入模板的区域。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"enabled\": false,\n    \"color\": [0.0, 0.68, 0.71],\n    \"alpha\": 0.16,",
+      "content": "\"enabled\": true,\n    \"color\": [0.0, 0.68, 0.71],\n    \"alpha\": 0.16,"
+    }
+  ]
+}

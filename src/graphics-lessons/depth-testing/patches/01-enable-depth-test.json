@@ -1,0 +1,12 @@
+{
+  "id": "01-enable-depth-test",
+  "description": "遮挡关系变得稳定，前方箱体不再被后绘制的远处箱体错误覆盖。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"depthTest\": false,",
+      "content": "\"depthTest\": true,"
+    }
+  ]
+}

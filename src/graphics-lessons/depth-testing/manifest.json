@@ -1,0 +1,189 @@
+{
+  "id": "depth-testing",
+  "title": "Depth Testing",
+  "category": "渲染管线",
+  "series": "LearnOpenGL 高级",
+  "order": 15,
+  "level": "intermediate",
+  "createdAt": "2026-07-01",
+  "description": "观察深度测试如何让更靠近相机的片元遮挡更远片元，而不是只依赖绘制顺序。",
+  "source": "OpenGLProject/src/15_depth_testing",
+  "runtime": "three-shader-material",
+  "previewTitle": "Depth Buffer",
+  "draft": false,
+  "aiBrief": "围绕 glEnable(GL_DEPTH_TEST)、glClear(GL_DEPTH_BUFFER_BIT)、绘制顺序与深度缓冲组织教学。不要让 AI 临时生成课程主流程代码，正确回答后只返回本地 patchId 或 nextCheckpointId。",
+  "referenceBrief": [
+    "OpenGL 源码开启 glEnable(GL_DEPTH_TEST)，并在每帧清理 GL_DEPTH_BUFFER_BIT。",
+    "场景包含地面和两个立方体；立方体之间存在前后遮挡关系。",
+    "深度测试让更小深度值的片元保留，避免后绘制物体错误覆盖前方物体。",
+    "浏览器实验通过 depthTest/depthWrite 切换来观察绘制顺序与深度缓冲的区别。"
+  ],
+  "shaderSets": [
+    {
+      "name": "shader",
+      "role": "object/material shader program",
+      "fragment": "reference/shader.fs",
+      "vertex": "reference/shader.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "depth.fragment.glsl",
+      "role": "shader",
+      "concept": "输出基础颜色，并可按世界 z 值加入深度提示色",
+      "visible": true
+    },
+    {
+      "path": "depth.vertex.glsl",
+      "role": "shader",
+      "concept": "把模型坐标变换到裁剪空间，并传出世界坐标用于深度提示色",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "声明两个箱体的空间位置，使它们在相机视角中发生遮挡",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "创建两个重叠箱体、地面和可切换 depthTest/depthWrite 的材质",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "控制深度测试、绘制顺序、相机与材质颜色",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shader.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "draw-order-problem",
+      "title": "绘制顺序问题",
+      "concept": "没有深度测试时，后绘制的片元可能覆盖先绘制的前方片元。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "geometry.json"
+      ],
+      "flow": "question_only",
+      "question": "当 depthTest 关闭时，为什么后绘制的箱体可能覆盖本该在前面的箱体？",
+      "expectedKeywords": [
+        "绘制顺序",
+        "片元",
+        "覆盖",
+        "深度",
+        "后绘制"
+      ],
+      "hint": "如果没有深度比较，颜色缓冲只知道最后写入的片元。"
+    },
+    {
+      "id": "enable-depth-buffer",
+      "title": "开启深度测试",
+      "concept": "深度测试会比较当前片元深度与深度缓冲中已有深度，保留更靠近相机的片元。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
+      "flow": "observe_then_question",
+      "question": "开启 depthTest 后，为什么即使绘制顺序不变，前方箱体仍然能正确遮挡后方箱体？",
+      "expectedKeywords": [
+        "深度缓冲",
+        "比较",
+        "更近",
+        "遮挡",
+        "片元"
+      ],
+      "hint": "颜色写入前会先做深度比较，不再只看 draw call 的先后。",
+      "patchId": "01-enable-depth-test",
+      "expectedObservation": "遮挡关系变得稳定，前方箱体不再被后绘制的远处箱体错误覆盖。"
+    },
+    {
+      "id": "depth-clear",
+      "title": "每帧清理深度",
+      "concept": "深度缓冲是跨片元写入的状态，每帧开始时需要清除上一帧的深度值。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 OpenGL 源码每帧要清理 GL_DEPTH_BUFFER_BIT，而不能只清理颜色缓冲？",
+      "expectedKeywords": [
+        "上一帧",
+        "深度值",
+        "缓冲",
+        "阻挡",
+        "清理"
+      ],
+      "hint": "如果旧深度还在，新一帧的片元可能被上一帧留下的深度错误拒绝。"
+    },
+    {
+      "id": "visualize-depth",
+      "title": "深度可视化",
+      "concept": "深度值不是线性颜色，但可以用提示色帮助观察前后关系。",
+      "files": [
+        "depth.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "observe_then_question",
+      "question": "为什么把世界 z 或深度提示映射成颜色只能辅助理解前后关系，不能等同于真实深度缓冲中的数值？",
+      "expectedKeywords": [
+        "非线性",
+        "投影",
+        "辅助",
+        "深度缓冲",
+        "z"
+      ],
+      "hint": "真实深度来自投影后的深度范围，受 near/far 和透视除法影响。",
+      "patchId": "02-depth-tint",
+      "expectedObservation": "远处箱体带有更明显的青色深度提示，但遮挡仍由深度测试决定。"
+    },
+    {
+      "id": "depth-function",
+      "title": "深度函数",
+      "concept": "默认深度函数类似 GL_LESS：只有更近的片元通过测试。",
+      "files": [
+        "main.js",
+        "scene.json",
+        "depth.vertex.glsl"
+      ],
+      "flow": "question_only",
+      "question": "如果把深度比较从“更近通过”改成“更远通过”，画面遮挡关系会发生什么变化？为什么？",
+      "expectedKeywords": [
+        "GL_LESS",
+        "更近",
+        "更远",
+        "遮挡",
+        "比较函数"
+      ],
+      "hint": "比较函数决定新片元相对旧深度值时，什么条件才允许写入颜色。"
+    }
+  ]
+}

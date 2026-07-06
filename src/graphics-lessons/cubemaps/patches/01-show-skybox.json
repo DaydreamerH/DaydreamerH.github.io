@@ -1,0 +1,12 @@
+{
+  "id": "01-show-skybox",
+  "description": "场景出现由六张图片组成的天空盒，拖动相机时它表现为远处环境。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"showSkybox\": false,",
+      "content": "\"showSkybox\": true,"
+    }
+  ]
+}

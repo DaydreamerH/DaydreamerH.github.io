@@ -1,0 +1,28 @@
+{
+  "shape": "two-cubes-and-plane",
+  "mode": "no-depth",
+  "depthTest": false,
+  "drawBackCubeFirst": false,
+  "camera": {
+    "type": "perspective",
+    "fov": 45,
+    "position": [2.6, 2.0, 4.2],
+    "lookAt": [0.2, 0.1, -0.8]
+  },
+  "material": {
+    "vertexShader": "depth.vertex.glsl",
+    "fragmentShader": "depth.fragment.glsl"
+  },
+  "planeMaterial": {
+    "color": [0.68, 0.68, 0.68],
+    "depthTint": 0.0
+  },
+  "cubeMaterial": {
+    "color": [0.13, 0.16, 0.19],
+    "depthTint": 0.0
+  },
+  "backCubeMaterial": {
+    "color": [0.0, 0.68, 0.71],
+    "depthTint": 0.0
+  }
+}

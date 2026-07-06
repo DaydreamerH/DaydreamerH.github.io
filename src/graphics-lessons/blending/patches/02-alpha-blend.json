@@ -1,0 +1,12 @@
+{
+  "id": "02-alpha-blend",
+  "description": "透明窗口开始与地面和其他窗口混合，玻璃区域可以看到背后的颜色。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace",
+      "target": "\"transparent\": false,\n    \"depthWrite\": true,\n    \"discardThreshold\": -1.0,",
+      "content": "\"transparent\": true,\n    \"depthWrite\": true,\n    \"discardThreshold\": -1.0,"
+    }
+  ]
+}

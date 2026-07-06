@@ -1,0 +1,9 @@
+{
+  "mode": "uniform-buffer-simulation",
+  "camera": { "type": "perspective", "fov": 45, "position": [3.2, 2.0, 4.8], "lookAt": [0, 0, 0] },
+  "material": { "vertexShader": "ubo-cube.vertex.glsl", "fragmentShader": "ubo-cube.fragment.glsl" },
+  "cubeCount": 1,
+  "useSharedColor": false,
+  "sharedColor": [0.0, 0.68, 0.71],
+  "animated": true
+}
