@@ -1,0 +1,190 @@
+{
+  "id": "msaa",
+  "title": "MSAA",
+  "category": "抗锯齿",
+  "series": "LearnOpenGL 高级",
+  "order": 24,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "比较硬边、平滑边缘和多采样解析思路，理解覆盖率采样为何能改善几何边缘锯齿。",
+  "source": "OpenGLProject/src/24_MSAA",
+  "runtime": "three-shader-material",
+  "previewTitle": "MSAA",
+  "draft": false,
+  "aiBrief": "MSAA 课程把 OpenGL 源码中的多 pass 或状态概念转写为可实时观察的 Three.js ShaderMaterial 实验。AI 应按 checkpoint 逐步提问，必要时应用本地 patch，不自由重写课程主流程。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "msaa.cpp 创建 multisample framebuffer，再 blit/resolve 到普通颜色缓冲。"
+  ],
+  "shaderSets": [
+    {
+      "name": "cube",
+      "role": "object/material shader program",
+      "fragment": "reference/cube.fs",
+      "vertex": "reference/cube.vs"
+    },
+    {
+      "name": "screen",
+      "role": "object/material shader program",
+      "fragment": "reference/screen.fs",
+      "vertex": "reference/screen.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "concept": "screen fragment stage",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "concept": "screen vertex stage",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/cube.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/cube.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/msaa.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/screen.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/screen.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "coverage",
+      "title": "覆盖率采样",
+      "concept": "MSAA 通过子样本覆盖率改善几何边缘。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 MSAA 主要改善几何边缘？请用 coverage sample 解释一个像素内部分 sample 被三角形覆盖时如何得到边缘颜色。",
+      "expectedKeywords": [
+        "coverage",
+        "sample",
+        "resolve",
+        "边缘"
+      ],
+      "hint": "MSAA 不是简单提高屏幕分辨率，而是在一个像素内记录多个覆盖结果。"
+    },
+    {
+      "id": "resolve-formula",
+      "title": "Resolve 公式",
+      "concept": "多采样颜色需要解析成单个像素颜色。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果 4x MSAA 中两个 sample 覆盖三角形颜色 C，两个 sample 是背景 B，resolve 后颜色可近似写成什么平均公式？",
+      "expectedKeywords": [
+        "0.5",
+        "C",
+        "B",
+        "平均"
+      ],
+      "hint": "可写成 (2C + 2B) / 4。"
+    },
+    {
+      "id": "manual-smooth",
+      "title": "边缘平滑",
+      "concept": "用 smoothstep 模拟覆盖率过渡。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "把边缘改成 smoothstep 过渡后，为什么视觉上更接近 MSAA resolve 后的边界，但仍不等价于真实的几何多采样？",
+      "expectedKeywords": [
+        "smoothstep",
+        "coverage",
+        "几何",
+        "resolve"
+      ],
+      "hint": "这里的过渡发生在 shader 里，真实 MSAA 的覆盖判断发生在光栅化 sample 上。"
+    },
+    {
+      "id": "sample-pattern",
+      "title": "采样数量",
+      "concept": "采样数、带宽和边缘质量的权衡。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么增加 sample count 通常提升边缘稳定性，但会增加颜色/深度缓冲带宽，并且不能直接解决 shader 内部高频纹理锯齿？",
+      "expectedKeywords": [
+        "sample count",
+        "带宽",
+        "shader aliasing",
+        "纹理"
+      ],
+      "hint": "MSAA 多采样的是覆盖和部分缓冲，不一定为每个 sample 独立执行复杂片元着色。"
+    },
+    {
+      "id": "alpha-limit",
+      "title": "透明纹理限制",
+      "concept": "Alpha test 和 shader 高频需要其它抗锯齿策略。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么草叶、铁丝网这类 alpha texture 的边缘，即使开启 MSAA 也可能仍有锯齿？",
+      "expectedKeywords": [
+        "alpha",
+        "纹理",
+        "片元",
+        "sample shading"
+      ],
+      "hint": "这些边缘不是几何边缘，而是片元 shader 根据纹理透明度制造出来的。"
+    }
+  ]
+}

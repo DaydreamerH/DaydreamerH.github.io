@@ -1,0 +1,144 @@
+{
+  "id": "hdr",
+  "title": "HDR",
+  "category": "后处理",
+  "series": "LearnOpenGL 高级",
+  "order": 31,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "source": "31_HDR",
+  "description": "用高动态范围颜色、曝光和 tone mapping 理解为什么亮光不能直接截断到 1.0。",
+  "previewTitle": "HDR",
+  "aiBrief": "HDR 课程把 OpenGL 源码中的多 pass 或状态概念转写为可实时观察的 Three.js ShaderMaterial 实验。AI 应按 checkpoint 逐步提问，必要时应用本地 patch，不自由重写课程主流程。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "HDR 示例先渲染到浮点颜色缓冲，再用 hdr.fs 做曝光 tone mapping。"
+  ],
+  "starterAssets": [],
+  "starterFiles": {
+    "main.js": "// Generated CG experiment runtime\n// Available objects: THREE, OrbitControls, canvas, files, getFile, report\n\nconst sceneConfig = JSON.parse(getFile(\"scene.json\") || \"{}\");\nconst geometryConfig = JSON.parse(getFile(\"geometry.json\") || \"{}\");\n\nconst renderer = new THREE.WebGLRenderer({\n  canvas,\n  antialias: Boolean(sceneConfig.antialias)\n});\nrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\nrenderer.setClearColor(0xf8f8f8, 1);\n\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(sceneConfig.fov || 45, 1, 0.1, 100);\ncamera.position.fromArray(sceneConfig.cameraPosition || [2.6, 1.8, 4.2]);\ncamera.lookAt(...(sceneConfig.lookAt || [0, 0, 0]));\n\nconst controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;\ncontrols.target.fromArray(sceneConfig.lookAt || [0, 0, 0]);\n\nfunction makeFallbackTexture() {\n  const texture = new THREE.DataTexture(new Uint8Array([238, 238, 238, 255]), 1, 1, THREE.RGBAFormat);\n  texture.needsUpdate = true;\n  return texture;\n}\n\nfunction makeTexture(fileName, colorSpace = \"srgb\") {\n  const dataUrl = getFile(fileName);\n  const fallback = makeFallbackTexture();\n  if (!dataUrl) return fallback;\n  const texture = new THREE.TextureLoader().load(dataUrl, () => render());\n  texture.wrapS = THREE.RepeatWrapping;\n  texture.wrapT = THREE.RepeatWrapping;\n  texture.colorSpace = colorSpace === \"srgb\" ? THREE.SRGBColorSpace : THREE.NoColorSpace;\n  return texture;\n}\n\nfunction makeGeometry(config) {\n  if (config.type === \"plane\") {\n    const geometry = new THREE.PlaneGeometry(config.width || 3, config.height || 3, config.segments || 1, config.segments || 1);\n    if (config.rotateX) geometry.rotateX(config.rotateX);\n    return geometry;\n  }\n  if (config.type === \"points\") {\n    const geometry = new THREE.BufferGeometry();\n    geometry.setAttribute(\"position\", new THREE.BufferAttribute(new Float32Array(config.positions || []), 3));\n    return geometry;\n  }\n  return new THREE.BoxGeometry(config.size?.[0] || 1, config.size?.[1] || 1, config.size?.[2] || 1);\n}\n\nconst uniforms = {\n  uTime: { value: 0 },\n  uMode: { value: Number(sceneConfig.mode || 0) },\n  uStrength: { value: Number(sceneConfig.strength ?? 1) },\n  uExposure: { value: Number(sceneConfig.exposure ?? 1) },\n  uLightPos: { value: new THREE.Vector3(...(sceneConfig.lightPos || [1.2, 1.8, 2.2])) },\n  uViewPos: { value: camera.position },\n  uWallMap: { value: makeTexture(\"wall-texture.txt\") },\n  uWoodMap: { value: makeTexture(\"wood-texture.txt\") },\n  uContainerMap: { value: makeTexture(\"container-texture.txt\") },\n  uDiffuseMap: { value: makeTexture(\"diffuse-map.txt\") },\n  uNormalMap: { value: makeTexture(\"normal-map.txt\", \"linear\") },\n  uHeightMap: { value: makeTexture(\"height-map.txt\", \"linear\") }\n};\n\nconst material = new THREE.ShaderMaterial({\n  vertexShader: getFile(sceneConfig.vertexShader || \"lab.vertex.glsl\"),\n  fragmentShader: getFile(sceneConfig.fragmentShader || \"lab.fragment.glsl\"),\n  uniforms,\n  side: THREE.DoubleSide\n});\n\nconst geometry = makeGeometry(geometryConfig);\nlet mesh;\nif (geometryConfig.type === \"points\") {\n  mesh = new THREE.Points(geometry, material);\n} else {\n  mesh = new THREE.Mesh(geometry, material);\n}\nmesh.rotation.set(...(sceneConfig.rotation || [0, 0, 0]));\nmesh.position.set(...(sceneConfig.position || [0, 0, 0]));\nscene.add(mesh);\n\nif (sceneConfig.showLight) {\n  const lightMarker = new THREE.Mesh(\n    new THREE.SphereGeometry(0.08, 18, 18),\n    new THREE.MeshBasicMaterial({ color: 0x00adb5 })\n  );\n  lightMarker.position.copy(uniforms.uLightPos.value);\n  scene.add(lightMarker);\n}\n\nlet frame = 0;\nfunction resize() {\n  const bounds = canvas.parentElement.getBoundingClientRect();\n  const width = Math.max(1, Math.floor(bounds.width));\n  const height = Math.max(1, Math.floor(bounds.height));\n  renderer.setSize(width, height, false);\n  camera.aspect = width / height;\n  camera.updateProjectionMatrix();\n}\n\nfunction render(time = 0) {\n  resize();\n  controls.update();\n  uniforms.uTime.value = time * 0.001;\n  if (sceneConfig.animated) mesh.rotation.y = time * 0.0005;\n  renderer.render(scene, camera);\n  report({ mode: sceneConfig.label || \"advanced\", files: Object.keys(files).length });\n  frame = requestAnimationFrame(render);\n}\n\nframe = requestAnimationFrame(render);\n\nreturn () => {\n  cancelAnimationFrame(frame);\n  geometry.dispose();\n  material.dispose();\n  Object.values(uniforms).forEach((uniform) => uniform.value?.dispose?.());\n  renderer.dispose();\n};",
+    "geometry.json": "{\n  \"type\": \"plane\",\n  \"width\": 3.2,\n  \"height\": 2.2,\n  \"segments\": 1\n}",
+    "scene.json": "{\n  \"label\": \"HDR\",\n  \"vertexShader\": \"screen.vertex.glsl\",\n  \"fragmentShader\": \"screen.fragment.glsl\",\n  \"cameraPosition\": [\n    0,\n    0,\n    2.6\n  ],\n  \"mode\": 0,\n  \"strength\": 1,\n  \"exposure\": 1\n}",
+    "screen.vertex.glsl": "varying vec2 vUv;\n\nvoid main() {\n  vUv = uv;\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n}",
+    "screen.fragment.glsl": "varying vec2 vUv;\nuniform float uMode;\nuniform float uExposure;\n\nvec3 sceneColor(vec2 uv) {\n  float glow = 3.8 * exp(-42.0 * distance(uv, vec2(0.34, 0.56)));\n  float bar = smoothstep(0.02, 0.0, abs(uv.y - 0.36)) * 1.4;\n  return vec3(0.08, 0.1, 0.12) + vec3(1.0, 0.76, 0.42) * glow + vec3(0.0, 0.68, 0.71) * bar;\n}\n\nvoid main() {\n  vec3 hdr = sceneColor(vUv);\n  vec3 ldrClamp = clamp(hdr, 0.0, 1.0);\n  vec3 toneMapped = vec3(1.0) - exp(-hdr * uExposure);\n  vec3 color = mix(ldrClamp, toneMapped, step(0.5, uMode));\n  gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);\n}"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "visible": true
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "range",
+      "title": "HDR 范围",
+      "concept": "浮点颜色缓冲允许保留大于 1 的亮度。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 HDR 渲染通常需要浮点 color buffer？如果 lighting pass 中 color > 1.0 在 LDR FBO 中被 clamp，会丢失什么信息？",
+      "expectedKeywords": [
+        "浮点",
+        "clamp",
+        "1.0",
+        "亮度"
+      ],
+      "hint": "超过 1 的相对亮度差异会在 LDR 中被压成同一个值。"
+    },
+    {
+      "id": "tone-map-formula",
+      "title": "Tone Mapping 公式",
+      "concept": "Tone mapping 把 HDR 压缩到显示范围。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "比较 Reinhard color/(color+1) 与 exposure tone mapping 1-exp(-color*exposure)：它们都在解决什么映射问题？",
+      "expectedKeywords": [
+        "Reinhard",
+        "exposure",
+        "压缩",
+        "HDR"
+      ],
+      "hint": "目标是把无上界的亮度映射到 0 到 1，同时尽量保留层次。"
+    },
+    {
+      "id": "tone-map",
+      "title": "指数压缩",
+      "concept": "指数 tone mapping 保留高亮层次。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用 result = 1 - exp(-hdrColor * exposure) 后，为什么高亮不再大片死白，同时暗部和中间调仍会被重新分配？",
+      "expectedKeywords": [
+        "exp",
+        "exposure",
+        "高亮",
+        "中间调"
+      ],
+      "hint": "这是非线性压缩，不是简单 clamp。"
+    },
+    {
+      "id": "exposure",
+      "title": "曝光参数",
+      "concept": "exposure 改变整条 tone mapping 曲线。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "提高 exposure 后，为什么不只是最亮区域变化？请从 1-exp(-x*exposure) 的曲线斜率解释。",
+      "expectedKeywords": [
+        "exposure",
+        "曲线",
+        "斜率",
+        "中间调"
+      ],
+      "hint": "exposure 乘在输入 x 上，会影响所有非零亮度区间。"
+    },
+    {
+      "id": "pipeline-order",
+      "title": "后处理顺序",
+      "concept": "HDR、Bloom、Tone mapping、Gamma 的顺序影响最终结果。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Bloom 通常在 HDR 颜色上提取和模糊，然后再 tone map，最后 gamma encode？如果先 clamp/tone map 会怎样影响 Bloom？",
+      "expectedKeywords": [
+        "Bloom",
+        "tone map",
+        "gamma",
+        "clamp"
+      ],
+      "hint": "Bloom 需要知道真实高亮差异，gamma 是面向显示的最后编码。"
+    }
+  ]
+}

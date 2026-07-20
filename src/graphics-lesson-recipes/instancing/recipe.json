@@ -1,0 +1,145 @@
+{
+  "id": "instancing",
+  "title": "Instancing",
+  "category": "GPU 数据组织",
+  "series": "LearnOpenGL 高级",
+  "order": 23,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "source": "23_instancing",
+  "description": "用一份网格和多份实例数据渲染大量对象，理解 per-vertex 与 per-instance 属性的分工。",
+  "previewTitle": "Instancing",
+  "aiBrief": "课程对应 OpenGL instancing。WebGL 版本用 InstancedMesh、instanceMatrix 和 instanceColor 展示一次 draw call 复用几何数据的思想。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "源代码的 instancing_quads.cpp 使用实例偏移减少重复提交。",
+    "Three.js 中 instanceMatrix 和 InstancedBufferAttribute 对应 per-instance 数据。"
+  ],
+  "starterFiles": {
+    "main.js": "// Generated CG experiment runtime\n// Available objects: THREE, OrbitControls, canvas, files, getFile, report\n\nconst sceneConfig = JSON.parse(getFile(\"scene.json\") || \"{}\");\nconst geometryConfig = JSON.parse(getFile(\"geometry.json\") || \"{}\");\nconst renderer = new THREE.WebGLRenderer({ canvas, antialias: true });\nrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\nrenderer.setClearColor(0xf8f8f8, 1);\n\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);\ncamera.position.set(0, 2.5, 8);\ncamera.lookAt(0, 0, 0);\nconst controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;\n\nconst geometry = new THREE.BoxGeometry(0.28, 0.28, 0.28);\nconst material = new THREE.ShaderMaterial({\n  vertexShader: getFile(\"instancing.vertex.glsl\"),\n  fragmentShader: getFile(\"instancing.fragment.glsl\"),\n  uniforms: {\n    uTime: { value: 0 },\n    uUseInstanceColor: { value: Number(sceneConfig.useInstanceColor || 0) }\n  }\n});\n\nconst count = Number(sceneConfig.count || 16);\nconst mesh = new THREE.InstancedMesh(geometry, material, count);\nconst matrix = new THREE.Matrix4();\nconst color = new THREE.Color();\nconst colors = [];\nconst grid = Math.ceil(Math.sqrt(count));\nfor (let i = 0; i < count; i += 1) {\n  const x = (i % grid) - (grid - 1) * 0.5;\n  const y = Math.floor(i / grid) - (grid - 1) * 0.5;\n  matrix.makeTranslation(x * 0.55, y * 0.55, 0);\n  mesh.setMatrixAt(i, matrix);\n  color.setHSL(i / Math.max(1, count), 0.45, 0.55);\n  colors.push(color.r, color.g, color.b);\n}\nmesh.geometry.setAttribute(\"instanceColor\", new THREE.InstancedBufferAttribute(new Float32Array(colors), 3));\nscene.add(mesh);\n\nlet frame = 0;\nfunction resize() {\n  const bounds = canvas.parentElement.getBoundingClientRect();\n  renderer.setSize(Math.max(1, bounds.width), Math.max(1, bounds.height), false);\n  camera.aspect = Math.max(1, bounds.width) / Math.max(1, bounds.height);\n  camera.updateProjectionMatrix();\n}\nfunction render(time = 0) {\n  resize();\n  controls.update();\n  material.uniforms.uTime.value = time * 0.001;\n  mesh.rotation.y = time * 0.00035;\n  renderer.render(scene, camera);\n  report({ instances: count, mode: sceneConfig.label || \"instancing\" });\n  frame = requestAnimationFrame(render);\n}\nframe = requestAnimationFrame(render);\nreturn () => {\n  cancelAnimationFrame(frame);\n  geometry.dispose();\n  material.dispose();\n  renderer.dispose();\n};",
+    "geometry.json": "{\n  \"primitive\": \"cube\",\n  \"instanceAttribute\": \"instanceMatrix\",\n  \"colorAttribute\": \"instanceColor\"\n}",
+    "scene.json": "{\n  \"label\": \"few instances\",\n  \"count\": 16,\n  \"useInstanceColor\": 0\n}",
+    "instancing.vertex.glsl": "attribute vec3 instanceColor;\nvarying vec3 vColor;\nuniform float uTime;\nuniform float uUseInstanceColor;\n\nvoid main() {\n  vec3 baseColor = mix(vec3(0.0, 0.68, 0.71), instanceColor, uUseInstanceColor);\n  vColor = baseColor;\n  vec4 world = instanceMatrix * vec4(position, 1.0);\n  world.z += sin(world.x * 1.3 + world.y * 1.7 + uTime) * 0.18;\n  gl_Position = projectionMatrix * modelViewMatrix * world;\n}",
+    "instancing.fragment.glsl": "varying vec3 vColor;\n\nvoid main() {\n  gl_FragColor = vec4(vColor, 1.0);\n}"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "instancing.vertex.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "instancing.fragment.glsl",
+      "role": "shader",
+      "visible": true
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "data-split",
+      "title": "数据分层",
+      "concept": "per-vertex 数据与 per-instance 数据分开绑定。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "instancing.vertex.glsl",
+        "instancing.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么实例化渲染要把 mesh 顶点数据和每个实例的 transform/color 数据分开存储？请从重复内存、属性更新频率和 draw call 数量说明。",
+      "expectedKeywords": [
+        "per-vertex",
+        "per-instance",
+        "draw call",
+        "内存"
+      ],
+      "hint": "同一几何被多次复用，变化的是每个实例的位置、矩阵或颜色。"
+    },
+    {
+      "id": "instance-index",
+      "title": "实例索引",
+      "concept": "实例编号驱动每个实例读取自己的属性。",
+      "files": [
+        "instancing.vertex.glsl",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "OpenGL 中 gl_InstanceID 或 divisor 属性如何让第 i 个实例读取第 i 份 transform？如果有 V 个顶点和 I 个实例，顶点着色器调用次数约是多少？",
+      "expectedKeywords": [
+        "gl_InstanceID",
+        "divisor",
+        "V*I",
+        "实例"
+      ],
+      "hint": "实例化没有减少顶点 shader 的总调用次数，它主要减少 CPU 提交和重复 buffer。"
+    },
+    {
+      "id": "increase-count",
+      "title": "实例数量",
+      "concept": "一次提交复用几何并绘制大量实例。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "实例数量增加到 100 后，为什么 CPU 不需要创建 100 份 cube 顶点 buffer，但 GPU 仍然需要为每个实例执行顶点变换？",
+      "expectedKeywords": [
+        "instanceMatrix",
+        "复用",
+        "顶点变换",
+        "GPU"
+      ],
+      "hint": "减少的是重复数据和提交次数，不是每个实例的顶点数学计算。"
+    },
+    {
+      "id": "instance-color",
+      "title": "实例颜色",
+      "concept": "per-instance 属性参与片元颜色变化。",
+      "files": [
+        "scene.json",
+        "instancing.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "打开 instanceColor 后，为什么颜色变化属于 per-instance 属性，而不是 per-vertex 属性？它在光栅化前后分别怎样影响最终颜色？",
+      "expectedKeywords": [
+        "per-instance",
+        "插值",
+        "片元",
+        "颜色"
+      ],
+      "hint": "同一个 cube 内部顶点仍共享几何，颜色来源按实例变化。"
+    },
+    {
+      "id": "draw-call-balance",
+      "title": "收益边界",
+      "concept": "实例化收益受材质状态、剔除和可见性影响。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果每个物体材质、贴图或 shader state 都不同，为什么实例化收益会下降？请说明 draw call 合批和状态切换之间的关系。",
+      "expectedKeywords": [
+        "材质",
+        "状态切换",
+        "合批",
+        "draw call"
+      ],
+      "hint": "实例化要求一批对象能共享同一套渲染状态。"
+    }
+  ]
+}

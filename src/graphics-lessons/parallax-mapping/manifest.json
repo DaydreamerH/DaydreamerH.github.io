@@ -1,0 +1,211 @@
+{
+  "id": "parallax-mapping",
+  "title": "Parallax Mapping",
+  "category": "纹理细节",
+  "series": "LearnOpenGL 高级",
+  "order": 30,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "在法线贴图基础上用高度图偏移 UV，理解视差贴图如何制造表面深度错觉。",
+  "source": "OpenGLProject/src/30_parallax_mapping",
+  "runtime": "three-shader-material",
+  "previewTitle": "Parallax Mapping",
+  "draft": false,
+  "aiBrief": "Parallax Mapping 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "30_parallax_mapping 使用纹理、光照向量和 fragment shader 公式展示 Parallax Mapping。"
+  ],
+  "shaderSets": [
+    {
+      "name": "parallax_mapping",
+      "role": "object/material shader program",
+      "fragment": "reference/parallax_mapping.fs",
+      "vertex": "reference/parallax_mapping.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "diffuse-map.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "height-map.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "normal-map.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/parallax_mapping.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/parallax_mapping.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/parallax_mapping.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "height-vs-normal",
+      "title": "高度与法线",
+      "concept": "height map 用于偏移采样位置，normal map 用于改变光照方向。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "height map 和 normal map 分别改变 shader 中的什么量？为什么前者常用于 UV 偏移，后者常用于 dot(normal, lightDir)？",
+      "expectedKeywords": [
+        "height",
+        "UV",
+        "normal",
+        "光照"
+      ],
+      "hint": "一个描述表面高度标量，一个描述局部方向向量。"
+    },
+    {
+      "id": "view-dependent",
+      "title": "视角相关偏移",
+      "concept": "视差贴图的偏移方向来自切线空间 viewDir。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "基础 Parallax Mapping 常近似 uv' = uv - viewDir.xy / viewDir.z * height * scale。为什么偏移必须依赖 viewDir？",
+      "expectedKeywords": [
+        "viewDir",
+        "viewDir.z",
+        "height",
+        "UV"
+      ],
+      "hint": "视线越斜，同样高度造成的表观位移越大。"
+    },
+    {
+      "id": "enable-parallax",
+      "title": "启用视差",
+      "concept": "偏移 UV 产生深度错觉但不改变轮廓。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用 parallax 后，为什么砖块内部出现错位深度感，但平面外轮廓和真实遮挡仍没有变化？",
+      "expectedKeywords": [
+        "UV",
+        "高度",
+        "轮廓",
+        "几何"
+      ],
+      "hint": "视差贴图移动的是采样坐标，不是 mesh 顶点。"
+    },
+    {
+      "id": "layered-search",
+      "title": "分层搜索",
+      "concept": "Steep parallax 通过多层采样逼近高度交点。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "分层高度搜索为什么比单次 offset 更接近真实交点？如果层数从 L 增大到 2L，采样成本如何变化？",
+      "expectedKeywords": [
+        "层数",
+        "采样",
+        "交点",
+        "线性"
+      ],
+      "hint": "每一层都需要额外采样 height map，成本大致随层数增长。"
+    },
+    {
+      "id": "pom-interpolation",
+      "title": "交点插值",
+      "concept": "Parallax Occlusion Mapping 用前后两层插值改善交点。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 POM 在找到高度穿越的前后两个 layer 后，还要做线性插值？它试图减少哪种 stair-step 误差？",
+      "expectedKeywords": [
+        "插值",
+        "layer",
+        "交点",
+        "阶梯"
+      ],
+      "hint": "离散层只能给出粗略交点，插值能在两层之间估计更连续的位置。"
+    },
+    {
+      "id": "artifact",
+      "title": "掠射角伪影",
+      "concept": "视差贴图在斜视角下容易拉伸和 UV 越界。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 viewDir.z 很小时，视差偏移会变得很大并容易出现拉伸、穿帮或 UV 越界？",
+      "expectedKeywords": [
+        "viewDir.z",
+        "掠射角",
+        "UV",
+        "越界"
+      ],
+      "hint": "公式里存在除以 viewDir.z 的项。"
+    }
+  ]
+}

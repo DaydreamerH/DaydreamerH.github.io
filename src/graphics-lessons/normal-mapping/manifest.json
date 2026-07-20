@@ -1,0 +1,206 @@
+{
+  "id": "normal-mapping",
+  "title": "Normal Mapping",
+  "category": "纹理细节",
+  "series": "LearnOpenGL 高级",
+  "order": 29,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "使用法线贴图改变每个片元参与光照的法线方向，观察低几何复杂度表面的细节增强。",
+  "source": "OpenGLProject/src/29_normal_mapping",
+  "runtime": "three-shader-material",
+  "previewTitle": "Normal Mapping",
+  "draft": false,
+  "aiBrief": "Normal Mapping 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "29_normal_mapping 使用纹理、光照向量和 fragment shader 公式展示 Normal Mapping。"
+  ],
+  "shaderSets": [
+    {
+      "name": "norm_mapping",
+      "role": "object/material shader program",
+      "fragment": "reference/norm_mapping.fs",
+      "vertex": "reference/norm_mapping.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "diffuse-map.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "normal-map.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/norm_mapping.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/norm_mapping.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "normal-role",
+      "title": "法线作用",
+      "concept": "法线贴图改变片元光照，不改变几何轮廓。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么法线贴图能改变明暗和高光位置，却不会改变平面的轮廓、遮挡关系或真实深度？",
+      "expectedKeywords": [
+        "法线",
+        "片元",
+        "顶点",
+        "深度"
+      ],
+      "hint": "它改的是参与光照的方向，不是顶点位置。"
+    },
+    {
+      "id": "rgb-to-normal",
+      "title": "RGB 到方向",
+      "concept": "normal map 的 RGB 通常从 [0,1] 映射到 [-1,1]。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 shader 中常写 normal = texture(normalMap, uv).rgb * 2.0 - 1.0？这个公式把贴图值映射到了什么向量范围？",
+      "expectedKeywords": [
+        "2.0",
+        "-1.0",
+        "[-1,1]",
+        "向量"
+      ],
+      "hint": "纹理通道不能直接存负数方向，所以要从颜色区间还原到方向区间。"
+    },
+    {
+      "id": "tangent-space",
+      "title": "TBN 空间",
+      "concept": "切线空间法线需要通过 TBN 变换到光照所在空间。",
+      "files": [
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "TBN 矩阵由 tangent、bitangent、normal 组成。为什么 normal map 中的局部法线要通过 TBN 变换后才能和世界空间 lightDir 做 dot？",
+      "expectedKeywords": [
+        "TBN",
+        "切线空间",
+        "世界空间",
+        "dot"
+      ],
+      "hint": "dot 两个向量前，它们必须处在同一个坐标空间。"
+    },
+    {
+      "id": "enable-normal",
+      "title": "启用法线贴图",
+      "concept": "片元法线扰动产生表面细节光照。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用 normal map 后，为什么砖缝处出现明暗起伏，但轮廓仍笔直？请结合 dot(normal, lightDir) 和顶点位置说明。",
+      "expectedKeywords": [
+        "dot",
+        "normal",
+        "lightDir",
+        "顶点"
+      ],
+      "hint": "光照项变了，几何位置没有变。"
+    },
+    {
+      "id": "normal-strength",
+      "title": "法线强度",
+      "concept": "法线扰动强度需要归一化并受物理合理性限制。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "提高 normal strength 后，为什么凹凸感增强？如果不重新 normalize，dot(normal, lightDir) 会出现什么问题？",
+      "expectedKeywords": [
+        "normalize",
+        "dot",
+        "长度",
+        "强度"
+      ],
+      "hint": "光照公式假设法线是单位向量。"
+    },
+    {
+      "id": "mip-filtering",
+      "title": "高频采样",
+      "concept": "远处法线贴图容易欠采样。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么远处 normal map 如果没有合适 mip/filtering，可能出现闪烁？法线贴图的高频变化会怎样影响 specular？",
+      "expectedKeywords": [
+        "mip",
+        "高频",
+        "specular",
+        "采样"
+      ],
+      "hint": "高频法线会让高光方向快速变化，欠采样后就会闪烁。"
+    }
+  ]
+}

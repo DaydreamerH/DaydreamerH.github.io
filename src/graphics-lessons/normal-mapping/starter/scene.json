@@ -1,0 +1,24 @@
+{
+  "label": "Normal Mapping",
+  "vertexShader": "lab.vertex.glsl",
+  "fragmentShader": "lab.fragment.glsl",
+  "cameraPosition": [
+    0,
+    1.6,
+    3.6
+  ],
+  "lookAt": [
+    0,
+    0,
+    0
+  ],
+  "lightPos": [
+    0.7,
+    1.7,
+    1.2
+  ],
+  "showLight": true,
+  "mode": 0,
+  "strength": 1,
+  "exposure": 1
+}

@@ -1,0 +1,13 @@
+{
+  "label": "Bloom",
+  "vertexShader": "screen.vertex.glsl",
+  "fragmentShader": "screen.fragment.glsl",
+  "cameraPosition": [
+    0,
+    0,
+    2.6
+  ],
+  "mode": 0,
+  "strength": 1,
+  "exposure": 1
+}

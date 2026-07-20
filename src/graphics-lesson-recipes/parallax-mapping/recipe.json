@@ -1,0 +1,192 @@
+{
+  "id": "parallax-mapping",
+  "title": "Parallax Mapping",
+  "category": "纹理细节",
+  "series": "LearnOpenGL 高级",
+  "order": 30,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "source": "30_parallax_mapping",
+  "description": "在法线贴图基础上用高度图偏移 UV，理解视差贴图如何制造表面深度错觉。",
+  "previewTitle": "Parallax Mapping",
+  "aiBrief": "Parallax Mapping 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "30_parallax_mapping 使用纹理、光照向量和 fragment shader 公式展示 Parallax Mapping。"
+  ],
+  "starterAssets": [
+    {
+      "path": "diffuse-map.txt",
+      "source": "OpenGLProject/images/bricks2.jpg",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "path": "normal-map.txt",
+      "source": "OpenGLProject/images/bricks2_normal.jpg",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "path": "height-map.txt",
+      "source": "OpenGLProject/images/bricks2_disp.jpg",
+      "mimeType": "image/jpeg"
+    }
+  ],
+  "starterFiles": {
+    "main.js": "// Generated CG experiment runtime\n// Available objects: THREE, OrbitControls, canvas, files, getFile, report\n\nconst sceneConfig = JSON.parse(getFile(\"scene.json\") || \"{}\");\nconst geometryConfig = JSON.parse(getFile(\"geometry.json\") || \"{}\");\n\nconst renderer = new THREE.WebGLRenderer({\n  canvas,\n  antialias: Boolean(sceneConfig.antialias)\n});\nrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\nrenderer.setClearColor(0xf8f8f8, 1);\n\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(sceneConfig.fov || 45, 1, 0.1, 100);\ncamera.position.fromArray(sceneConfig.cameraPosition || [2.6, 1.8, 4.2]);\ncamera.lookAt(...(sceneConfig.lookAt || [0, 0, 0]));\n\nconst controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;\ncontrols.target.fromArray(sceneConfig.lookAt || [0, 0, 0]);\n\nfunction makeFallbackTexture() {\n  const texture = new THREE.DataTexture(new Uint8Array([238, 238, 238, 255]), 1, 1, THREE.RGBAFormat);\n  texture.needsUpdate = true;\n  return texture;\n}\n\nfunction makeTexture(fileName, colorSpace = \"srgb\") {\n  const dataUrl = getFile(fileName);\n  const fallback = makeFallbackTexture();\n  if (!dataUrl) return fallback;\n  const texture = new THREE.TextureLoader().load(dataUrl, () => render());\n  texture.wrapS = THREE.RepeatWrapping;\n  texture.wrapT = THREE.RepeatWrapping;\n  texture.colorSpace = colorSpace === \"srgb\" ? THREE.SRGBColorSpace : THREE.NoColorSpace;\n  return texture;\n}\n\nfunction makeGeometry(config) {\n  if (config.type === \"plane\") {\n    const geometry = new THREE.PlaneGeometry(config.width || 3, config.height || 3, config.segments || 1, config.segments || 1);\n    if (config.rotateX) geometry.rotateX(config.rotateX);\n    return geometry;\n  }\n  if (config.type === \"points\") {\n    const geometry = new THREE.BufferGeometry();\n    geometry.setAttribute(\"position\", new THREE.BufferAttribute(new Float32Array(config.positions || []), 3));\n    return geometry;\n  }\n  return new THREE.BoxGeometry(config.size?.[0] || 1, config.size?.[1] || 1, config.size?.[2] || 1);\n}\n\nconst uniforms = {\n  uTime: { value: 0 },\n  uMode: { value: Number(sceneConfig.mode || 0) },\n  uStrength: { value: Number(sceneConfig.strength ?? 1) },\n  uExposure: { value: Number(sceneConfig.exposure ?? 1) },\n  uLightPos: { value: new THREE.Vector3(...(sceneConfig.lightPos || [1.2, 1.8, 2.2])) },\n  uViewPos: { value: camera.position },\n  uWallMap: { value: makeTexture(\"wall-texture.txt\") },\n  uWoodMap: { value: makeTexture(\"wood-texture.txt\") },\n  uContainerMap: { value: makeTexture(\"container-texture.txt\") },\n  uDiffuseMap: { value: makeTexture(\"diffuse-map.txt\") },\n  uNormalMap: { value: makeTexture(\"normal-map.txt\", \"linear\") },\n  uHeightMap: { value: makeTexture(\"height-map.txt\", \"linear\") }\n};\n\nconst material = new THREE.ShaderMaterial({\n  vertexShader: getFile(sceneConfig.vertexShader || \"lab.vertex.glsl\"),\n  fragmentShader: getFile(sceneConfig.fragmentShader || \"lab.fragment.glsl\"),\n  uniforms,\n  side: THREE.DoubleSide\n});\n\nconst geometry = makeGeometry(geometryConfig);\nlet mesh;\nif (geometryConfig.type === \"points\") {\n  mesh = new THREE.Points(geometry, material);\n} else {\n  mesh = new THREE.Mesh(geometry, material);\n}\nmesh.rotation.set(...(sceneConfig.rotation || [0, 0, 0]));\nmesh.position.set(...(sceneConfig.position || [0, 0, 0]));\nscene.add(mesh);\n\nif (sceneConfig.showLight) {\n  const lightMarker = new THREE.Mesh(\n    new THREE.SphereGeometry(0.08, 18, 18),\n    new THREE.MeshBasicMaterial({ color: 0x00adb5 })\n  );\n  lightMarker.position.copy(uniforms.uLightPos.value);\n  scene.add(lightMarker);\n}\n\nlet frame = 0;\nfunction resize() {\n  const bounds = canvas.parentElement.getBoundingClientRect();\n  const width = Math.max(1, Math.floor(bounds.width));\n  const height = Math.max(1, Math.floor(bounds.height));\n  renderer.setSize(width, height, false);\n  camera.aspect = width / height;\n  camera.updateProjectionMatrix();\n}\n\nfunction render(time = 0) {\n  resize();\n  controls.update();\n  uniforms.uTime.value = time * 0.001;\n  if (sceneConfig.animated) mesh.rotation.y = time * 0.0005;\n  renderer.render(scene, camera);\n  report({ mode: sceneConfig.label || \"advanced\", files: Object.keys(files).length });\n  frame = requestAnimationFrame(render);\n}\n\nframe = requestAnimationFrame(render);\n\nreturn () => {\n  cancelAnimationFrame(frame);\n  geometry.dispose();\n  material.dispose();\n  Object.values(uniforms).forEach((uniform) => uniform.value?.dispose?.());\n  renderer.dispose();\n};",
+    "geometry.json": "{\n  \"type\": \"plane\",\n  \"width\": 4.2,\n  \"height\": 2.4,\n  \"segments\": 48,\n  \"rotateX\": -1.05\n}",
+    "scene.json": "{\n  \"label\": \"Parallax Mapping\",\n  \"vertexShader\": \"lab.vertex.glsl\",\n  \"fragmentShader\": \"lab.fragment.glsl\",\n  \"cameraPosition\": [\n    0,\n    1.6,\n    3.6\n  ],\n  \"lookAt\": [\n    0,\n    0,\n    0\n  ],\n  \"lightPos\": [\n    0.7,\n    1.7,\n    1.2\n  ],\n  \"showLight\": true,\n  \"mode\": 0,\n  \"strength\": 1,\n  \"exposure\": 1\n}",
+    "lab.vertex.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\n\nvoid main() {\n  vUv = uv * 3.0;\n  vec4 world = modelMatrix * vec4(position, 1.0);\n  vWorldPosition = world.xyz;\n  vNormal = normalize(mat3(modelMatrix) * normal);\n  gl_Position = projectionMatrix * viewMatrix * world;\n}",
+    "lab.fragment.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\nuniform sampler2D uDiffuseMap;\nuniform sampler2D uNormalMap;\nuniform sampler2D uHeightMap;\nuniform vec3 uLightPos;\nuniform vec3 uViewPos;\nuniform float uMode;\n\nvec2 parallaxUv(vec2 uv, vec3 viewDir) {\n  float height = texture2D(uHeightMap, uv).r;\n  float scale = mix(0.0, 0.08, step(0.5, uMode));\n  vec2 offset = viewDir.xy / max(viewDir.z, 0.22) * (height - 0.5) * scale;\n  if (uMode > 1.5) {\n    float layers = 8.0;\n    vec2 stepUv = offset / layers;\n    vec2 current = uv;\n    for (int i = 0; i < 8; i++) {\n      current -= stepUv;\n      float sampleHeight = texture2D(uHeightMap, current).r;\n      if (sampleHeight < float(i) / layers) break;\n    }\n    return current;\n  }\n  return uv - offset;\n}\n\nvoid main() {\n  vec3 viewDir = normalize(uViewPos - vWorldPosition);\n  vec2 uv = parallaxUv(vUv, viewDir);\n  vec3 albedo = texture2D(uDiffuseMap, uv).rgb;\n  vec3 tangentNormal = texture2D(uNormalMap, uv).rgb * 2.0 - 1.0;\n  vec3 normal = normalize(mix(normalize(vNormal), tangentNormal, 0.85));\n  vec3 lightDir = normalize(uLightPos - vWorldPosition);\n  float diff = max(dot(normal, lightDir), 0.0);\n  gl_FragColor = vec4(albedo * (0.2 + diff * 0.95), 1.0);\n}"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "diffuse-map.txt",
+      "role": "data",
+      "visible": false
+    },
+    {
+      "path": "normal-map.txt",
+      "role": "data",
+      "visible": false
+    },
+    {
+      "path": "height-map.txt",
+      "role": "data",
+      "visible": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "height-vs-normal",
+      "title": "高度与法线",
+      "concept": "height map 用于偏移采样位置，normal map 用于改变光照方向。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "height map 和 normal map 分别改变 shader 中的什么量？为什么前者常用于 UV 偏移，后者常用于 dot(normal, lightDir)？",
+      "expectedKeywords": [
+        "height",
+        "UV",
+        "normal",
+        "光照"
+      ],
+      "hint": "一个描述表面高度标量，一个描述局部方向向量。"
+    },
+    {
+      "id": "view-dependent",
+      "title": "视角相关偏移",
+      "concept": "视差贴图的偏移方向来自切线空间 viewDir。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "基础 Parallax Mapping 常近似 uv' = uv - viewDir.xy / viewDir.z * height * scale。为什么偏移必须依赖 viewDir？",
+      "expectedKeywords": [
+        "viewDir",
+        "viewDir.z",
+        "height",
+        "UV"
+      ],
+      "hint": "视线越斜，同样高度造成的表观位移越大。"
+    },
+    {
+      "id": "enable-parallax",
+      "title": "启用视差",
+      "concept": "偏移 UV 产生深度错觉但不改变轮廓。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用 parallax 后，为什么砖块内部出现错位深度感，但平面外轮廓和真实遮挡仍没有变化？",
+      "expectedKeywords": [
+        "UV",
+        "高度",
+        "轮廓",
+        "几何"
+      ],
+      "hint": "视差贴图移动的是采样坐标，不是 mesh 顶点。"
+    },
+    {
+      "id": "layered-search",
+      "title": "分层搜索",
+      "concept": "Steep parallax 通过多层采样逼近高度交点。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "分层高度搜索为什么比单次 offset 更接近真实交点？如果层数从 L 增大到 2L，采样成本如何变化？",
+      "expectedKeywords": [
+        "层数",
+        "采样",
+        "交点",
+        "线性"
+      ],
+      "hint": "每一层都需要额外采样 height map，成本大致随层数增长。"
+    },
+    {
+      "id": "pom-interpolation",
+      "title": "交点插值",
+      "concept": "Parallax Occlusion Mapping 用前后两层插值改善交点。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 POM 在找到高度穿越的前后两个 layer 后，还要做线性插值？它试图减少哪种 stair-step 误差？",
+      "expectedKeywords": [
+        "插值",
+        "layer",
+        "交点",
+        "阶梯"
+      ],
+      "hint": "离散层只能给出粗略交点，插值能在两层之间估计更连续的位置。"
+    },
+    {
+      "id": "artifact",
+      "title": "掠射角伪影",
+      "concept": "视差贴图在斜视角下容易拉伸和 UV 越界。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 viewDir.z 很小时，视差偏移会变得很大并容易出现拉伸、穿帮或 UV 越界？",
+      "expectedKeywords": [
+        "viewDir.z",
+        "掠射角",
+        "UV",
+        "越界"
+      ],
+      "hint": "公式里存在除以 viewDir.z 的项。"
+    }
+  ]
+}

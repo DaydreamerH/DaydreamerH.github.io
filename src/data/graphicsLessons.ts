@@ -33,6 +33,7 @@ export type GraphicsLesson = {
     name: string;
     role?: string;
     vertex?: string;
+    geometry?: string;
     fragment?: string;
   }>;
   workspaceFiles?: Array<{

@@ -1,0 +1,178 @@
+{
+  "id": "instancing",
+  "title": "Instancing",
+  "category": "GPU 数据组织",
+  "series": "LearnOpenGL 高级",
+  "order": 23,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "用一份网格和多份实例数据渲染大量对象，理解 per-vertex 与 per-instance 属性的分工。",
+  "source": "OpenGLProject/src/23_instancing",
+  "runtime": "three-shader-material",
+  "previewTitle": "Instancing",
+  "draft": false,
+  "aiBrief": "课程对应 OpenGL instancing。WebGL 版本用 InstancedMesh、instanceMatrix 和 instanceColor 展示一次 draw call 复用几何数据的思想。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "源代码的 instancing_quads.cpp 使用实例偏移减少重复提交。",
+    "Three.js 中 instanceMatrix 和 InstancedBufferAttribute 对应 per-instance 数据。"
+  ],
+  "shaderSets": [
+    {
+      "name": "instancing",
+      "role": "object/material shader program",
+      "fragment": "reference/instancing.fs",
+      "vertex": "reference/instancing.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "instancing.fragment.glsl",
+      "role": "shader",
+      "concept": "instancing fragment stage",
+      "visible": true
+    },
+    {
+      "path": "instancing.vertex.glsl",
+      "role": "shader",
+      "concept": "instancing vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/instancing.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/instancing.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/instancing_quads.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "data-split",
+      "title": "数据分层",
+      "concept": "per-vertex 数据与 per-instance 数据分开绑定。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "instancing.vertex.glsl",
+        "instancing.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么实例化渲染要把 mesh 顶点数据和每个实例的 transform/color 数据分开存储？请从重复内存、属性更新频率和 draw call 数量说明。",
+      "expectedKeywords": [
+        "per-vertex",
+        "per-instance",
+        "draw call",
+        "内存"
+      ],
+      "hint": "同一几何被多次复用，变化的是每个实例的位置、矩阵或颜色。"
+    },
+    {
+      "id": "instance-index",
+      "title": "实例索引",
+      "concept": "实例编号驱动每个实例读取自己的属性。",
+      "files": [
+        "instancing.vertex.glsl",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "OpenGL 中 gl_InstanceID 或 divisor 属性如何让第 i 个实例读取第 i 份 transform？如果有 V 个顶点和 I 个实例，顶点着色器调用次数约是多少？",
+      "expectedKeywords": [
+        "gl_InstanceID",
+        "divisor",
+        "V*I",
+        "实例"
+      ],
+      "hint": "实例化没有减少顶点 shader 的总调用次数，它主要减少 CPU 提交和重复 buffer。"
+    },
+    {
+      "id": "increase-count",
+      "title": "实例数量",
+      "concept": "一次提交复用几何并绘制大量实例。",
+      "files": [
+        "scene.json",
+        "main.js"
+      ],
+      "flow": "question_only",
+      "question": "实例数量增加到 100 后，为什么 CPU 不需要创建 100 份 cube 顶点 buffer，但 GPU 仍然需要为每个实例执行顶点变换？",
+      "expectedKeywords": [
+        "instanceMatrix",
+        "复用",
+        "顶点变换",
+        "GPU"
+      ],
+      "hint": "减少的是重复数据和提交次数，不是每个实例的顶点数学计算。"
+    },
+    {
+      "id": "instance-color",
+      "title": "实例颜色",
+      "concept": "per-instance 属性参与片元颜色变化。",
+      "files": [
+        "scene.json",
+        "instancing.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "打开 instanceColor 后，为什么颜色变化属于 per-instance 属性，而不是 per-vertex 属性？它在光栅化前后分别怎样影响最终颜色？",
+      "expectedKeywords": [
+        "per-instance",
+        "插值",
+        "片元",
+        "颜色"
+      ],
+      "hint": "同一个 cube 内部顶点仍共享几何，颜色来源按实例变化。"
+    },
+    {
+      "id": "draw-call-balance",
+      "title": "收益边界",
+      "concept": "实例化收益受材质状态、剔除和可见性影响。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果每个物体材质、贴图或 shader state 都不同，为什么实例化收益会下降？请说明 draw call 合批和状态切换之间的关系。",
+      "expectedKeywords": [
+        "材质",
+        "状态切换",
+        "合批",
+        "draw call"
+      ],
+      "hint": "实例化要求一批对象能共享同一套渲染状态。"
+    }
+  ]
+}
