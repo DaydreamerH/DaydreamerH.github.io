@@ -1,0 +1,183 @@
+{
+  "id": "geometry-shader",
+  "title": "Geometry Shader",
+  "category": "Shader 管线",
+  "series": "LearnOpenGL 高级",
+  "order": 22,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "用浏览器中的点扩展实验理解几何着色器位于顶点阶段和光栅化之间的放大作用。",
+  "source": "OpenGLProject/src/22_geometry_shader",
+  "runtime": "three-shader-material",
+  "previewTitle": "Geometry Shader",
+  "draft": false,
+  "aiBrief": "源 OpenGL 课程通过 geometry shader 把输入图元扩展为新的输出图元。WebGL/Three.js 版本不直接运行 geometry stage，而是用点大小与片元形状模拟图元放大，让 AI 引导用户理解阶段位置、输入输出图元和放大成本。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "geometry_shader.vs 提供点位置，geometry_shader.gs 在顶点和片元之间生成新的图元。",
+    "WebGL 版本用 gl_PointSize 与 gl_PointCoord 模拟几何阶段的图元扩展。"
+  ],
+  "shaderSets": [
+    {
+      "name": "geometry_shader",
+      "role": "object/material shader program",
+      "fragment": "reference/geometry_shader.fs",
+      "geometry": "reference/geometry_shader.gs",
+      "vertex": "reference/geometry_shader.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.fragment.glsl",
+      "role": "shader",
+      "concept": "geometry fragment stage",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "geometry.vertex.glsl",
+      "role": "shader",
+      "concept": "geometry vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/geometry_shader.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/geometry_shader.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/geometry_shader.gs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/geometry_shader.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "pipeline-position",
+      "title": "管线位置",
+      "concept": "geometry shader 的输入输出发生在图元装配之后、光栅化之前。",
+      "files": [
+        "main.js",
+        "geometry.vertex.glsl",
+        "geometry.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "从渲染管线顺序说明：为什么 geometry shader 能改变图元数量，而 fragment shader 不能再生成新的三角形？",
+      "expectedKeywords": [
+        "图元装配",
+        "光栅化",
+        "顶点",
+        "片元"
+      ],
+      "hint": "关键是 fragment shader 接收到的是光栅化后的片元，不再拥有图元拓扑。"
+    },
+    {
+      "id": "primitive-amplification",
+      "title": "图元放大",
+      "concept": "输入图元到输出图元的数量映射与 GPU 工作量。",
+      "files": [
+        "geometry.json",
+        "geometry.vertex.glsl"
+      ],
+      "flow": "question_only",
+      "question": "如果每个输入 point 被扩展成一个由 4 个顶点组成的 quad，输入 N 个 point 时，输出顶点数、三角形数和潜在片元数如何随 N 增长？",
+      "expectedKeywords": [
+        "4N",
+        "2N",
+        "面积",
+        "片元"
+      ],
+      "hint": "quad 通常由 4 个顶点和 2 个三角形组成；片元数还取决于屏幕覆盖面积。"
+    },
+    {
+      "id": "point-expand",
+      "title": "屏幕空间扩展",
+      "concept": "用点大小模拟几何阶段的放大效果。",
+      "files": [
+        "scene.json",
+        "geometry.vertex.glsl"
+      ],
+      "flow": "observe_then_question",
+      "question": "预览中点被放大后，为什么顶点 buffer 没有变大，但 rasterizer 需要处理的覆盖像素明显增加？",
+      "expectedKeywords": [
+        "gl_PointSize",
+        "屏幕空间",
+        "光栅化",
+        "覆盖面积"
+      ],
+      "hint": "顶点数量与屏幕覆盖面积不是一回事；一个点可以覆盖很多片元。",
+      "patchId": "01-expand-points",
+      "expectedObservation": "点被放大为更明显的屏幕空间图元。"
+    },
+    {
+      "id": "shape-from-fragment",
+      "title": "片元遮罩",
+      "concept": "gl_PointCoord 只能塑造点图元内部的屏幕空间遮罩。",
+      "files": [
+        "geometry.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "把圆形点改成菱形后，为什么这只是基于 gl_PointCoord 的片元丢弃/着色，而不是输出了新的模型空间几何？",
+      "expectedKeywords": [
+        "gl_PointCoord",
+        "片元",
+        "屏幕空间",
+        "模型空间"
+      ],
+      "hint": "观察 fragment shader 只能决定当前片元颜色或透明度，不能创建新的顶点。"
+    },
+    {
+      "id": "amplification-cost",
+      "title": "放大代价",
+      "concept": "geometry shader 的灵活性和吞吐代价。",
+      "files": [
+        "geometry.vertex.glsl",
+        "geometry.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么真实项目中大量 billboards 或粒子通常更偏向 instancing/compute 方案，而不是无节制依赖 geometry shader 放大图元？",
+      "expectedKeywords": [
+        "吞吐",
+        "并行度",
+        "缓存",
+        "instancing"
+      ],
+      "hint": "geometry shader 灵活，但常会成为管线中吞吐较差的阶段。"
+    }
+  ]
+}

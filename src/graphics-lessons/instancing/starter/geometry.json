@@ -1,0 +1,5 @@
+{
+  "primitive": "cube",
+  "instanceAttribute": "instanceMatrix",
+  "colorAttribute": "instanceColor"
+}

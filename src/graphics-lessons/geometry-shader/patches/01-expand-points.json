@@ -1,0 +1,11 @@
+{
+  "id": "01-expand-points",
+  "description": "点被放大为更明显的屏幕空间图元。",
+  "changes": [
+    {
+      "file": "scene.json",
+      "operation": "replace_all",
+      "content": "{\n  \"label\": \"expanded points\",\n  \"vertexShader\": \"geometry.vertex.glsl\",\n  \"fragmentShader\": \"geometry.fragment.glsl\",\n  \"cameraPosition\": [\n    0,\n    0,\n    3\n  ],\n  \"mode\": 1,\n  \"strength\": 1\n}"
+    }
+  ]
+}

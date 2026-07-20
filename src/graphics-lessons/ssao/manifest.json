@@ -1,0 +1,243 @@
+{
+  "id": "ssao",
+  "title": "SSAO",
+  "category": "环境遮蔽",
+  "series": "LearnOpenGL 高级",
+  "order": 34,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "用屏幕空间深度、法线和采样核理解局部环境遮蔽如何增强接触阴影。",
+  "source": "OpenGLProject/src/34_SSAO",
+  "runtime": "three-shader-material",
+  "previewTitle": "SSAO",
+  "draft": false,
+  "aiBrief": "SSAO 课程把 OpenGL 源码中的多 pass 或状态概念转写为可实时观察的 Three.js ShaderMaterial 实验。AI 应按 checkpoint 逐步提问，必要时应用本地 patch，不自由重写课程主流程。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "ssao.fs 从 gPosition/gNormal 采样邻域估计遮蔽，ssao_blur.fs 平滑噪声，ssao_lighting.fs 把遮蔽乘到 ambient。"
+  ],
+  "shaderSets": [
+    {
+      "name": "ssao_blur",
+      "role": "object/material shader program",
+      "fragment": "reference/ssao_blur.fs"
+    },
+    {
+      "name": "ssao_geometry",
+      "role": "object/material shader program",
+      "fragment": "reference/ssao_geometry.fs",
+      "vertex": "reference/ssao_geometry.vs"
+    },
+    {
+      "name": "ssao_lighting",
+      "role": "object/material shader program",
+      "fragment": "reference/ssao_lighting.fs"
+    },
+    {
+      "name": "ssao",
+      "role": "object/material shader program",
+      "fragment": "reference/ssao.fs",
+      "vertex": "reference/ssao.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "concept": "screen fragment stage",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "concept": "screen vertex stage",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao_blur.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao_geometry.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao_geometry.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/ssao_lighting.fs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "ambient-occlusion",
+      "title": "环境遮蔽目标",
+      "concept": "SSAO 近似估计环境光被局部几何遮挡的比例。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 SSAO 主要乘到 ambient/indirect 项，而不应该把 direct diffuse 和 specular 全部乘黑？",
+      "expectedKeywords": [
+        "ambient",
+        "间接光",
+        "direct",
+        "遮蔽"
+      ],
+      "hint": "SSAO 估计的是局部环境光可见性，不是光源到片元之间的阴影。"
+    },
+    {
+      "id": "view-space",
+      "title": "视空间采样",
+      "concept": "SSAO 常在 view space 中用 position/normal 构造采样半球。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 SSAO 常在 view space 中重建 position 和 normal？采样点从 view space 投影回屏幕 UV 时需要经过哪些坐标转换？",
+      "expectedKeywords": [
+        "view space",
+        "projection",
+        "UV",
+        "position"
+      ],
+      "hint": "采样在三维空间发生，但遮蔽判断要回到屏幕纹理读取深度。"
+    },
+    {
+      "id": "kernel-hemisphere",
+      "title": "半球采样核",
+      "concept": "采样核应沿法线半球分布，并随距离加权。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 SSAO 的 sample kernel 应该分布在 normal 朝向的半球，而不是完整球面？为什么样本通常更多集中在原点附近？",
+      "expectedKeywords": [
+        "半球",
+        "normal",
+        "kernel",
+        "距离"
+      ],
+      "hint": "表面背面方向通常被几何自身遮挡；近处遮蔽对接触阴影影响更明显。"
+    },
+    {
+      "id": "enable-ssao",
+      "title": "遮蔽判定",
+      "concept": "比较采样点投影位置的深度估计遮挡。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "当启用 SSAO 时，为什么凹槽和接触区域变暗？请用 sampleDepth 与 samplePosition.z 的比较关系描述遮蔽条件。",
+      "expectedKeywords": [
+        "sampleDepth",
+        "position.z",
+        "深度",
+        "遮蔽"
+      ],
+      "hint": "如果采样方向上读到的几何比采样点更靠近相机，说明这部分半球方向被挡住。"
+    },
+    {
+      "id": "noise-rotation",
+      "title": "噪声旋转",
+      "concept": "随机旋转采样核降低固定方向条纹。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 SSAO 常用小尺寸 noise texture 随机旋转 kernel？它减少了哪类 banding，又引入了哪类噪声？",
+      "expectedKeywords": [
+        "noise texture",
+        "旋转",
+        "banding",
+        "噪声"
+      ],
+      "hint": "固定 kernel 会让屏幕空间采样方向出现规律性条纹。"
+    },
+    {
+      "id": "blur-noise",
+      "title": "模糊降噪",
+      "concept": "模糊在降噪和保留接触阴影之间折中。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "加入 blur 后，为什么噪点减少，但过大的 blur 会抹掉小尺度接触阴影？",
+      "expectedKeywords": [
+        "blur",
+        "噪点",
+        "接触阴影",
+        "细节"
+      ],
+      "hint": "模糊会平均邻域遮蔽值，既能降噪也会损失高频细节。"
+    },
+    {
+      "id": "radius-bias",
+      "title": "半径与 Bias",
+      "concept": "SSAO radius 和 bias 控制尺度与自遮蔽。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "SSAO 中 radius 太大、bias 太小分别会造成什么问题？为什么 radius 应和场景尺度、深度单位保持一致？",
+      "expectedKeywords": [
+        "radius",
+        "bias",
+        "尺度",
+        "自遮蔽"
+      ],
+      "hint": "半径决定搜索多远的邻域，bias 用来避免表面自己遮蔽自己。"
+    }
+  ]
+}

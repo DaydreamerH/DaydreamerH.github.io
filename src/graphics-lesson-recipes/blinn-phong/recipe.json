@@ -1,0 +1,156 @@
+{
+  "id": "blinn-phong",
+  "title": "Blinn-Phong",
+  "category": "光照模型",
+  "series": "LearnOpenGL 高级",
+  "order": 25,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "source": "25_blinn_phong",
+  "description": "比较 Phong 反射向量和 Blinn 半程向量，观察高光在低视角下的差异。",
+  "previewTitle": "Blinn-Phong",
+  "aiBrief": "Blinn-Phong 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "25_blinn_phong 使用纹理、光照向量和 fragment shader 公式展示 Blinn-Phong。"
+  ],
+  "starterAssets": [
+    {
+      "path": "wall-texture.txt",
+      "source": "OpenGLProject/images/wall.jpg",
+      "mimeType": "image/jpeg"
+    }
+  ],
+  "starterFiles": {
+    "main.js": "// Generated CG experiment runtime\n// Available objects: THREE, OrbitControls, canvas, files, getFile, report\n\nconst sceneConfig = JSON.parse(getFile(\"scene.json\") || \"{}\");\nconst geometryConfig = JSON.parse(getFile(\"geometry.json\") || \"{}\");\n\nconst renderer = new THREE.WebGLRenderer({\n  canvas,\n  antialias: Boolean(sceneConfig.antialias)\n});\nrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\nrenderer.setClearColor(0xf8f8f8, 1);\n\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(sceneConfig.fov || 45, 1, 0.1, 100);\ncamera.position.fromArray(sceneConfig.cameraPosition || [2.6, 1.8, 4.2]);\ncamera.lookAt(...(sceneConfig.lookAt || [0, 0, 0]));\n\nconst controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;\ncontrols.target.fromArray(sceneConfig.lookAt || [0, 0, 0]);\n\nfunction makeFallbackTexture() {\n  const texture = new THREE.DataTexture(new Uint8Array([238, 238, 238, 255]), 1, 1, THREE.RGBAFormat);\n  texture.needsUpdate = true;\n  return texture;\n}\n\nfunction makeTexture(fileName, colorSpace = \"srgb\") {\n  const dataUrl = getFile(fileName);\n  const fallback = makeFallbackTexture();\n  if (!dataUrl) return fallback;\n  const texture = new THREE.TextureLoader().load(dataUrl, () => render());\n  texture.wrapS = THREE.RepeatWrapping;\n  texture.wrapT = THREE.RepeatWrapping;\n  texture.colorSpace = colorSpace === \"srgb\" ? THREE.SRGBColorSpace : THREE.NoColorSpace;\n  return texture;\n}\n\nfunction makeGeometry(config) {\n  if (config.type === \"plane\") {\n    const geometry = new THREE.PlaneGeometry(config.width || 3, config.height || 3, config.segments || 1, config.segments || 1);\n    if (config.rotateX) geometry.rotateX(config.rotateX);\n    return geometry;\n  }\n  if (config.type === \"points\") {\n    const geometry = new THREE.BufferGeometry();\n    geometry.setAttribute(\"position\", new THREE.BufferAttribute(new Float32Array(config.positions || []), 3));\n    return geometry;\n  }\n  return new THREE.BoxGeometry(config.size?.[0] || 1, config.size?.[1] || 1, config.size?.[2] || 1);\n}\n\nconst uniforms = {\n  uTime: { value: 0 },\n  uMode: { value: Number(sceneConfig.mode || 0) },\n  uStrength: { value: Number(sceneConfig.strength ?? 1) },\n  uExposure: { value: Number(sceneConfig.exposure ?? 1) },\n  uLightPos: { value: new THREE.Vector3(...(sceneConfig.lightPos || [1.2, 1.8, 2.2])) },\n  uViewPos: { value: camera.position },\n  uWallMap: { value: makeTexture(\"wall-texture.txt\") },\n  uWoodMap: { value: makeTexture(\"wood-texture.txt\") },\n  uContainerMap: { value: makeTexture(\"container-texture.txt\") },\n  uDiffuseMap: { value: makeTexture(\"diffuse-map.txt\") },\n  uNormalMap: { value: makeTexture(\"normal-map.txt\", \"linear\") },\n  uHeightMap: { value: makeTexture(\"height-map.txt\", \"linear\") }\n};\n\nconst material = new THREE.ShaderMaterial({\n  vertexShader: getFile(sceneConfig.vertexShader || \"lab.vertex.glsl\"),\n  fragmentShader: getFile(sceneConfig.fragmentShader || \"lab.fragment.glsl\"),\n  uniforms,\n  side: THREE.DoubleSide\n});\n\nconst geometry = makeGeometry(geometryConfig);\nlet mesh;\nif (geometryConfig.type === \"points\") {\n  mesh = new THREE.Points(geometry, material);\n} else {\n  mesh = new THREE.Mesh(geometry, material);\n}\nmesh.rotation.set(...(sceneConfig.rotation || [0, 0, 0]));\nmesh.position.set(...(sceneConfig.position || [0, 0, 0]));\nscene.add(mesh);\n\nif (sceneConfig.showLight) {\n  const lightMarker = new THREE.Mesh(\n    new THREE.SphereGeometry(0.08, 18, 18),\n    new THREE.MeshBasicMaterial({ color: 0x00adb5 })\n  );\n  lightMarker.position.copy(uniforms.uLightPos.value);\n  scene.add(lightMarker);\n}\n\nlet frame = 0;\nfunction resize() {\n  const bounds = canvas.parentElement.getBoundingClientRect();\n  const width = Math.max(1, Math.floor(bounds.width));\n  const height = Math.max(1, Math.floor(bounds.height));\n  renderer.setSize(width, height, false);\n  camera.aspect = width / height;\n  camera.updateProjectionMatrix();\n}\n\nfunction render(time = 0) {\n  resize();\n  controls.update();\n  uniforms.uTime.value = time * 0.001;\n  if (sceneConfig.animated) mesh.rotation.y = time * 0.0005;\n  renderer.render(scene, camera);\n  report({ mode: sceneConfig.label || \"advanced\", files: Object.keys(files).length });\n  frame = requestAnimationFrame(render);\n}\n\nframe = requestAnimationFrame(render);\n\nreturn () => {\n  cancelAnimationFrame(frame);\n  geometry.dispose();\n  material.dispose();\n  Object.values(uniforms).forEach((uniform) => uniform.value?.dispose?.());\n  renderer.dispose();\n};",
+    "geometry.json": "{\n  \"type\": \"plane\",\n  \"width\": 4.2,\n  \"height\": 2.4,\n  \"segments\": 48,\n  \"rotateX\": -1.05\n}",
+    "scene.json": "{\n  \"label\": \"Blinn-Phong\",\n  \"vertexShader\": \"lab.vertex.glsl\",\n  \"fragmentShader\": \"lab.fragment.glsl\",\n  \"cameraPosition\": [\n    0,\n    1.6,\n    3.6\n  ],\n  \"lookAt\": [\n    0,\n    0,\n    0\n  ],\n  \"lightPos\": [\n    0.7,\n    1.7,\n    1.2\n  ],\n  \"showLight\": true,\n  \"mode\": 0,\n  \"strength\": 1,\n  \"exposure\": 1\n}",
+    "lab.vertex.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\n\nvoid main() {\n  vUv = uv * 3.0;\n  vec4 world = modelMatrix * vec4(position, 1.0);\n  vWorldPosition = world.xyz;\n  vNormal = normalize(mat3(modelMatrix) * normal);\n  gl_Position = projectionMatrix * viewMatrix * world;\n}",
+    "lab.fragment.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\nuniform sampler2D uWallMap;\nuniform vec3 uLightPos;\nuniform vec3 uViewPos;\nuniform float uMode;\n\nvoid main() {\n  vec3 albedo = texture2D(uWallMap, vUv).rgb;\n  vec3 normal = normalize(vNormal);\n  vec3 lightDir = normalize(uLightPos - vWorldPosition);\n  vec3 viewDir = normalize(uViewPos - vWorldPosition);\n  vec3 reflectDir = reflect(-lightDir, normal);\n  vec3 halfDir = normalize(lightDir + viewDir);\n  float diff = max(dot(normal, lightDir), 0.0);\n  float phong = pow(max(dot(viewDir, reflectDir), 0.0), mix(16.0, 96.0, step(1.5, uMode)));\n  float blinn = pow(max(dot(normal, halfDir), 0.0), mix(32.0, 128.0, step(1.5, uMode)));\n  float spec = mix(phong, blinn, step(0.5, uMode));\n  vec3 color = albedo * (0.16 + diff * 0.72) + vec3(1.0, 0.93, 0.82) * spec * 0.65;\n  gl_FragColor = vec4(color, 1.0);\n}"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "visible": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "reflect-vs-half",
+      "title": "反射向量与半程向量",
+      "concept": "Phong 与 Blinn-Phong 高光项的几何含义。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "Phong 的 R = 2(N·L)N - L 与 Blinn 的 H = normalize(L + V) 分别在比较哪两个方向？为什么 H 更适合低视角稳定高光？",
+      "expectedKeywords": [
+        "reflect",
+        "halfDir",
+        "N",
+        "V"
+      ],
+      "hint": "Phong 比较视线和反射方向，Blinn 比较法线和半程向量。"
+    },
+    {
+      "id": "specular-power",
+      "title": "高光指数",
+      "concept": "pow(max(dot(...),0), shininess) 控制角度衰减。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "从 spec = pow(max(dot(N, H), 0.0), shininess) 出发，为什么 shininess 增大后高光角度范围变窄？",
+      "expectedKeywords": [
+        "pow",
+        "dot",
+        "角度",
+        "shininess"
+      ],
+      "hint": "当 dot 小于 1 时，指数越大衰减越快。"
+    },
+    {
+      "id": "enable-blinn",
+      "title": "启用 Blinn",
+      "concept": "半程向量减少部分视角下的高光断裂。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "切换到 Blinn 后，为什么用 halfDir = normalize(lightDir + viewDir) 可以避免一部分 Phong 在掠射角下的高光断裂？",
+      "expectedKeywords": [
+        "halfDir",
+        "viewDir",
+        "lightDir",
+        "掠射角"
+      ],
+      "hint": "当反射向量和视线夹角很大时，Phong 的 dot 很容易被 clamp 到 0。"
+    },
+    {
+      "id": "shininess",
+      "title": "指数调节",
+      "concept": "高光范围与峰值方向的分离。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "提高 shininess 后，为什么高光范围变窄，但峰值位置仍然由 N、L、V 的几何关系决定？",
+      "expectedKeywords": [
+        "shininess",
+        "峰值",
+        "N",
+        "L",
+        "V"
+      ],
+      "hint": "指数改变衰减曲线，不改变 dot 最大时对应的方向。"
+    },
+    {
+      "id": "energy-limit",
+      "title": "能量限制",
+      "concept": "经典 Blinn-Phong 与 PBR BRDF 的差异。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Blinn-Phong 适合实时渲染教学，却不等价于严格能量守恒的微表面 BRDF？",
+      "expectedKeywords": [
+        "能量守恒",
+        "BRDF",
+        "微表面",
+        "归一化"
+      ],
+      "hint": "经典模型主要是经验项，缺少完整的归一化、菲涅尔和几何遮蔽项。"
+    }
+  ]
+}

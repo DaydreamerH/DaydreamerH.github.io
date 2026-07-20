@@ -102,6 +102,7 @@ Required AI-facing fields:
       "name": "cube",
       "role": "object/material shader program",
       "vertex": "reference/cube.vs",
+      "geometry": "reference/cube.gs",
       "fragment": "reference/cube.fs"
     }
   ],
@@ -114,7 +115,7 @@ Required AI-facing fields:
 }
 ```
 
-`workspaceFiles` describes files that the browser experiment can load and the learner may inspect. `shaderSets` describes the original source shader relationships for AI reference. A file can appear in both concepts only after it has been converted into a runnable starter file; otherwise it stays in `reference/`.
+`workspaceFiles` describes files that the browser experiment can load and the learner may inspect. `shaderSets` describes the original source shader relationships for AI reference, including optional geometry stages when the source chapter uses `.gs` files. A file can appear in both concepts only after it has been converted into a runnable starter file; otherwise it stays in `reference/`.
 
 Required checkpoint fields:
 
@@ -195,6 +196,12 @@ Good checkpoint topics:
 - How is a vertex attribute interpreted?
 - What value changes the visible result?
 - What should the learner observe after this patch?
+- Which render pass or framebuffer owns this intermediate result?
+- What formula does the shader implement, and what do the terms mean?
+- Which coordinate space is used before and after this step?
+- What sampling cost, bandwidth cost, precision issue, or artifact does this technique introduce?
+
+Advanced lessons must not stop at "what changed on screen". For post-processing and multi-pass topics, checkpoints should explicitly cover the render-pass graph, what every framebuffer/attachment stores, the formula used by the shader, why the pass order matters, and the cost/artifact tradeoff of the chosen sampling strategy. For example, a Bloom lesson should cover HDR scene buffers, bright-pass luminance thresholding, ping-pong blur framebuffers, separable Gaussian blur, final composition, and HDR-vs-LDR threshold behavior.
 
 Avoid:
 

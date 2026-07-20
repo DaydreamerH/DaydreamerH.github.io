@@ -1,0 +1,229 @@
+{
+  "id": "shadow-mapping",
+  "title": "Shadow Mapping",
+  "category": "阴影",
+  "series": "LearnOpenGL 高级",
+  "order": 27,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "用二维深度比较和 PCF 思路理解方向光阴影贴图的核心判断。",
+  "source": "OpenGLProject/src/27_shadow_mapping",
+  "runtime": "three-shader-material",
+  "previewTitle": "Shadow Mapping",
+  "draft": false,
+  "aiBrief": "Shadow Mapping 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "27_shadow_mapping 使用纹理、光照向量和 fragment shader 公式展示 Shadow Mapping。"
+  ],
+  "shaderSets": [
+    {
+      "name": "debug_quad",
+      "role": "object/material shader program",
+      "fragment": "reference/debug_quad.fs",
+      "vertex": "reference/debug_quad.vs"
+    },
+    {
+      "name": "shadow_mapping_depth",
+      "role": "object/material shader program",
+      "fragment": "reference/shadow_mapping_depth.fs",
+      "vertex": "reference/shadow_mapping_depth.vs"
+    },
+    {
+      "name": "shadow_mapping",
+      "role": "object/material shader program",
+      "fragment": "reference/shadow_mapping.fs",
+      "vertex": "reference/shadow_mapping.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/debug_quad.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/debug_quad.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shadow_mapping.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shadow_mapping.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shadow_mapping_depth.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/shadow_mapping_depth.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "depth-pass",
+      "title": "深度 Pass",
+      "concept": "第一遍从光源视角写入 depth map。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "Shadow Mapping 为什么需要先渲染一个 light-space depth pass？这个 FBO 中的 depth texture 存储的是什么坐标系下的最近深度？",
+      "expectedKeywords": [
+        "FBO",
+        "depth texture",
+        "light space",
+        "最近深度"
+      ],
+      "hint": "它不是从相机看见的深度，而是从光源看见的深度。"
+    },
+    {
+      "id": "light-space-matrix",
+      "title": "光源空间矩阵",
+      "concept": "片元位置通过 lightProjection * lightView * model 进入光源裁剪空间。",
+      "files": [
+        "lab.vertex.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "写出片元世界坐标变换到 light clip space 的矩阵链。为什么比较阴影前还要做透视除法并映射到 [0,1] 纹理坐标？",
+      "expectedKeywords": [
+        "lightProjection",
+        "lightView",
+        "model",
+        "透视除法"
+      ],
+      "hint": "裁剪空间不是纹理坐标，采样 depth map 需要归一化坐标。"
+    },
+    {
+      "id": "hard-shadow",
+      "title": "硬阴影比较",
+      "concept": "currentDepth 与 closestDepth 的遮挡判定。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "在深度比较中，为什么 currentDepth > closestDepth + bias 表示当前片元被挡住？bias 在这个公式中抵消了哪类误差？",
+      "expectedKeywords": [
+        "currentDepth",
+        "closestDepth",
+        "bias",
+        "acne"
+      ],
+      "hint": "如果光先看到别的表面，那么当前片元距离光更远。"
+    },
+    {
+      "id": "pcf",
+      "title": "PCF 平均",
+      "concept": "PCF 是邻域深度比较结果的平均。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "PCF 可以写成 shadow = (1/N) * sum(compare(depth_i, currentDepth))。为什么它会软化边缘，但不会增加 shadow map 的真实分辨率？",
+      "expectedKeywords": [
+        "PCF",
+        "平均",
+        "邻域",
+        "分辨率"
+      ],
+      "hint": "PCF 平滑的是比较结果，不会创造新的几何深度信息。"
+    },
+    {
+      "id": "bias-tradeoff",
+      "title": "Bias 权衡",
+      "concept": "acne 与 peter-panning 的共同来源。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 shadow bias 太小会产生 acne，太大又会造成 peter-panning？斜率相关 bias 想解决什么问题？",
+      "expectedKeywords": [
+        "acne",
+        "peter-panning",
+        "斜率",
+        "精度"
+      ],
+      "hint": "表面角度越斜，深度贴图离散误差越容易被放大。"
+    },
+    {
+      "id": "projection-aliasing",
+      "title": "投影走样",
+      "concept": "shadow map 分辨率与光源投影体积决定 texel 密度。",
+      "files": [
+        "main.js",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么扩大 directional light 的正交投影范围会让阴影更容易块状化？请从 world units per texel 的角度解释。",
+      "expectedKeywords": [
+        "正交投影",
+        "texel",
+        "分辨率",
+        "范围"
+      ],
+      "hint": "固定分辨率覆盖更大世界范围时，每个 texel 对应的面积会变大。"
+    }
+  ]
+}

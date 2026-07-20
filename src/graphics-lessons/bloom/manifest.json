@@ -1,0 +1,279 @@
+{
+  "id": "bloom",
+  "title": "Bloom",
+  "category": "后处理",
+  "series": "LearnOpenGL 高级",
+  "order": 32,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "拆解亮部提取、模糊和合成三个阶段，理解 Bloom 为什么依赖 HDR 亮度。",
+  "source": "OpenGLProject/src/32_bloom",
+  "runtime": "three-shader-material",
+  "previewTitle": "Bloom",
+  "draft": false,
+  "aiBrief": "Bloom 课程把 OpenGL 源码中的多 pass 或状态概念转写为可实时观察的 Three.js ShaderMaterial 实验。AI 应按 checkpoint 逐步提问，必要时应用本地 patch，不自由重写课程主流程。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "bloom.fs 输出颜色和 bright color，blur.fs 做 ping-pong 高斯模糊，bloom_final.fs 合成并 tone map。"
+  ],
+  "shaderSets": [
+    {
+      "name": "bloom_final",
+      "role": "object/material shader program",
+      "fragment": "reference/bloom_final.fs",
+      "vertex": "reference/bloom_final.vs"
+    },
+    {
+      "name": "bloom",
+      "role": "object/material shader program",
+      "fragment": "reference/bloom.fs",
+      "vertex": "reference/bloom.vs"
+    },
+    {
+      "name": "blur",
+      "role": "object/material shader program",
+      "fragment": "reference/blur.fs",
+      "vertex": "reference/blur.vs"
+    },
+    {
+      "name": "light_box",
+      "role": "object/material shader program",
+      "fragment": "reference/light_box.fs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "container-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "concept": "screen fragment stage",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "concept": "screen vertex stage",
+      "visible": true
+    },
+    {
+      "path": "wood-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/bloom.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/bloom.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/bloom_final.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/bloom_final.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/blur.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/blur.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/light_box.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "hdr-fbo",
+      "title": "HDR Framebuffer",
+      "concept": "Bloom 的第一步通常把场景渲染到 HDR FBO，而不是直接到屏幕。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "Bloom 为什么通常先把场景渲染进 HDR framebuffer？这个 FBO 至少需要保存哪两类颜色信息，为什么不能直接只画到默认 framebuffer？",
+      "expectedKeywords": [
+        "HDR",
+        "FBO",
+        "scene color",
+        "bright color"
+      ],
+      "hint": "后处理需要把场景颜色作为纹理再读一遍，默认 framebuffer 不是为多 pass 读写设计的。"
+    },
+    {
+      "id": "bright-pass",
+      "title": "Bright Pass",
+      "concept": "亮部提取通过亮度阈值生成待模糊纹理。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "bright pass 常用 brightness = dot(color, vec3(0.2126, 0.7152, 0.0722)) 再与 threshold 比较。为什么要用加权亮度，而不是简单取 max(R,G,B)？",
+      "expectedKeywords": [
+        "dot",
+        "亮度",
+        "权重",
+        "threshold"
+      ],
+      "hint": "人眼对绿色更敏感，线性亮度通常用 RGB 加权和估计。"
+    },
+    {
+      "id": "enable-bloom",
+      "title": "合成光晕",
+      "concept": "原始场景颜色与模糊后的亮部颜色合成。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "当启用 Bloom 时，若 finalColor = sceneColor + blurredBrightColor，为什么光晕能扩散到亮物体周围，而物体中心仍保留原始 sceneColor 贡献？",
+      "expectedKeywords": [
+        "sceneColor",
+        "blurredBrightColor",
+        "相加",
+        "扩散"
+      ],
+      "hint": "blur 只扩散 bright texture；最终合成仍把未模糊的 sceneColor 加回来。"
+    },
+    {
+      "id": "ping-pong",
+      "title": "Ping-Pong Blur",
+      "concept": "高斯模糊常用两个 framebuffer 交替做水平/垂直 pass。",
+      "files": [
+        "main.js",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Bloom 的 Gaussian blur 常用 ping-pong FBO 交替进行 horizontal 和 vertical pass，而不是在一个 texture 上原地读写？",
+      "expectedKeywords": [
+        "ping-pong",
+        "水平",
+        "垂直",
+        "读写冲突"
+      ],
+      "hint": "同一 pass 中同时读写同一纹理会产生未定义或不可控结果；可分离模糊也能降低采样成本。"
+    },
+    {
+      "id": "gaussian-formula",
+      "title": "高斯核公式",
+      "concept": "可分离高斯模糊用权重卷积扩散亮部。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "一维高斯模糊可写为 C'(x)=sum_i w_i*C(x+i)，且 sum_i w_i=1。为什么权重归一化重要？为什么横向再纵向比直接二维核更便宜？",
+      "expectedKeywords": [
+        "sum",
+        "归一化",
+        "可分离",
+        "采样"
+      ],
+      "hint": "未归一化会改变整体亮度；二维 k*k 采样可拆成 2k 次采样。"
+    },
+    {
+      "id": "blur-radius",
+      "title": "模糊半径",
+      "concept": "卷积核半径决定光晕宽度和细节损失。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "当 blur radius 变大时，为什么卷积核覆盖范围变大后 Bloom 更宽，同时小尺度亮部细节会被平均掉？",
+      "expectedKeywords": [
+        "卷积核",
+        "半径",
+        "平均",
+        "细节"
+      ],
+      "hint": "更大的核会混合更远邻域的像素。"
+    },
+    {
+      "id": "hdr-threshold",
+      "title": "HDR 阈值",
+      "concept": "Bloom 阈值应在 HDR/tone mapping 前判断。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Bloom 的 threshold 应依赖 HDR 颜色？如果先 LDR clamp 到 [0,1]，亮度 2、8、20 的区域在 bright pass 中会丢失什么差异？",
+      "expectedKeywords": [
+        "HDR",
+        "clamp",
+        "threshold",
+        "亮度差异"
+      ],
+      "hint": "clamp 后这些高亮值都可能变成 1，无法区分光晕强弱。"
+    },
+    {
+      "id": "energy-artifact",
+      "title": "强度与伪影",
+      "concept": "Bloom 强度需要和曝光、阈值、模糊半径共同调节。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果 threshold 太低、blur radius 太大或 bloomStrength 太高，为什么画面会发灰、失去局部对比？这三个参数分别控制哪一环？",
+      "expectedKeywords": [
+        "threshold",
+        "radius",
+        "strength",
+        "对比"
+      ],
+      "hint": "阈值决定谁发光，半径决定扩散多远，强度决定加回多少。"
+    }
+  ]
+}

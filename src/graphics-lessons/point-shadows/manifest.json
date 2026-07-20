@@ -1,0 +1,220 @@
+{
+  "id": "point-shadows",
+  "title": "Point Shadows",
+  "category": "阴影",
+  "series": "LearnOpenGL 高级",
+  "order": 28,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "把二维阴影贴图扩展到点光源的全方向深度判断，理解距离比较和采样方向。",
+  "source": "OpenGLProject/src/28_point_shadows",
+  "runtime": "three-shader-material",
+  "previewTitle": "Point Shadows",
+  "draft": false,
+  "aiBrief": "Point Shadows 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "28_point_shadows 使用纹理、光照向量和 fragment shader 公式展示 Point Shadows。"
+  ],
+  "shaderSets": [
+    {
+      "name": "point_shadows_depth",
+      "role": "object/material shader program",
+      "fragment": "reference/point_shadows_depth.fs",
+      "geometry": "reference/point_shadows_depth.gs",
+      "vertex": "reference/point_shadows_depth.vs"
+    },
+    {
+      "name": "point_shadows",
+      "role": "object/material shader program",
+      "fragment": "reference/point_shadows.fs",
+      "vertex": "reference/point_shadows.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_shadows.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_shadows.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_shadows_depth.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_shadows_depth.gs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/point_shadows_depth.vs",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "cubemap-depth",
+      "title": "立方体深度图",
+      "concept": "点光源需要六个方向的深度。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么点光源阴影通常需要 depth cubemap？请说明六个面分别覆盖什么方向，以及为什么一张 2D depth map 不够。",
+      "expectedKeywords": [
+        "cubemap",
+        "六个方向",
+        "点光源",
+        "全方向"
+      ],
+      "hint": "点光源向球面所有方向发光，而 2D 投影只能覆盖一个视锥。"
+    },
+    {
+      "id": "depth-geometry-stage",
+      "title": "深度几何阶段",
+      "concept": "源 OpenGL 课程用 geometry shader 把三角形输出到 cubemap 六个面。",
+      "files": [
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "在源 OpenGL 实现中，为什么 point_shadows_depth.gs 需要把同一图元投到 6 个 light-space 矩阵？这和普通 shadow mapping 的 depth pass 有何不同？",
+      "expectedKeywords": [
+        "geometry shader",
+        "6",
+        "light-space",
+        "depth pass"
+      ],
+      "hint": "普通方向光通常只有一个 light view，点光源有六个 cubemap face。"
+    },
+    {
+      "id": "radial-shadow",
+      "title": "径向距离比较",
+      "concept": "点阴影比较的是片元到光源的径向距离。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用径向阴影后，为什么 currentDepth 应该是 length(fragPos - lightPos)，而不是相机或光源空间中的单个 z 分量？",
+      "expectedKeywords": [
+        "length",
+        "fragToLight",
+        "径向",
+        "点光源"
+      ],
+      "hint": "cubemap 的采样方向是三维方向，深度含义是沿该方向离光源的距离。"
+    },
+    {
+      "id": "far-plane",
+      "title": "距离归一化",
+      "concept": "深度 cubemap 存储 0 到 1 的归一化距离。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么点阴影常存储 closestDepth = distance / far_plane，采样后又乘回 far_plane 再与 currentDepth 比较？",
+      "expectedKeywords": [
+        "far_plane",
+        "归一化",
+        "distance",
+        "比较"
+      ],
+      "hint": "纹理值通常在 0 到 1，比较时两个深度必须回到同一尺度。"
+    },
+    {
+      "id": "sampling-disk",
+      "title": "软阴影采样",
+      "concept": "多个方向偏移采样近似软化边界。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "加入多方向采样后，为什么 diskRadius 应该随 viewDistance 或 fragDistance 改变？固定半径会造成什么尺度问题？",
+      "expectedKeywords": [
+        "diskRadius",
+        "viewDistance",
+        "采样",
+        "尺度"
+      ],
+      "hint": "同样的方向偏移在不同距离上对应不同世界空间范围。"
+    },
+    {
+      "id": "cost",
+      "title": "性能代价",
+      "concept": "点阴影比单向阴影更重。",
+      "files": [
+        "main.js",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么动态点光源阴影通常比方向光 shadow map 更昂贵？请从 depth pass 次数、cubemap 存储和 PCF 采样数说明。",
+      "expectedKeywords": [
+        "6",
+        "cubemap",
+        "PCF",
+        "带宽"
+      ],
+      "hint": "一个点光源阴影近似要维护六个方向的深度信息。"
+    }
+  ]
+}

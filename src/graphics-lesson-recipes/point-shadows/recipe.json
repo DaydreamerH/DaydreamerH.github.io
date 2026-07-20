@@ -1,0 +1,174 @@
+{
+  "id": "point-shadows",
+  "title": "Point Shadows",
+  "category": "阴影",
+  "series": "LearnOpenGL 高级",
+  "order": 28,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "source": "28_point_shadows",
+  "description": "把二维阴影贴图扩展到点光源的全方向深度判断，理解距离比较和采样方向。",
+  "previewTitle": "Point Shadows",
+  "aiBrief": "Point Shadows 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "28_point_shadows 使用纹理、光照向量和 fragment shader 公式展示 Point Shadows。"
+  ],
+  "starterAssets": [
+    {
+      "path": "wall-texture.txt",
+      "source": "OpenGLProject/images/wall.jpg",
+      "mimeType": "image/jpeg"
+    }
+  ],
+  "starterFiles": {
+    "main.js": "// Generated CG experiment runtime\n// Available objects: THREE, OrbitControls, canvas, files, getFile, report\n\nconst sceneConfig = JSON.parse(getFile(\"scene.json\") || \"{}\");\nconst geometryConfig = JSON.parse(getFile(\"geometry.json\") || \"{}\");\n\nconst renderer = new THREE.WebGLRenderer({\n  canvas,\n  antialias: Boolean(sceneConfig.antialias)\n});\nrenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\nrenderer.setClearColor(0xf8f8f8, 1);\n\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(sceneConfig.fov || 45, 1, 0.1, 100);\ncamera.position.fromArray(sceneConfig.cameraPosition || [2.6, 1.8, 4.2]);\ncamera.lookAt(...(sceneConfig.lookAt || [0, 0, 0]));\n\nconst controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;\ncontrols.target.fromArray(sceneConfig.lookAt || [0, 0, 0]);\n\nfunction makeFallbackTexture() {\n  const texture = new THREE.DataTexture(new Uint8Array([238, 238, 238, 255]), 1, 1, THREE.RGBAFormat);\n  texture.needsUpdate = true;\n  return texture;\n}\n\nfunction makeTexture(fileName, colorSpace = \"srgb\") {\n  const dataUrl = getFile(fileName);\n  const fallback = makeFallbackTexture();\n  if (!dataUrl) return fallback;\n  const texture = new THREE.TextureLoader().load(dataUrl, () => render());\n  texture.wrapS = THREE.RepeatWrapping;\n  texture.wrapT = THREE.RepeatWrapping;\n  texture.colorSpace = colorSpace === \"srgb\" ? THREE.SRGBColorSpace : THREE.NoColorSpace;\n  return texture;\n}\n\nfunction makeGeometry(config) {\n  if (config.type === \"plane\") {\n    const geometry = new THREE.PlaneGeometry(config.width || 3, config.height || 3, config.segments || 1, config.segments || 1);\n    if (config.rotateX) geometry.rotateX(config.rotateX);\n    return geometry;\n  }\n  if (config.type === \"points\") {\n    const geometry = new THREE.BufferGeometry();\n    geometry.setAttribute(\"position\", new THREE.BufferAttribute(new Float32Array(config.positions || []), 3));\n    return geometry;\n  }\n  return new THREE.BoxGeometry(config.size?.[0] || 1, config.size?.[1] || 1, config.size?.[2] || 1);\n}\n\nconst uniforms = {\n  uTime: { value: 0 },\n  uMode: { value: Number(sceneConfig.mode || 0) },\n  uStrength: { value: Number(sceneConfig.strength ?? 1) },\n  uExposure: { value: Number(sceneConfig.exposure ?? 1) },\n  uLightPos: { value: new THREE.Vector3(...(sceneConfig.lightPos || [1.2, 1.8, 2.2])) },\n  uViewPos: { value: camera.position },\n  uWallMap: { value: makeTexture(\"wall-texture.txt\") },\n  uWoodMap: { value: makeTexture(\"wood-texture.txt\") },\n  uContainerMap: { value: makeTexture(\"container-texture.txt\") },\n  uDiffuseMap: { value: makeTexture(\"diffuse-map.txt\") },\n  uNormalMap: { value: makeTexture(\"normal-map.txt\", \"linear\") },\n  uHeightMap: { value: makeTexture(\"height-map.txt\", \"linear\") }\n};\n\nconst material = new THREE.ShaderMaterial({\n  vertexShader: getFile(sceneConfig.vertexShader || \"lab.vertex.glsl\"),\n  fragmentShader: getFile(sceneConfig.fragmentShader || \"lab.fragment.glsl\"),\n  uniforms,\n  side: THREE.DoubleSide\n});\n\nconst geometry = makeGeometry(geometryConfig);\nlet mesh;\nif (geometryConfig.type === \"points\") {\n  mesh = new THREE.Points(geometry, material);\n} else {\n  mesh = new THREE.Mesh(geometry, material);\n}\nmesh.rotation.set(...(sceneConfig.rotation || [0, 0, 0]));\nmesh.position.set(...(sceneConfig.position || [0, 0, 0]));\nscene.add(mesh);\n\nif (sceneConfig.showLight) {\n  const lightMarker = new THREE.Mesh(\n    new THREE.SphereGeometry(0.08, 18, 18),\n    new THREE.MeshBasicMaterial({ color: 0x00adb5 })\n  );\n  lightMarker.position.copy(uniforms.uLightPos.value);\n  scene.add(lightMarker);\n}\n\nlet frame = 0;\nfunction resize() {\n  const bounds = canvas.parentElement.getBoundingClientRect();\n  const width = Math.max(1, Math.floor(bounds.width));\n  const height = Math.max(1, Math.floor(bounds.height));\n  renderer.setSize(width, height, false);\n  camera.aspect = width / height;\n  camera.updateProjectionMatrix();\n}\n\nfunction render(time = 0) {\n  resize();\n  controls.update();\n  uniforms.uTime.value = time * 0.001;\n  if (sceneConfig.animated) mesh.rotation.y = time * 0.0005;\n  renderer.render(scene, camera);\n  report({ mode: sceneConfig.label || \"advanced\", files: Object.keys(files).length });\n  frame = requestAnimationFrame(render);\n}\n\nframe = requestAnimationFrame(render);\n\nreturn () => {\n  cancelAnimationFrame(frame);\n  geometry.dispose();\n  material.dispose();\n  Object.values(uniforms).forEach((uniform) => uniform.value?.dispose?.());\n  renderer.dispose();\n};",
+    "geometry.json": "{\n  \"type\": \"plane\",\n  \"width\": 4.2,\n  \"height\": 2.4,\n  \"segments\": 48,\n  \"rotateX\": -1.05\n}",
+    "scene.json": "{\n  \"label\": \"Point Shadows\",\n  \"vertexShader\": \"lab.vertex.glsl\",\n  \"fragmentShader\": \"lab.fragment.glsl\",\n  \"cameraPosition\": [\n    0,\n    1.6,\n    3.6\n  ],\n  \"lookAt\": [\n    0,\n    0,\n    0\n  ],\n  \"lightPos\": [\n    0.7,\n    1.7,\n    1.2\n  ],\n  \"showLight\": true,\n  \"mode\": 0,\n  \"strength\": 1,\n  \"exposure\": 1\n}",
+    "lab.vertex.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\n\nvoid main() {\n  vUv = uv * 3.0;\n  vec4 world = modelMatrix * vec4(position, 1.0);\n  vWorldPosition = world.xyz;\n  vNormal = normalize(mat3(modelMatrix) * normal);\n  gl_Position = projectionMatrix * viewMatrix * world;\n}",
+    "lab.fragment.glsl": "varying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vWorldPosition;\nuniform sampler2D uWallMap;\nuniform vec3 uLightPos;\nuniform float uMode;\n\nfloat radialBlocker(vec3 dir) {\n  return 1.2 + 0.18 * sin(dir.x * 7.0) + 0.12 * cos(dir.z * 6.0);\n}\n\nfloat pointShadow(vec3 fragToLight) {\n  float current = length(fragToLight);\n  vec3 dir = normalize(fragToLight);\n  float bias = 0.035;\n  if (uMode < 1.5) return current - bias > radialBlocker(dir) ? 0.55 : 0.0;\n  float shadow = 0.0;\n  for (int i = 0; i < 6; i++) {\n    vec3 offset = vec3(float(i - 2) * 0.035, float(i % 3 - 1) * 0.025, float(i - 3) * 0.02);\n    shadow += current - bias > radialBlocker(normalize(dir + offset)) ? 1.0 : 0.0;\n  }\n  return shadow / 6.0 * 0.55;\n}\n\nvoid main() {\n  vec3 albedo = texture2D(uWallMap, vUv).rgb;\n  vec3 fragToLight = vWorldPosition - uLightPos;\n  vec3 lightDir = normalize(-fragToLight);\n  float diff = max(dot(normalize(vNormal), lightDir), 0.0);\n  float attenuation = 1.0 / (1.0 + 0.32 * length(fragToLight) + 0.18 * length(fragToLight) * length(fragToLight));\n  float shadow = uMode < 0.5 ? 0.0 : pointShadow(fragToLight);\n  vec3 color = albedo * (0.12 + diff * attenuation * (1.0 - shadow) * 2.2);\n  gl_FragColor = vec4(color, 1.0);\n}"
+  },
+  "workspaceFiles": [
+    {
+      "path": "main.js",
+      "role": "entry",
+      "visible": true
+    },
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "visible": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cubemap-depth",
+      "title": "立方体深度图",
+      "concept": "点光源需要六个方向的深度。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么点光源阴影通常需要 depth cubemap？请说明六个面分别覆盖什么方向，以及为什么一张 2D depth map 不够。",
+      "expectedKeywords": [
+        "cubemap",
+        "六个方向",
+        "点光源",
+        "全方向"
+      ],
+      "hint": "点光源向球面所有方向发光，而 2D 投影只能覆盖一个视锥。"
+    },
+    {
+      "id": "depth-geometry-stage",
+      "title": "深度几何阶段",
+      "concept": "源 OpenGL 课程用 geometry shader 把三角形输出到 cubemap 六个面。",
+      "files": [
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "在源 OpenGL 实现中，为什么 point_shadows_depth.gs 需要把同一图元投到 6 个 light-space 矩阵？这和普通 shadow mapping 的 depth pass 有何不同？",
+      "expectedKeywords": [
+        "geometry shader",
+        "6",
+        "light-space",
+        "depth pass"
+      ],
+      "hint": "普通方向光通常只有一个 light view，点光源有六个 cubemap face。"
+    },
+    {
+      "id": "radial-shadow",
+      "title": "径向距离比较",
+      "concept": "点阴影比较的是片元到光源的径向距离。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "启用径向阴影后，为什么 currentDepth 应该是 length(fragPos - lightPos)，而不是相机或光源空间中的单个 z 分量？",
+      "expectedKeywords": [
+        "length",
+        "fragToLight",
+        "径向",
+        "点光源"
+      ],
+      "hint": "cubemap 的采样方向是三维方向，深度含义是沿该方向离光源的距离。"
+    },
+    {
+      "id": "far-plane",
+      "title": "距离归一化",
+      "concept": "深度 cubemap 存储 0 到 1 的归一化距离。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么点阴影常存储 closestDepth = distance / far_plane，采样后又乘回 far_plane 再与 currentDepth 比较？",
+      "expectedKeywords": [
+        "far_plane",
+        "归一化",
+        "distance",
+        "比较"
+      ],
+      "hint": "纹理值通常在 0 到 1，比较时两个深度必须回到同一尺度。"
+    },
+    {
+      "id": "sampling-disk",
+      "title": "软阴影采样",
+      "concept": "多个方向偏移采样近似软化边界。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "加入多方向采样后，为什么 diskRadius 应该随 viewDistance 或 fragDistance 改变？固定半径会造成什么尺度问题？",
+      "expectedKeywords": [
+        "diskRadius",
+        "viewDistance",
+        "采样",
+        "尺度"
+      ],
+      "hint": "同样的方向偏移在不同距离上对应不同世界空间范围。"
+    },
+    {
+      "id": "cost",
+      "title": "性能代价",
+      "concept": "点阴影比单向阴影更重。",
+      "files": [
+        "main.js",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么动态点光源阴影通常比方向光 shadow map 更昂贵？请从 depth pass 次数、cubemap 存储和 PCF 采样数说明。",
+      "expectedKeywords": [
+        "6",
+        "cubemap",
+        "PCF",
+        "带宽"
+      ],
+      "hint": "一个点光源阴影近似要维护六个方向的深度信息。"
+    }
+  ]
+}

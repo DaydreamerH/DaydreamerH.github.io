@@ -1,0 +1,183 @@
+{
+  "id": "blinn-phong",
+  "title": "Blinn-Phong",
+  "category": "光照模型",
+  "series": "LearnOpenGL 高级",
+  "order": 25,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "比较 Phong 反射向量和 Blinn 半程向量，观察高光在低视角下的差异。",
+  "source": "OpenGLProject/src/25_blinn_phong",
+  "runtime": "three-shader-material",
+  "previewTitle": "Blinn-Phong",
+  "draft": false,
+  "aiBrief": "Blinn-Phong 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "25_blinn_phong 使用纹理、光照向量和 fragment shader 公式展示 Blinn-Phong。"
+  ],
+  "shaderSets": [
+    {
+      "name": "blinn_phong",
+      "role": "object/material shader program",
+      "fragment": "reference/blinn_phong.fs",
+      "vertex": "reference/blinn_phong.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/blinn_phong.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/blinn_phong.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "reflect-vs-half",
+      "title": "反射向量与半程向量",
+      "concept": "Phong 与 Blinn-Phong 高光项的几何含义。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "Phong 的 R = 2(N·L)N - L 与 Blinn 的 H = normalize(L + V) 分别在比较哪两个方向？为什么 H 更适合低视角稳定高光？",
+      "expectedKeywords": [
+        "reflect",
+        "halfDir",
+        "N",
+        "V"
+      ],
+      "hint": "Phong 比较视线和反射方向，Blinn 比较法线和半程向量。"
+    },
+    {
+      "id": "specular-power",
+      "title": "高光指数",
+      "concept": "pow(max(dot(...),0), shininess) 控制角度衰减。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "从 spec = pow(max(dot(N, H), 0.0), shininess) 出发，为什么 shininess 增大后高光角度范围变窄？",
+      "expectedKeywords": [
+        "pow",
+        "dot",
+        "角度",
+        "shininess"
+      ],
+      "hint": "当 dot 小于 1 时，指数越大衰减越快。"
+    },
+    {
+      "id": "enable-blinn",
+      "title": "启用 Blinn",
+      "concept": "半程向量减少部分视角下的高光断裂。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "切换到 Blinn 后，为什么用 halfDir = normalize(lightDir + viewDir) 可以避免一部分 Phong 在掠射角下的高光断裂？",
+      "expectedKeywords": [
+        "halfDir",
+        "viewDir",
+        "lightDir",
+        "掠射角"
+      ],
+      "hint": "当反射向量和视线夹角很大时，Phong 的 dot 很容易被 clamp 到 0。"
+    },
+    {
+      "id": "shininess",
+      "title": "指数调节",
+      "concept": "高光范围与峰值方向的分离。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "提高 shininess 后，为什么高光范围变窄，但峰值位置仍然由 N、L、V 的几何关系决定？",
+      "expectedKeywords": [
+        "shininess",
+        "峰值",
+        "N",
+        "L",
+        "V"
+      ],
+      "hint": "指数改变衰减曲线，不改变 dot 最大时对应的方向。"
+    },
+    {
+      "id": "energy-limit",
+      "title": "能量限制",
+      "concept": "经典 Blinn-Phong 与 PBR BRDF 的差异。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 Blinn-Phong 适合实时渲染教学，却不等价于严格能量守恒的微表面 BRDF？",
+      "expectedKeywords": [
+        "能量守恒",
+        "BRDF",
+        "微表面",
+        "归一化"
+      ],
+      "hint": "经典模型主要是经验项，缺少完整的归一化、菲涅尔和几何遮蔽项。"
+    }
+  ]
+}

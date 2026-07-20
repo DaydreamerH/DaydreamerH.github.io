@@ -1,0 +1,222 @@
+{
+  "id": "deferred-shading",
+  "title": "Deferred Shading",
+  "category": "渲染管线",
+  "series": "LearnOpenGL 高级",
+  "order": 33,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "把几何信息写入 G-Buffer，再在屏幕空间计算光照，理解延迟渲染的带宽与光源扩展取舍。",
+  "source": "OpenGLProject/src/33_deferred_shading",
+  "runtime": "three-shader-material",
+  "previewTitle": "Deferred Shading",
+  "draft": false,
+  "aiBrief": "Deferred Shading 课程把 OpenGL 源码中的多 pass 或状态概念转写为可实时观察的 Three.js ShaderMaterial 实验。AI 应按 checkpoint 逐步提问，必要时应用本地 patch，不自由重写课程主流程。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "buffer.fs 写 gPosition、gNormal、gAlbedoSpec；deferred_shading.fs 从多个 G-Buffer 读取并累计光照。"
+  ],
+  "shaderSets": [
+    {
+      "name": "buffer",
+      "role": "object/material shader program",
+      "fragment": "reference/buffer.fs",
+      "vertex": "reference/buffer.vs"
+    },
+    {
+      "name": "deferred_shading",
+      "role": "object/material shader program",
+      "fragment": "reference/deferred_shading.fs",
+      "vertex": "reference/deferred_shading.vs"
+    },
+    {
+      "name": "light_box",
+      "role": "object/material shader program",
+      "fragment": "reference/light_box.fs",
+      "vertex": "reference/light_box.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "screen.fragment.glsl",
+      "role": "shader",
+      "concept": "screen fragment stage",
+      "visible": true
+    },
+    {
+      "path": "screen.vertex.glsl",
+      "role": "shader",
+      "concept": "screen vertex stage",
+      "visible": true
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/buffer.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/buffer.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/deferred_shading.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/deferred_shading.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light_box.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/light_box.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "gbuffer-attachments",
+      "title": "G-Buffer 附件",
+      "concept": "Geometry pass 把光照输入拆分写入多个 render target。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "screen.vertex.glsl",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "Deferred shading 的 geometry pass 通常把 position/depth、normal、albedo、specular 写入哪些 G-Buffer attachment？这些量为什么足够给 lighting pass 重建局部光照？",
+      "expectedKeywords": [
+        "G-Buffer",
+        "position",
+        "normal",
+        "albedo"
+      ],
+      "hint": "光照公式需要位置求 lightDir/viewDir，需要法线求 dot，需要材质颜色调制结果。"
+    },
+    {
+      "id": "show-gbuffer",
+      "title": "调试 G-Buffer",
+      "concept": "G-Buffer 可视化不是最终图像，而是中间数据。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "观察 G-Buffer 时，为什么 normal/depth/albedo 看起来不像最终画面？请说明每张 buffer 在 lighting pass 中扮演什么输入角色。",
+      "expectedKeywords": [
+        "normal",
+        "depth",
+        "albedo",
+        "lighting pass"
+      ],
+      "hint": "这些纹理存的是属性，不是已经算完的光照颜色。"
+    },
+    {
+      "id": "lighting-pass",
+      "title": "屏幕空间光照",
+      "concept": "Lighting pass 在屏幕空间遍历像素和光源。",
+      "files": [
+        "scene.json",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "在 lighting pass 中，为什么添加 L 个小光源主要增加的是屏幕像素上的光照循环成本，可近似看作 O(P*L)，而不是重新提交所有几何？",
+      "expectedKeywords": [
+        "P*L",
+        "screen space",
+        "光源",
+        "几何"
+      ],
+      "hint": "几何已经写入 G-Buffer，后续按屏幕像素读取这些属性。"
+    },
+    {
+      "id": "position-reconstruction",
+      "title": "位置重建",
+      "concept": "可用 depth 和 inverse projection 重建 view-space position。",
+      "files": [
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么很多 deferred renderer 不直接存 world position，而是用 depth + inverse projection 重建 view-space position？这样节省了什么，又增加了什么计算？",
+      "expectedKeywords": [
+        "depth",
+        "inverse projection",
+        "带宽",
+        "重建"
+      ],
+      "hint": "少存一个高精度 position buffer 能省显存带宽，但 lighting pass 要多做反投影。"
+    },
+    {
+      "id": "memory-bandwidth",
+      "title": "带宽代价",
+      "concept": "G-Buffer 用显存带宽换大量动态光源能力。",
+      "files": [
+        "main.js",
+        "screen.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "如果 G-Buffer 有 4 个 RGBA16F attachment，为什么高分辨率下 deferred shading 的显存带宽压力会很大？",
+      "expectedKeywords": [
+        "RGBA16F",
+        "attachment",
+        "带宽",
+        "分辨率"
+      ],
+      "hint": "每个像素要写入并读取多张高精度纹理。"
+    },
+    {
+      "id": "tradeoff",
+      "title": "透明与 MSAA",
+      "concept": "Deferred shading 对透明物体和 MSAA 不友好。",
+      "files": [
+        "screen.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "为什么 deferred shading 适合大量动态光源，却会让透明物体和 MSAA 处理更复杂？",
+      "expectedKeywords": [
+        "透明",
+        "MSAA",
+        "G-Buffer",
+        "混合"
+      ],
+      "hint": "透明需要顺序混合，MSAA 需要处理每个 sample 的不同几何属性。"
+    }
+  ]
+}

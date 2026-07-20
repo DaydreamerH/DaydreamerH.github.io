@@ -1,0 +1,182 @@
+{
+  "id": "gamma-correction",
+  "title": "Gamma Correction",
+  "category": "色彩空间",
+  "series": "LearnOpenGL 高级",
+  "order": 26,
+  "level": "advanced",
+  "createdAt": "2026-07-19",
+  "description": "观察线性空间计算和 sRGB 显示之间的差异，理解为什么光照结果需要 gamma 校正。",
+  "source": "OpenGLProject/src/26_gamma_correction",
+  "runtime": "three-shader-material",
+  "previewTitle": "Gamma Correction",
+  "draft": false,
+  "aiBrief": "Gamma Correction 课程使用一个可观察的材质/光照平面，把源 OpenGL 章节中的 shader 公式转写为浏览器实验。AI 需要围绕公式、观察结果和本地 patch 推进。 课程问题需要覆盖 pass/FBO 数据流、核心公式、空间变换、采样代价和常见伪影；不要只停留在视觉现象描述。",
+  "referenceBrief": [
+    "26_gamma_correction 使用纹理、光照向量和 fragment shader 公式展示 Gamma Correction。"
+  ],
+  "shaderSets": [
+    {
+      "name": "gamma_correction",
+      "role": "object/material shader program",
+      "fragment": "reference/gamma_correction.fs",
+      "vertex": "reference/gamma_correction.vs"
+    }
+  ],
+  "workspaceFiles": [
+    {
+      "path": "geometry.json",
+      "role": "data",
+      "concept": "geometry attributes, indices, and primitive data",
+      "visible": true
+    },
+    {
+      "path": "lab.fragment.glsl",
+      "role": "shader",
+      "concept": "lab fragment stage",
+      "visible": true
+    },
+    {
+      "path": "lab.vertex.glsl",
+      "role": "shader",
+      "concept": "lab vertex stage",
+      "visible": true
+    },
+    {
+      "path": "main.js",
+      "role": "entry",
+      "concept": "browser runtime entry and scene orchestration",
+      "visible": true
+    },
+    {
+      "path": "scene.json",
+      "role": "data",
+      "concept": "camera, uniforms, material shader routing, and animation settings",
+      "visible": true
+    },
+    {
+      "path": "wall-texture.txt",
+      "role": "data",
+      "concept": "static lesson data asset",
+      "visible": false
+    }
+  ],
+  "referenceFiles": [
+    {
+      "path": "reference/CMakeLists.txt",
+      "role": "原始章节构建入口"
+    },
+    {
+      "path": "reference/gamma_correction.fs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/gamma_correction.vs",
+      "role": "原始课程参考文件"
+    },
+    {
+      "path": "reference/main.cpp",
+      "role": "原始课程参考文件"
+    }
+  ],
+  "teachingRules": [
+    "每轮只提出一个问题。",
+    "checkpoint.flow 决定教学节奏：observe_then_question 先应用本地 patch 并观察现象，再要求用户解释；answer_then_patch 先让用户预测或解释，再应用本地 patch；question_only 只推进概念问题。",
+    "回答正确或基本正确时，按当前 checkpoint.flow 返回 patchId 或 nextCheckpointId。",
+    "回答不完整或错误时给一个提示，并重复当前 checkpoint 问题，不要应用 patch，也不要推进 checkpoint。",
+    "不要输出大段 OpenGL 或 WebGL 代码；课程主流程的代码变更由本地 patch 完成。"
+  ],
+  "checkpoints": [
+    {
+      "id": "linear-space",
+      "title": "线性空间",
+      "concept": "光照计算应在线性颜色空间中进行。",
+      "files": [
+        "main.js",
+        "geometry.json",
+        "lab.vertex.glsl",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 diffuse、specular 等光照加法应在线性空间完成？如果直接在 sRGB 数值上相加，会破坏什么物理含义？",
+      "expectedKeywords": [
+        "线性",
+        "sRGB",
+        "加法",
+        "能量"
+      ],
+      "hint": "光强相加默认数值和能量成正比，sRGB 编码后的数值不是线性的。"
+    },
+    {
+      "id": "gamma-formula",
+      "title": "Gamma 公式",
+      "concept": "输出编码近似 C_srgb = C_linear^(1/2.2)。",
+      "files": [
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "若显示器近似执行 C_display = C_srgb^2.2，为什么 shader 输出前常用 C_srgb = pow(C_linear, vec3(1.0/2.2))？",
+      "expectedKeywords": [
+        "2.2",
+        "pow",
+        "编码",
+        "显示器"
+      ],
+      "hint": "输出编码和显示器响应近似互为反函数。"
+    },
+    {
+      "id": "apply-gamma",
+      "title": "输出校正",
+      "concept": "Gamma 编码主要抬升暗部感知亮度。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "在 gamma correction 中使用 pow(color, vec3(1.0 / 2.2)) 时，为什么暗部会明显变亮，但这不是简单给所有像素加一个常数？",
+      "expectedKeywords": [
+        "非线性",
+        "暗部",
+        "pow",
+        "比例"
+      ],
+      "hint": "幂函数会对不同亮度区间产生不同幅度的变化。"
+    },
+    {
+      "id": "srgb-texture",
+      "title": "贴图解码",
+      "concept": "颜色贴图采样需要从 sRGB 解码到线性空间。",
+      "files": [
+        "scene.json",
+        "lab.fragment.glsl"
+      ],
+      "flow": "question_only",
+      "question": "为什么 albedo 贴图通常要按 sRGB 读取并转为线性值，而 normal/roughness 这类数据贴图不应该做同样的 gamma 解码？",
+      "expectedKeywords": [
+        "albedo",
+        "数据贴图",
+        "sRGB",
+        "线性"
+      ],
+      "hint": "颜色贴图是给人眼看的编码值，法线贴图的 RGB 是向量数据。"
+    },
+    {
+      "id": "double-correction",
+      "title": "重复校正",
+      "concept": "重复解码或编码会造成系统性偏色。",
+      "files": [
+        "lab.fragment.glsl",
+        "scene.json"
+      ],
+      "flow": "question_only",
+      "question": "如果贴图读取已经做了 sRGB 解码，最终输出又被重复 gamma 编码两次，画面为什么可能过亮或发灰？",
+      "expectedKeywords": [
+        "重复",
+        "gamma",
+        "过亮",
+        "发灰"
+      ],
+      "hint": "颜色空间转换不是幂等操作，多做一次就改变了数值曲线。"
+    }
+  ]
+}

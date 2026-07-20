@@ -78,7 +78,7 @@ function copyReferenceFiles(sourceDir, outDir) {
   const referenceDir = join(outDir, "reference");
   mkdirSync(referenceDir, { recursive: true });
   const copied = [];
-  const allowed = new Set([".cpp", ".h", ".hpp", ".vs", ".fs", ".glsl", ".txt", ".md", ".cmake"]);
+  const allowed = new Set([".cpp", ".h", ".hpp", ".vs", ".fs", ".gs", ".glsl", ".txt", ".md", ".cmake"]);
   const ignoredDirectories = new Set([".git", ".vs", ".vscode", "build", "out", "dist", "node_modules"]);
 
   const visit = (dir, relativeDir = "") => {
@@ -110,25 +110,27 @@ function copyReferenceFiles(sourceDir, outDir) {
 function shaderSetsFromSource(sourceDir) {
   const shaderEntries = readdirSync(sourceDir)
     .filter((entry) => statSync(join(sourceDir, entry)).isFile())
-    .filter((entry) => [".vs", ".fs", ".glsl"].includes(extname(entry).toLowerCase()))
+    .filter((entry) => [".vs", ".fs", ".gs", ".glsl"].includes(extname(entry).toLowerCase()))
     .sort((a, b) => a.localeCompare(b));
 
   const sourceFiles = {};
   for (const entry of shaderEntries) {
     const extension = extname(entry).toLowerCase();
-    const shaderName = entry.replace(/\.(vs|fs|glsl)$/i, "");
+    const shaderName = entry.replace(/\.(vs|fs|gs|glsl)$/i, "");
     const outputName =
       extension === ".vs"
         ? `${shaderName}.vertex.glsl`
         : extension === ".fs"
           ? `${shaderName}.fragment.glsl`
-          : entry;
+          : extension === ".gs"
+            ? `${shaderName}.geometry.glsl`
+            : entry;
     sourceFiles[outputName] = `reference/${entry}`;
   }
 
   const groups = new Map();
   for (const file of Object.keys(sourceFiles)) {
-    const match = file.match(/^(.*)\.(vertex|fragment)\.glsl$/);
+    const match = file.match(/^(.*)\.(vertex|fragment|geometry)\.glsl$/);
     if (!match) continue;
     const [, name, stage] = match;
     const group = groups.get(name) ?? {

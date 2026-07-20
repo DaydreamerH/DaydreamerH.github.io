@@ -30,6 +30,8 @@ type LabFile = {
   source: string;
 };
 
+type PersistState = "empty" | "saved" | "failed";
+
 type RuntimeCleanup = () => void;
 type RuntimeResult =
   | RuntimeCleanup
@@ -125,6 +127,7 @@ type GraphicsLesson = {
     name: string;
     role?: string;
     vertex?: string;
+    geometry?: string;
     fragment?: string;
   }>;
   workspaceFiles?: Array<{
@@ -167,6 +170,8 @@ declare global {
 }
 
 const STORAGE_KEY_PREFIX = "daydreamerh.graphics-lab.lesson";
+const STORAGE_KEY_SCHEMA_VERSION = 4;
+const STORAGE_VALUE_VERSION = 1;
 const PREVIEW_LAYOUT_KEY = "daydreamerh.graphics-lab.preview-layout";
 const jsCompletions = [
   "THREE.Scene",
@@ -333,7 +338,27 @@ function makeStorageKey(lesson: GraphicsLesson) {
   for (let index = 0; index < lessonSignature.length; index += 1) {
     hash = (hash * 31 + lessonSignature.charCodeAt(index)) >>> 0;
   }
-  return `${STORAGE_KEY_PREFIX}.${lesson.id}.v3.${hash.toString(36)}`;
+  return `${STORAGE_KEY_PREFIX}.${lesson.id}.v${STORAGE_KEY_SCHEMA_VERSION}.${hash.toString(36)}`;
+}
+
+function makeStoragePrefix(lesson: GraphicsLesson) {
+  return `${STORAGE_KEY_PREFIX}.${lesson.id}.`;
+}
+
+function getLegacyLessonStorageKeys(lesson: GraphicsLesson, currentKey: string) {
+  const prefix = makeStoragePrefix(lesson);
+  const keys: string[] = [];
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith(prefix) && key !== currentKey) keys.push(key);
+  }
+  return keys;
+}
+
+function removeLegacyLessonStorage(lesson: GraphicsLesson, currentKey: string) {
+  getLegacyLessonStorageKeys(lesson, currentKey).forEach((key) => {
+    window.localStorage.removeItem(key);
+  });
 }
 
 function cloneStarterFiles(lesson: GraphicsLesson, fileNames: LabFileName[]): Record<LabFileName, LabFile> {
@@ -349,30 +374,67 @@ function cloneStarterFiles(lesson: GraphicsLesson, fileNames: LabFileName[]): Re
   ) as Record<LabFileName, LabFile>;
 }
 
+function getStoredFileMap(raw: unknown): Partial<Record<LabFileName, string>> {
+  if (!raw || typeof raw !== "object") return {};
+  if ("files" in raw) {
+    const files = (raw as { files?: unknown }).files;
+    return files && typeof files === "object" ? (files as Partial<Record<LabFileName, string>>) : {};
+  }
+  return raw as Partial<Record<LabFileName, string>>;
+}
+
 function loadFiles(lesson: GraphicsLesson, fileNames: LabFileName[]) {
+  const storageKey = makeStorageKey(lesson);
   try {
-    const saved = window.localStorage.getItem(makeStorageKey(lesson));
+    const legacyKeys = getLegacyLessonStorageKeys(lesson, storageKey);
+    const saved =
+      window.localStorage.getItem(storageKey) ??
+      legacyKeys.map((key) => window.localStorage.getItem(key)).find(Boolean);
     if (!saved) return cloneStarterFiles(lesson, fileNames);
 
-    const parsed = JSON.parse(saved) as Partial<Record<LabFileName, string>>;
+    const parsed = getStoredFileMap(JSON.parse(saved));
     const mergedNames = [...new Set([...fileNames, ...Object.keys(parsed)])];
     const files = cloneStarterFiles(lesson, mergedNames);
     mergedNames.forEach((name) => {
       if (typeof parsed[name] === "string") {
-        const starterSource = lesson.starterFiles[name] ?? "";
         const savedSource = parsed[name] ?? "";
-        files[name].source = savedSource.trim() || !starterSource.trim() ? savedSource : files[name].source;
+        files[name].source = savedSource;
       }
     });
+    removeLegacyLessonStorage(lesson, storageKey);
     return files;
   } catch {
     return cloneStarterFiles(lesson, fileNames);
   }
 }
 
-function persistFiles(lesson: GraphicsLesson, files: Record<LabFileName, LabFile>) {
-  const payload = Object.fromEntries(Object.values(files).map((file) => [file.name, file.source]));
-  window.localStorage.setItem(makeStorageKey(lesson), JSON.stringify(payload));
+function persistFiles(lesson: GraphicsLesson, files: Record<LabFileName, LabFile>): PersistState {
+  const changedFiles = Object.fromEntries(
+    Object.values(files)
+      .filter((file) => file.source !== (lesson.starterFiles[file.name] ?? ""))
+      .map((file) => [file.name, file.source])
+  );
+  const storageKey = makeStorageKey(lesson);
+
+  try {
+    removeLegacyLessonStorage(lesson, storageKey);
+
+    if (!Object.keys(changedFiles).length) {
+      window.localStorage.removeItem(storageKey);
+      return "empty";
+    }
+
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: STORAGE_VALUE_VERSION,
+        files: changedFiles
+      })
+    );
+    return "saved";
+  } catch {
+    return "failed";
+  }
 }
 
 function extractJsonObject(text: string) {
@@ -1456,9 +1518,14 @@ function initGraphicsLab(root: HTMLElement) {
   const saveSoon = () => {
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => {
-      persistFiles(lesson, files);
-      setStatus("idle", "已保存到当前浏览器");
+      const saveState = persistFiles(lesson, files);
+      setSaveStatus(saveState, "已保存到当前浏览器");
     }, 260);
+  };
+
+  const setSaveStatus = (saveState: PersistState, successText: string) => {
+    const isFailed = saveState === "failed";
+    setStatus(isFailed ? "error" : "idle", isFailed ? "本地保存空间不足" : successText);
   };
 
   const scheduleRun = () => {
@@ -2225,8 +2292,8 @@ ${getFilesSnapshot()}`;
 
     if (event.key.toLowerCase() === "s") {
       event.preventDefault();
-      persistFiles(lesson, files);
-      setStatus("idle", "已手动保存");
+      const saveState = persistFiles(lesson, files);
+      setSaveStatus(saveState, "已手动保存");
     }
   });
 
