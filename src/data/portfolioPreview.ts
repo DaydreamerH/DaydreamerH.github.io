@@ -47,6 +47,7 @@ export const portfolioPreviewProjects: PortfolioPreviewProject[] = [
     ],
     sections: [],
     externalLinks: [
+      { label: "查看 GitHub 仓库", href: "https://github.com/DaydreamerH/HeroShooters" },
       { label: "观看演示视频", href: "https://www.bilibili.com/video/BV1WbD1BZEGJ" }
     ],
     document: "hero-shooters",
@@ -115,6 +116,7 @@ export const portfolioPreviewProjects: PortfolioPreviewProject[] = [
     ],
     sections: [],
     externalLinks: [
+      { label: "查看 GitHub 仓库", href: "https://github.com/DaydreamerH/StylizedRenderer" },
       { label: "观看演示视频", href: "https://www.bilibili.com/video/BV1cL8d6iEez" }
     ],
     document: "stylized-renderer",
