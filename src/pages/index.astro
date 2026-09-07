@@ -1,11 +1,13 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { getCategoryLabel } from "../data/navigation";
-import { graphicsLessonSummaries } from "../data/graphicsLessons";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "@lucide/astro";
+import { portfolioPreviewProjects } from "../data/portfolioPreview";
+import heroShootersCover from "../assets/portfolio/hero-shooters-cover.png";
+import stylizedRendererCover from "../assets/portfolio/stylized-renderer-cover.png";
 
 const docs = (await getCollection("knowledge"))
-  .filter((item) => item.data.status === "ready" && item.data.published !== false)
+  .filter((item) => item.data.status === "ready" && item.data.published !== false);
 
 function parseDate(value = "") {
   const normalized = value.replaceAll(".", "-");
@@ -13,69 +15,124 @@ function parseDate(value = "") {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-const recentPosts = docs
+const recentUpdates = docs
   .map((doc) => ({
-    type: "博客",
     title: doc.data.title,
     href: `/knowledge/${doc.slug}/`,
     date: doc.data.date ? doc.data.date.slice(0, 10) : "未标注日期",
     timestamp: parseDate(doc.data.date ?? ""),
-    meta: getCategoryLabel(doc.data.category)
   }))
   .sort((a, b) => {
     if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
     return a.title.localeCompare(b.title, "zh-Hans-CN");
   })
-  .slice(0, 12);
-
-const recentLessons = graphicsLessonSummaries
-  .map((lesson) => ({
-    type: "实验",
-    title: lesson.title,
-    href: `/webgl/${lesson.id}/`,
-    date: lesson.createdAt,
-    timestamp: parseDate(lesson.createdAt),
-    meta: lesson.category
-  }))
-  .sort((a, b) => {
-    if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
-    return a.title.localeCompare(b.title, "zh-Hans-CN");
-  })
-  .slice(0, 12);
-
-const recentGroups = [
-  { label: "博客", items: recentPosts },
-  { label: "实验", items: recentLessons }
-];
+  .slice(0, 8);
 ---
 
-<BaseLayout title="学习总览">
-  <section class="workspace-hero">
-    <div class="identity-panel recent-post-panel">
-      <div class="inline-heading">
-        <div>
-          <p class="eyebrow">Recent Updates</p>
-          <h1>近日更新</h1>
-        </div>
-      </div>
-      <div class="recent-update-groups">
-        {recentGroups.map((group) => (
-          <section class="recent-update-group" aria-label={`近日更新-${group.label}`}>
-            <div class="recent-group-heading">
-              <h2>{group.label}</h2>
-            </div>
-            <div class="recent-post-list">
-              {group.items.map((item) => (
-                <a class="recent-post-item" href={item.href}>
-                  <span>{item.date}</span>
-                  <strong>{item.title}</strong>
-                  <small>{item.meta}</small>
-                </a>
+<BaseLayout title="工作台" description="作品与近期技术记录。">
+  <main class="workspace-home">
+    <section class="workspace-primary-grid" aria-label="作品集与近日更新">
+      <section class="workspace-featured" aria-labelledby="featured-work-title">
+        <header class="workspace-section-heading">
+          <div>
+            <h1 id="featured-work-title">作品集</h1>
+          </div>
+          <a class="workspace-text-link" href="/portfolio/">全部作品 <ArrowUpRight size={15} aria-hidden="true" /></a>
+        </header>
+
+        <div class="workspace-carousel" data-workspace-carousel aria-label="项目预览走马灯">
+          {portfolioPreviewProjects.map((project, index) => (
+            <article
+              class:list={["workspace-carousel-slide", `workspace-carousel-slide--${project.visual}`, project.cover && "has-cover", index === 0 && "is-active"]}
+              data-workspace-slide
+              aria-hidden={index === 0 ? "false" : "true"}
+              style={`--workspace-carousel-banner: ${project.banner}`}
+            >
+              {project.cover === "hero-shooters" && <img class="workspace-carousel-cover" src={heroShootersCover.src} alt="" />}
+              {project.cover === "stylized-renderer" && <img class="workspace-carousel-cover" src={stylizedRendererCover.src} alt="" />}
+              <span class="workspace-carousel-index">0{index + 1} · Project Preview</span>
+              <div class="workspace-carousel-copy">
+                <p>{project.eyebrow}</p>
+                <h2>{project.titleLines ? project.titleLines.map((line) => <span>{line}</span>) : project.title}</h2>
+                <span>{project.summary}</span>
+                <a href={`/portfolio/${project.slug}/`}>查看项目 <ArrowUpRight size={17} aria-hidden="true" /></a>
+              </div>
+            </article>
+          ))}
+
+          <div class="workspace-carousel-controls" aria-label="切换项目">
+            <button type="button" data-workspace-prev aria-label="查看上一个项目"><ChevronLeft size={18} aria-hidden="true" /></button>
+            <div class="workspace-carousel-dots" role="tablist" aria-label="项目列表">
+              {portfolioPreviewProjects.map((project, index) => (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-label={`查看 ${project.title}`}
+                  aria-selected={index === 0 ? "true" : "false"}
+                  class={index === 0 ? "is-active" : ""}
+                  data-workspace-dot={index}
+                >
+                  0{index + 1}
+                </button>
               ))}
             </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  </section>
+            <button type="button" data-workspace-next aria-label="查看下一个项目"><ChevronRight size={18} aria-hidden="true" /></button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="workspace-updates" aria-labelledby="updates-title">
+        <header>
+          <h2 id="updates-title">近日更新</h2>
+        </header>
+        <div class="workspace-updates-list">
+          {recentUpdates.map((post) => (
+            <a href={post.href}>
+              <time datetime={post.date}>{post.date}</time>
+              <strong>{post.title}</strong>
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+        <a class="workspace-updates-more" href="/knowledge/">浏览知识库 <ArrowUpRight size={15} aria-hidden="true" /></a>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const carousel = document.querySelector("[data-workspace-carousel]");
+    const slides = Array.from(document.querySelectorAll("[data-workspace-slide]"));
+    const dots = Array.from(document.querySelectorAll("[data-workspace-dot]"));
+    const previous = document.querySelector("[data-workspace-prev]");
+    const next = document.querySelector("[data-workspace-next]");
+    let activeIndex = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    function showSlide(nextIndex: number) {
+      activeIndex = (nextIndex + slides.length) % slides.length;
+      slides.forEach((slide, index) => {
+        const active = index === activeIndex;
+        slide.classList.toggle("is-active", active);
+        slide.setAttribute("aria-hidden", String(!active));
+      });
+      dots.forEach((dot, index) => {
+        const active = index === activeIndex;
+        dot.classList.toggle("is-active", active);
+        dot.setAttribute("aria-selected", String(active));
+      });
+    }
+
+    function startRotation() {
+      window.clearInterval(timer);
+      timer = window.setInterval(() => showSlide(activeIndex + 1), 5600);
+    }
+
+    previous?.addEventListener("click", () => { showSlide(activeIndex - 1); startRotation(); });
+    next?.addEventListener("click", () => { showSlide(activeIndex + 1); startRotation(); });
+    dots.forEach((dot, index) => dot.addEventListener("click", () => { showSlide(index); startRotation(); }));
+    carousel?.addEventListener("pointerenter", () => window.clearInterval(timer));
+    carousel?.addEventListener("pointerleave", startRotation);
+    document.addEventListener("visibilitychange", () => document.hidden ? window.clearInterval(timer) : startRotation());
+    startRotation();
+  </script>
 </BaseLayout>

@@ -1,0 +1,111 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { portfolioPreviewProjects } from "../../data/portfolioPreview";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "@lucide/astro";
+import heroShootersCover from "../../assets/portfolio/hero-shooters-cover.png";
+import stylizedRendererCover from "../../assets/portfolio/stylized-renderer-cover.png";
+---
+
+<BaseLayout title="作品集" description="DaydreamerH 的游戏开发与图形项目作品集。">
+  <section class="portfolio-carousel" data-portfolio-carousel aria-label="项目预览跑马灯">
+    {portfolioPreviewProjects.map((project, index) => (
+      <article
+        class:list={["portfolio-carousel-slide", "project-visual", `project-visual--${project.visual}`, project.cover && "has-cover", index === 0 && "is-active"]}
+        data-carousel-slide
+        aria-hidden={index === 0 ? "false" : "true"}
+      >
+        {project.cover === "hero-shooters" && <img class="portfolio-carousel-cover" src={heroShootersCover.src} alt="" />}
+        {project.cover === "stylized-renderer" && <img class="portfolio-carousel-cover" src={stylizedRendererCover.src} alt="" />}
+        {project.cover && <div class="portfolio-carousel-cover-scrim"></div>}
+        {!project.cover && <div class="project-visual-grid"></div>}
+        {!project.cover && <div class="project-visual-orbit"></div>}
+        <span class="project-visual-label">0{index + 1} / PROJECT PREVIEW</span>
+        <div class="portfolio-carousel-copy">
+          <p>{project.eyebrow}</p>
+          <h1>{project.titleLines ? project.titleLines.map((line) => <span>{line}</span>) : project.title}</h1>
+          <span>{project.role}</span>
+          <a href={`/portfolio/${project.slug}/`}>进入项目详情 <ArrowUpRight size={17} aria-hidden="true" /></a>
+        </div>
+      </article>
+    ))}
+    <div class="portfolio-carousel-controls" aria-label="切换项目">
+      <button type="button" data-carousel-prev aria-label="查看上一个项目"><ChevronLeft size={19} aria-hidden="true" /></button>
+      <div class="portfolio-carousel-dots" role="tablist" aria-label="项目列表">
+        {portfolioPreviewProjects.map((project, index) => (
+          <button
+            type="button"
+            role="tab"
+            aria-label={`查看 ${project.title}`}
+            aria-selected={index === 0 ? "true" : "false"}
+            class={index === 0 ? "is-active" : ""}
+            data-carousel-dot={index}
+          >
+            <span>0{index + 1}</span>
+          </button>
+        ))}
+      </div>
+      <button type="button" data-carousel-next aria-label="查看下一个项目"><ChevronRight size={19} aria-hidden="true" /></button>
+    </div>
+  </section>
+
+  <section class="portfolio-project-list" aria-label="项目预览">
+    {portfolioPreviewProjects.map((project, index) => (
+      <article class="knowledge-card portfolio-project-card" style={`--card-banner: ${project.banner}`}>
+        <span class="portfolio-project-index">0{index + 1}</span>
+        <div class="portfolio-project-main">
+          <div class="portfolio-project-meta">
+            <span>{project.eyebrow}</span>
+            <span>{project.period}</span>
+          </div>
+          <h3>{project.title}</h3>
+          <p>{project.summary}</p>
+          <div class="portfolio-tag-row">
+            {project.stack.slice(0, 3).map((item) => <span>{item}</span>)}
+          </div>
+        </div>
+        <div class="portfolio-project-action">
+          <a href={`/portfolio/${project.slug}/`} aria-label={`查看 ${project.title} 项目详情`}>
+            <ArrowUpRight size={22} aria-hidden="true" />
+          </a>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <script>
+    const carousel = document.querySelector("[data-portfolio-carousel]");
+    const slides = Array.from(document.querySelectorAll("[data-carousel-slide]"));
+    const dots = Array.from(document.querySelectorAll("[data-carousel-dot]"));
+    const previous = document.querySelector("[data-carousel-prev]");
+    const next = document.querySelector("[data-carousel-next]");
+    let activeIndex = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    function showSlide(nextIndex: number) {
+      activeIndex = (nextIndex + slides.length) % slides.length;
+      slides.forEach((slide, index) => {
+        const active = index === activeIndex;
+        slide.classList.toggle("is-active", active);
+        slide.setAttribute("aria-hidden", String(!active));
+      });
+      dots.forEach((dot, index) => {
+        const active = index === activeIndex;
+        dot.classList.toggle("is-active", active);
+        dot.setAttribute("aria-selected", String(active));
+      });
+    }
+
+    function startRotation() {
+      window.clearInterval(timer);
+      timer = window.setInterval(() => showSlide(activeIndex + 1), 5600);
+    }
+
+    previous?.addEventListener("click", () => { showSlide(activeIndex - 1); startRotation(); });
+    next?.addEventListener("click", () => { showSlide(activeIndex + 1); startRotation(); });
+    dots.forEach((dot, index) => dot.addEventListener("click", () => { showSlide(index); startRotation(); }));
+    carousel?.addEventListener("pointerenter", () => window.clearInterval(timer));
+    carousel?.addEventListener("pointerleave", startRotation);
+    document.addEventListener("visibilitychange", () => document.hidden ? window.clearInterval(timer) : startRotation());
+    startRotation();
+  </script>
+</BaseLayout>

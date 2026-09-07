@@ -16,6 +16,7 @@ const {
 const currentPath = Astro.url.pathname;
 const navItems = [
   { href: "/", label: "工作台", active: currentPath === "/" },
+  { href: "/portfolio/", label: "作品集", active: currentPath.startsWith("/portfolio") },
   { href: "/knowledge/", label: "知识库", active: currentPath.startsWith("/knowledge") },
   { href: coachHref, label: "AI Coach", active: currentPath.startsWith("/coach") },
   { href: "/webgl/", label: "WebGL 实验", active: currentPath.startsWith("/webgl") }

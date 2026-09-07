@@ -1,0 +1,107 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { portfolioPreviewProjects } from "../../data/portfolioPreview";
+import { ArrowLeft, ArrowUpRight, FolderGit } from "@lucide/astro";
+import HeroShootersDocument from "../../components/portfolio-documents/hero-shooters.md";
+import StylizedRendererDocument from "../../components/portfolio-documents/stylized-renderer.md";
+import heroShootersCover from "../../assets/portfolio/hero-shooters-cover.png";
+import stylizedRendererCover from "../../assets/portfolio/stylized-renderer-cover.png";
+
+export function getStaticPaths() {
+  return portfolioPreviewProjects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project }
+  }));
+}
+
+const { project } = Astro.props;
+const ProjectDocument = project.document === "hero-shooters"
+  ? HeroShootersDocument
+  : project.document === "stylized-renderer"
+    ? StylizedRendererDocument
+    : undefined;
+const ProjectCover = project.cover === "hero-shooters"
+  ? heroShootersCover
+  : project.cover === "stylized-renderer"
+    ? stylizedRendererCover
+    : undefined;
+---
+
+<BaseLayout title={project.title} description={project.summary}>
+  <article class="portfolio-detail">
+    <header class="portfolio-detail-hero">
+      <a class="portfolio-back-link" href="/portfolio/"><ArrowLeft size={16} aria-hidden="true" /> 返回作品集</a>
+      <div class="portfolio-detail-title">
+        <p class="eyebrow">{project.eyebrow}</p>
+        <h1>{project.title}</h1>
+        <p>{project.summary}</p>
+        <div class="portfolio-title-actions">
+          {project.externalLinks.map((link) => {
+            const isGithub = link.href.includes("github.com");
+            return (
+              <a class="portfolio-project-link" href={link.href} target="_blank" rel="noreferrer">
+                {isGithub && <FolderGit size={17} aria-hidden="true" />}
+                <span>{link.label}</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            );
+          })}
+        </div>
+      </div>
+      <div class="portfolio-detail-facts">
+        <div><span>Role</span><strong>{project.role}</strong></div>
+        <div><span>Period</span><strong>{project.period}</strong></div>
+      </div>
+    </header>
+
+    {ProjectCover && (
+      <figure class="portfolio-detail-cover">
+        <img src={ProjectCover.src} width={ProjectCover.width} height={ProjectCover.height} alt={`${project.title} 项目封面`} loading="eager" />
+      </figure>
+    )}
+
+    {project.relatedPosts.length > 0 && (
+      <section class="portfolio-notes-section" aria-label="相关博客">
+        <div class="portfolio-notes-heading">
+          <h2 class="portfolio-section-kicker">Related Reading</h2>
+        </div>
+        <div class="portfolio-notes-list">
+          {project.relatedPosts.map((post, index) => (
+            <a class="portfolio-note-link" href={post.href}>
+              <span>0{index + 1}</span>
+              <div>
+                <strong>{post.title}</strong>
+                <p>{post.description}</p>
+              </div>
+              <ArrowUpRight size={19} aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {ProjectDocument ? (
+      <section class="portfolio-detail-document" aria-label={`${project.title} 项目文档`}>
+        <div class="article-content portfolio-document-content" data-article-content>
+          <ProjectDocument />
+        </div>
+      </section>
+    ) : (
+      <section class="portfolio-detail-body" aria-label="项目介绍">
+        <div class="portfolio-body-label"><h2 class="portfolio-section-kicker">Project Introduction</h2></div>
+        <div class="portfolio-body-copy">
+          {project.overview.map((paragraph) => <p>{paragraph}</p>)}
+          <div class="portfolio-article-sections">
+            {project.sections.map((section) => (
+              <section>
+                <h3>{section.title}</h3>
+                {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+              </section>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+  </article>
+</BaseLayout>
