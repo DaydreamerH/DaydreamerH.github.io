@@ -46,43 +46,15 @@ export const portfolioPreviewProjects: PortfolioPreviewProject[] = [
       "项目把输入、技能、武器、动画、命中与积分组织为同一条战斗闭环：客户端先给出即时操作反馈，服务端再依据 GAS 规则和命中验证确认最终结果。"
     ],
     sections: [],
-    externalLinks: [],
+    externalLinks: [
+      { label: "观看演示视频", href: "https://www.bilibili.com/video/BV1WbD1BZEGJ" }
+    ],
     document: "hero-shooters",
     relatedPosts: [
       {
-        title: "Refactoring Lag Compensation——Introducing Sphere-Based Collision Verification",
-        description: "将延迟补偿的命中验证改为基于球体碰撞的实现记录。",
-        href: "/knowledge/refactoring-lag-compensation-introducing-sphere-based-collision-verification/"
-      },
-      {
-        title: "Perfecting a Material-Only Sniper Scope in Unreal Engine",
-        description: "完善材质驱动狙击镜表现的迭代记录。",
-        href: "/knowledge/perfecting-a-material-only-sniper-scope-in-unreal-engine/"
-      },
-      {
-        title: "A Material-Only Sniper Scope in Unreal Engine — No SceneCapture, No UI, No Barrel Occlusion",
-        description: "不依赖 SceneCapture、UI 或枪管遮挡的瞄准镜方案。",
-        href: "/knowledge/a-material-only-sniper-scope-in-unreal-engine-no-scenecapture-no-ui-no-barrel-occlusion/"
-      },
-      {
-        title: "A Server-Authoritative Architecture for Lag-Compensated Projectile Hits",
-        description: "服务端权威的延迟补偿投射物命中架构。",
-        href: "/knowledge/a-server-authoritative-architecture-for-lag-compensated-projectile-hits/"
-      },
-      {
-        title: "Decoupling Logic and Visuals for Bullet Object Pooling",
-        description: "将子弹逻辑与视觉对象池解耦的实现记录。",
-        href: "/knowledge/decoupling-logic-and-visuals-for-bullet-object-pooling/"
-      },
-      {
-        title: "Building a Simple Parkour System in Unreal Engine",
-        description: "角色跑酷检测与动作系统的实现记录。",
-        href: "/knowledge/building-a-simple-parkour-system-in-unreal-engine/"
-      },
-      {
-        title: "Implementation of a Local Firing Prediction Mechanism in Multiplayer TPS with Unreal Engine GAS",
-        description: "多人 TPS 本地开火预测机制的实现记录。",
-        href: "/knowledge/implementation-of-a-local-firing-prediction-mechanism-in-multiplayer-tps-with-unreal-engine-gas/"
+        title: "Unreal Engine MMD Skeleton Retargeting Guide",
+        description: "MMD 骨骼重定向至 Unreal Engine 的工作记录。",
+        href: "/knowledge/unreal-engine-mmd-skeleton-retargeting-guide/"
       },
       {
         title: "Modify GameplayEffect Duration at Runtime in Unreal GAS",
@@ -90,9 +62,39 @@ export const portfolioPreviewProjects: PortfolioPreviewProject[] = [
         href: "/knowledge/modify-gameplayeffect-duration-at-runtime-in-unreal-gas/"
       },
       {
-        title: "Unreal Engine MMD Skeleton Retargeting Guide",
-        description: "MMD 骨骼重定向至 Unreal Engine 的工作记录。",
-        href: "/knowledge/unreal-engine-mmd-skeleton-retargeting-guide/"
+        title: "Implementation of a Local Firing Prediction Mechanism in Multiplayer TPS with Unreal Engine GAS",
+        description: "多人 TPS 本地开火预测机制的实现记录。",
+        href: "/knowledge/implementation-of-a-local-firing-prediction-mechanism-in-multiplayer-tps-with-unreal-engine-gas/"
+      },
+      {
+        title: "Building a Simple Parkour System in Unreal Engine",
+        description: "角色跑酷检测与动作系统的实现记录。",
+        href: "/knowledge/building-a-simple-parkour-system-in-unreal-engine/"
+      },
+      {
+        title: "Decoupling Logic and Visuals for Bullet Object Pooling",
+        description: "将子弹逻辑与视觉对象池解耦的实现记录。",
+        href: "/knowledge/decoupling-logic-and-visuals-for-bullet-object-pooling/"
+      },
+      {
+        title: "A Server-Authoritative Architecture for Lag-Compensated Projectile Hits",
+        description: "服务端权威的延迟补偿投射物命中架构。",
+        href: "/knowledge/a-server-authoritative-architecture-for-lag-compensated-projectile-hits/"
+      },
+      {
+        title: "A Material-Only Sniper Scope in Unreal Engine — No SceneCapture, No UI, No Barrel Occlusion",
+        description: "不依赖 SceneCapture、UI 或枪管遮挡的瞄准镜方案。",
+        href: "/knowledge/a-material-only-sniper-scope-in-unreal-engine-no-scenecapture-no-ui-no-barrel-occlusion/"
+      },
+      {
+        title: "Perfecting a Material-Only Sniper Scope in Unreal Engine",
+        description: "完善材质驱动狙击镜表现的迭代记录。",
+        href: "/knowledge/perfecting-a-material-only-sniper-scope-in-unreal-engine/"
+      },
+      {
+        title: "Refactoring Lag Compensation——Introducing Sphere-Based Collision Verification",
+        description: "将延迟补偿的命中验证改为基于球体碰撞的实现记录。",
+        href: "/knowledge/refactoring-lag-compensation-introducing-sphere-based-collision-verification/"
       }
     ]
   },
@@ -112,7 +114,9 @@ export const portfolioPreviewProjects: PortfolioPreviewProject[] = [
       "StylizedRenderer 是一个基于 C++20 与 OpenGL 4.5 Core 的实时风格化角色渲染项目。它以可扩展、可调试的渲染框架为目标，并通过 Viewer 将模型加载、材质与光照调整、动画播放、调试视图和性能观察放进同一套运行环境。"
     ],
     sections: [],
-    externalLinks: [],
+    externalLinks: [
+      { label: "观看演示视频", href: "https://www.bilibili.com/video/BV1cL8d6iEez" }
+    ],
     document: "stylized-renderer",
     relatedPosts: [
       {
