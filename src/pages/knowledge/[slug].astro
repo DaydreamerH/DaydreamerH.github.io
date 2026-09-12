@@ -70,8 +70,17 @@ const reviewJson = JSON.stringify(review ?? null);
       </aside>
     )}
 
-    <div class="article-content" data-article-content>
-      <Content />
+    <div class="article-reading-layout">
+      <div class="article-content" data-article-content>
+        <Content />
+      </div>
+
+      <aside class="article-toc" data-article-toc hidden aria-label="文章目录">
+        <div class="article-toc-card">
+          <p class="article-toc-label">文章目录</p>
+          <ol class="article-toc-list" data-toc-list></ol>
+        </div>
+      </aside>
     </div>
 
     <div class="review-popover" data-review-popover hidden>
@@ -92,6 +101,8 @@ const reviewJson = JSON.stringify(review ?? null);
   <script define:vars={{ reviewJson }}>
     const review = JSON.parse(reviewJson);
     const articleContent = document.querySelector("[data-article-content]");
+    const articleToc = document.querySelector("[data-article-toc]");
+    const tocList = document.querySelector("[data-toc-list]");
     const popover = document.querySelector("[data-review-popover]");
     const popoverBody = document.querySelector("[data-review-popover-body]");
     const closePopover = document.querySelector("[data-review-close]");
@@ -121,6 +132,60 @@ const reviewJson = JSON.stringify(review ?? null);
 
     function getElementText(element) {
       return normalizeQuote(element.textContent ?? "");
+    }
+
+    function headingSlug(value) {
+      return value
+        .trim()
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, "-")
+        .replace(/^-+|-+$/g, "") || "section";
+    }
+
+    function buildArticleToc() {
+      if (!articleContent || !articleToc || !tocList) return;
+
+      const headings = Array.from(articleContent.querySelectorAll("h2, h3"));
+      if (!headings.length) return;
+
+      const usedIds = new Set();
+      for (const heading of headings) {
+        let id = heading.id || headingSlug(heading.textContent ?? "");
+        const initialId = id;
+        let suffix = 2;
+        while (usedIds.has(id) || (document.getElementById(id) !== heading && document.getElementById(id))) {
+          id = `${initialId}-${suffix++}`;
+        }
+        heading.id = id;
+        usedIds.add(id);
+
+        const item = document.createElement("li");
+        item.className = heading.tagName === "H3" ? "is-subsection" : "";
+        const link = document.createElement("a");
+        link.href = `#${id}`;
+        link.textContent = heading.textContent ?? "";
+        link.dataset.tocTarget = id;
+        item.append(link);
+        tocList.append(item);
+      }
+
+      articleToc.hidden = false;
+      const tocLinks = Array.from(tocList.querySelectorAll("a[data-toc-target]"));
+      const setActiveLink = (id) => {
+        tocLinks.forEach((link) => {
+          link.classList.toggle("is-active", link.dataset.tocTarget === id);
+        });
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveLink(visible[0].target.id);
+      }, { rootMargin: "-18% 0px -72% 0px", threshold: 0 });
+
+      headings.forEach((heading) => observer.observe(heading));
+      setActiveLink(headings[0].id);
     }
 
     function showMarkDetail(mark, target) {
@@ -222,6 +287,7 @@ const reviewJson = JSON.stringify(review ?? null);
       if (event.key === "Escape" && popover) popover.hidden = true;
     });
 
+    buildArticleToc();
     applyReviewMarks();
   </script>
 </BaseLayout>
