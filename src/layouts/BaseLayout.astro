@@ -33,23 +33,23 @@ const navItems = [
     <title>{title} | DaydreamerH</title>
   </head>
   <body>
+    <header class="topbar" data-topbar>
+      <a class="brand" href="/">
+        <img class="brand-mark" src="/favicon.jpg" alt="DaydreamerH" width="640" height="640" decoding="async" />
+        <span>
+          <strong>DaydreamerH</strong>
+          <small>Game Dev Training Desk</small>
+        </span>
+      </a>
+      <nav class="main-nav" aria-label="主导航">
+        {navItems.map((item) => (
+          <a href={item.href} class={item.active ? "is-active" : ""} aria-current={item.active ? "page" : undefined}>
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    </header>
     <div class="site-shell">
-      <header class="topbar" data-topbar>
-        <a class="brand" href="/">
-          <img class="brand-mark" src="/favicon.jpg" alt="DaydreamerH" width="640" height="640" decoding="async" />
-          <span>
-            <strong>DaydreamerH</strong>
-            <small>Game Dev Training Desk</small>
-          </span>
-        </a>
-        <nav class="main-nav" aria-label="主导航">
-          {navItems.map((item) => (
-            <a href={item.href} class={item.active ? "is-active" : ""} aria-current={item.active ? "page" : undefined}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </header>
       <main>
         <slot />
       </main>
